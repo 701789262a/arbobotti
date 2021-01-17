@@ -27,11 +27,11 @@ class Operation:
         self.apikey_krk = apikey_krk
         self.secret_krk = secret_krk
 
-    def trade(self, exchange, fund_id, amount, price):
+    def trade(self,exchange, fund_id,type, amount, price):
         nonce = str(int(time.time() * 1e6))
         if exchange == "trt":
             url = "https://api.therocktrading.com/v1/funds/" + fund_id + "/orders"
-            payload_trt = {"fund_id": fund_id, "side": "buy", "amount": amount, "price": price}
+            payload_trt = {"fund_id": fund_id, "side": type, "amount": amount, "price": price}
             signature = hmac.new(self.secret_trt.encode(), msg=(str(nonce) + url).encode(),
                                  digestmod=hashlib.sha512).hexdigest()
 
@@ -42,18 +42,18 @@ class Operation:
         elif exchange == "krk":
             api = krakenex.API(self.apikey_krk, self.secret_krk)
             k = KrakenAPI(api)
-            resp = k.add_standard_order(fund_id, "buy", "limit", str(amount), str(price))
+            resp = k.add_standard_order(fund_id, type, "limit", str(amount), str(price))
             resp = str(resp).replace("\'", "\"")
             return resp
 
     def dotrade(self, type, exchange, fund_id, amount, price, type2, exchange2, fund_id2, amount2, price2):
         d = dict()
-        trt_trade = Thread(target=lambda q, arg1, arg2, arg3, arg4: q.put(
-            self.trade(arg1, arg2, arg3, arg4)),
-                           args=(q1, exchange, fund_id, type, amount, price, self.apikey_trt, self.secret_trt))
-        krk_trade = Thread(target=lambda q, arg1, arg2, arg3, arg4: q.put(
-            self.trade(arg1, arg2, arg3, arg4)),
-                           args=(q2, exchange2, fund_id2, type2, amount2, price2, self.apikey_krk, self.secret_krk))
+        trt_trade = Thread(target=lambda q, arg1, arg2, arg3, arg4,arg5: q.put(
+            self.trade(arg1, arg2, arg3, arg4,arg5)),
+                           args=(q1, exchange, fund_id, type, amount, price))
+        krk_trade = Thread(target=lambda q, arg1, arg2, arg3, arg4,arg5: q.put(
+            self.trade(arg1, arg2, arg3, arg4,arg5)),
+                           args=(q2, exchange2, fund_id2, type2, amount2, price2))
         trt_trade.start()
         krk_trade.start()
         trt_trade.join()

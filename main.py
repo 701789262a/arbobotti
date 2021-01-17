@@ -9,7 +9,7 @@ import requests
 from trade import Operation
 
 _list = []
-login_data = dict(open("keydict.txt", "r").readline().strip())
+login_data = json.loads(open("keydict.txt", "r").readline().strip().replace("\n", ""))
 
 trt_apikey = str(login_data["trt_apikey"])
 trt_secret = str(login_data["trt_secret"])
@@ -77,7 +77,7 @@ def main():
             print("[i] NEED %f EUR | %f BTC" % (asks_krk * depth, depth))
             last_ask = asks_krk
             last_bid = bids_trt
-            if prod * 100 > 0.3 and eff > 1:
+            if  eff > 0.1 and prod * 100 > 0.1 :
                 print("[#] TRADE")
                 op.dotrade("buy", "krk", "BTCEUR", depth, last_ask,
                            "sell", "trt", "BTCEUR", depth, last_bid)
@@ -98,7 +98,7 @@ def main():
             print("[!] NEED %f EUR | %f BTC" % (asks_trt * depth, depth))
             last_ask = asks_trt
             last_bid = bids_krk
-            if prod * 100 > 0.3 and eff > 1:
+            if eff > 0.1 and prod * 100 > 0.1 :
                 print("[#] TRADE")
                 op.dotrade("buy", "trt", "BTCEUR", depth, last_ask,
                            "sell", "krk", "BTCEUR", depth, last_bid)
@@ -107,7 +107,7 @@ def main():
                 print(resp_trt_trade, resp_krk_trade)
 
         _end_time = time.time()
-        print("[i] TIME: ", int(_end_time % 100))
+        print("[i] TIME:", int(_end_time % 100))
         if last_ask != 0:
             _list.append([_end_time, time.time(), last_ask, last_bid, depth, eff, int(_query_time * 1000),
                           (int((_end_time - _start_time) * 1000) - int(_query_time * 1000)),
