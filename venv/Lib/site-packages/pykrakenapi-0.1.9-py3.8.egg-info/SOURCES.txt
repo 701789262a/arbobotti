@@ -1,0 +1,15 @@
+LICENSE.txt
+MANIFEST.in
+README.rst
+setup.cfg
+setup.py
+pykrakenapi/__init__.py
+pykrakenapi/pykrakenapi.py
+pykrakenapi.egg-info/PKG-INFO
+pykrakenapi.egg-info/SOURCES.txt
+pykrakenapi.egg-info/dependency_links.txt
+pykrakenapi.egg-info/requires.txt
+pykrakenapi.egg-info/top_level.txt
+pykrakenapi/../LICENSE.txt
+pykrakenapi/../README.rst
+test/test_pykrakenapi.py
