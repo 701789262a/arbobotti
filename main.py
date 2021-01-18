@@ -17,8 +17,8 @@ trt_secret = str(login_data["trt_secret"])
 krk_apikey = str(login_data["krk_apikey"])
 krk_secret = str(login_data["krk_secret"])
 
-taker_fee_krk = .0013
-taker_fee_trt = .0020
+taker_fee_krk = .0024
+taker_fee_trt = .0010
 save_interval = 20
 rate = 10
 eff_threshold = 0.2
