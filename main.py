@@ -20,7 +20,7 @@ krk_secret = str(login_data["krk_secret"])
 taker_fee_krk = .0024
 taker_fee_trt = .0010
 save_interval = 20
-fee_interval=100
+fee_interval = 100
 rate = 10
 eff_threshold = 0.2
 
