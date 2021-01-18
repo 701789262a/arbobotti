@@ -1,7 +1,6 @@
 import json
 import queue
 import time
-import winsound
 from threading import Thread
 
 import pandas
@@ -33,7 +32,9 @@ all_balance = dict()
 
 def main():
     op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret)
-
+    fee = op.doop(0, "krk", 0, 0, 0, 0, "trt", 0, 0, 0, 3)
+    taker_fee_trt = float(fee[1]["feetrt"]) / 100
+    taker_fee_krk = float(fee[0]["feekrk"]) / 100
     checkbalance = True
     while 1:
         if checkbalance:
@@ -118,7 +119,6 @@ def main():
             if prod * 100 > eff_threshold:
                 checkbalance = True
                 print("[#] TRADE")
-                winsound.Beep(1132, 1000)
                 resp_dict = op.doop("buy", "trt", "BTCEUR", depth, last_ask,
                                     "sell", "krk", "BTCEUR", depth, last_bid, 1)
                 if resp_dict['krk'] != "ERROR" or resp_dict['trt'] == "ERROR":
