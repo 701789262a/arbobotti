@@ -4,6 +4,7 @@ import hmac
 import json
 import queue
 import time
+import pandas as pd
 from threading import Thread
 
 import krakenex
@@ -68,6 +69,26 @@ class Operation:
             d["krkbch"] = resp["vol"]["BCH"]
             return d
 
+    def fee(self,exchange):
+        nonce = str(int(time.time() * 1e6))
+        d = dict()
+        if exchange == "trt":
+
+            url = "https://api.therocktrading.com/v1/funds/BTCEUR"
+            signature = hmac.new(self.secret_trt.encode(), msg=(str(nonce) + url).encode(),
+                                 digestmod=hashlib.sha512).hexdigest()
+            _headers = {"Content-Type": "application/json", "X-TRT-KEY": self.apikey_trt,
+                        "X-TRT-SIGN": signature, "X-TRT-NONCE": nonce}
+            resp = requests.get(url, headers=_headers)
+            d["feetrt"] = json.loads(resp.text)["buy_fee"]
+            return d
+        elif exchange == "krk":
+            api = krakenex.API(self.apikey_krk, self.secret_krk)
+            k = KrakenAPI(api)
+            resp = pd.DataFrame(k.get_trade_volume("BTCEUR")[2])
+            d["feekrk"] = resp["XXBTZEUR"][0]
+            return d
+
     def doop(self, side, exchange, fund_id, amount, price, side2, exchange2, fund_id2, amount2, price2, case):
         if case == 1:
 
@@ -108,8 +129,19 @@ class Operation:
             d = (q1.get(), q2.get())
 
             return d
+        if case == 3:
+            d = dict()
+            krk_balance = Thread(target=lambda q, arg1: q.put(
+                self.fee(arg1)),
+                                 args=(q1, exchange))
+            trt_balance = Thread(target=lambda q, arg1: q.put(
+                self.fee(arg1)),
+                                 args=(q2, exchange2))
+            trt_balance.start()
+            krk_balance.start()
+            trt_balance.join()
+            krk_balance.join()
 
-    def merge_two_dicts(x, y):
-        z = x.copy()
-        z.update(y)
-        return z
+            d = (q1.get(), q2.get())
+            return d
+

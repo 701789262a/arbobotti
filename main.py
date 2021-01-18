@@ -20,6 +20,7 @@ krk_secret = str(login_data["krk_secret"])
 taker_fee_krk = .0024
 taker_fee_trt = .0010
 save_interval = 20
+fee_interval=100
 rate = 10
 eff_threshold = 0.2
 
@@ -32,6 +33,7 @@ all_balance = dict()
 
 def main():
     op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret)
+
     checkbalance = True
     while 1:
         if checkbalance:
@@ -128,9 +130,14 @@ def main():
                           (int((_end_time - _start_time) * 1000) - int(_query_time * 1000)),
                           int((_end_time - _start_time) * 1000)])
         if int(_end_time % save_interval) == 0:
-            print("[!] SALVATAGGIO")
+            print("[!] SAVING...")
             if _list:
                 save(_list)
+        if int(_end_time%fee_interval)==0:
+            print("[!] UPDATING FEE DATA...")
+            fee = op.doop(0, "krk", 0, 0, 0, 0, "trt", 0, 0, 0, 3)
+            taker_fee_trt = float(fee[1]["feetrt"]) / 100
+            taker_fee_krk = float(fee[0]["feekrk"]) / 100
 
         print("[-] ------------------------------------------- %d ms (%d ms(q) + %d ms(p))" % (
             int((_end_time - _start_time) * 1000), int(_query_time * 1000),
