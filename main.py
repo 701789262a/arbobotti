@@ -15,15 +15,18 @@ trt_apikey = str(login_data["trt_apikey"])
 trt_secret = str(login_data["trt_secret"])
 krk_apikey = str(login_data["krk_apikey"])
 krk_secret = str(login_data["krk_secret"])
+bnb_apikey = str(login_data["bnb_apikey"])
+bnb_secret = str(login_data["bnb_secret"])
 
 taker_fee_krk = .0024
-taker_fee_trt = .0010
+taker_fee_trt = .002
+taker_fee_bnb= .00075
 save_interval = 20
 fee_interval = 100
 rate = 10
 eff_threshold = 0.2
 
-_params_krk = {"pair": "BTCEUR", "count": "4"}
+_params_krk = {"pair": "BTCEUR", "count": "2"}
 _params_trt = {}
 krk_que = queue.Queue()
 trt_que = queue.Queue()
@@ -31,7 +34,8 @@ all_balance = dict()
 
 
 def main():
-    op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret)
+    op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret,bnb_apikey,bnb_secret)
+
     fee = op.doop(0, "krk", 0, 0, 0, 0, "trt", 0, 0, 0, 3)
     taker_fee_trt = float(fee[1]["feetrt"]) / 100
     taker_fee_krk = float(fee[0]["feekrk"]) / 100
@@ -74,10 +78,11 @@ def main():
         print("[i] ASK KRK:", asks_krk)
         print("[i] BID TRT:", bids_trt)
         print("[i]                           DIFFERENCE:", round(bids_trt - asks_krk, 2))
-        print("[i]                     DIFFERENCE + FEE:", round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_krk)), 2))
+        print("[i]                     DIFFERENCE + FEE:",
+              round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_krk)), 2))
         print("[i] ASK TRT:", asks_trt)
         print("[i] BID KRK:", bids_krk)
-        print("[i]                           DIFFERENCE:", round(bids_krk - asks_trt,2))
+        print("[i]                           DIFFERENCE:", round(bids_krk - asks_trt, 2))
         print("[i]                     DIFFERENCE + FEE:",
               round((bids_krk * (1 - taker_fee_krk)) - (asks_trt * (1 + taker_fee_trt)), 2))
 
@@ -103,7 +108,7 @@ def main():
                 if resp_dict['krk'] != "ERROR" or resp_dict['trt'] == "ERROR":
                     time.sleep(1)
 
-        elif (bids_krk * (1 + taker_fee_krk)) - (asks_trt * (1 + taker_fee_trt)) > 0:
+        elif (bids_krk * (1 - taker_fee_krk)) - (asks_trt * (1 + taker_fee_trt)) > 0:
             print("[!] %f < %f BUY TRT | SELL KRK DIFF: %f (MENO FEE): %f" % (
                 asks_trt, bids_krk, bids_krk - asks_trt,
                 (bids_krk * (1 + taker_fee_krk)) - (asks_trt * (1 + taker_fee_trt))))
@@ -133,7 +138,7 @@ def main():
             print("[!] SAVING...")
             if _list:
                 save(_list)
-        if int(_end_time%fee_interval)==0:
+        if int(_end_time % fee_interval) == 0:
             print("[!] UPDATING FEE DATA...")
             fee = op.doop(0, "krk", 0, 0, 0, 0, "trt", 0, 0, 0, 3)
             taker_fee_trt = float(fee[1]["feetrt"]) / 100
