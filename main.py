@@ -9,18 +9,36 @@ import requests
 from trade import Operation
 
 _list = []
+exchangelist = []
 login_data = json.loads(open("keydict.txt", "r").readline().strip().replace("\n", ""))
-
-trt_apikey = str(login_data["trt_apikey"])
-trt_secret = str(login_data["trt_secret"])
-krk_apikey = str(login_data["krk_apikey"])
-krk_secret = str(login_data["krk_secret"])
-bnb_apikey = str(login_data["bnb_apikey"])
-bnb_secret = str(login_data["bnb_secret"])
+try:
+    trt_apikey = str(login_data["trt_apikey"])
+    trt_secret = str(login_data["trt_secret"])
+    exchangelist.append("trt")
+except:
+    trt_apikey = ""
+    trt_secret = ""
+    pass
+try:
+    krk_apikey = str(login_data["krk_apikey"])
+    krk_secret = str(login_data["krk_secret"])
+    exchangelist.append("krk")
+except:
+    krk_apikey = ""
+    krk_secret = ""
+    pass
+try:
+    bnb_apikey = str(login_data["bnb_apikey"])
+    bnb_secret = str(login_data["bnb_secret"])
+    exchangelist.append("bnb")
+except:
+    bnb_apikey = ""
+    bnb_secret = ""
+    pass
 
 taker_fee_krk = .0024
 taker_fee_trt = .002
-taker_fee_bnb= .00075
+taker_fee_bnb = .00075
 save_interval = 20
 fee_interval = 100
 rate = 10
@@ -34,15 +52,15 @@ all_balance = dict()
 
 
 def main():
-    op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret,bnb_apikey,bnb_secret)
+    op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret, bnb_apikey, bnb_secret, exchangelist)
 
-    fee = op.doop(0, "krk", 0, 0, 0, 0, "trt", 0, 0, 0, 3)
-    taker_fee_trt = float(fee[1]["feetrt"]) / 100
-    taker_fee_krk = float(fee[0]["feekrk"]) / 100
+    fee = op.feethreading()
+    taker_fee_trt = float(fee["feetrt"]) / 100
+    taker_fee_krk = float(fee["feekrk"]) / 100
     checkbalance = True
     while 1:
         if checkbalance:
-            all_balance = op.doop(0, "krk", 0, 0, 0, 0, "trt", 0, 0, 0, 2)
+            all_balance = op.balancethreading()
             print(all_balance)
             try:
                 dis1 = all_balance[0]["krkbtc"] / all_balance[0]["trtbtc"]
@@ -102,8 +120,8 @@ def main():
             if prod * 100 > eff_threshold:
                 checkbalance = True
                 print("[#] TRADE")
-                resp_dict = op.doop("buy", "krk", "BTCEUR", depth, last_ask,
-                                    "sell", "trt", "BTCEUR", depth, last_bid, 1)
+                resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, last_bid, "buy", "krk", "BTCEUR", depth,
+                                              last_ask)
 
                 if resp_dict['krk'] != "ERROR" or resp_dict['trt'] == "ERROR":
                     time.sleep(1)
@@ -124,8 +142,8 @@ def main():
             if prod * 100 > eff_threshold:
                 checkbalance = True
                 print("[#] TRADE")
-                resp_dict = op.doop("buy", "trt", "BTCEUR", depth, last_ask,
-                                    "sell", "krk", "BTCEUR", depth, last_bid, 1)
+                resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
+                                              "sell", "krk", "BTCEUR", depth, last_bid)
                 if resp_dict['krk'] != "ERROR" or resp_dict['trt'] == "ERROR":
                     time.sleep(1)
 
@@ -140,7 +158,7 @@ def main():
                 save(_list)
         if int(_end_time % fee_interval) == 0:
             print("[!] UPDATING FEE DATA...")
-            fee = op.doop(0, "krk", 0, 0, 0, 0, "trt", 0, 0, 0, 3)
+            fee = op.feethreading()
             taker_fee_trt = float(fee[1]["feetrt"]) / 100
             taker_fee_krk = float(fee[0]["feekrk"]) / 100
 
