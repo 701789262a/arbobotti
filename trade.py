@@ -59,13 +59,13 @@ class Operation:
                         symbol=fund_id,
                         quantity=amount,
                         price=price)
-                    print("ciaone",order)
+                    print("ciaone", order)
                 elif side == "sell":
                     order = client.order_limit_sell(
                         symbol=fund_id,
                         quantity=amount,
                         price=price)
-                    print("ciaone",order)
+                    print("ciaone", order)
             except Exception:
                 order = "ERR"
             return order
@@ -131,6 +131,67 @@ class Operation:
             pass
         return d
 
+    def orderthreading(self, order1, order2):
+        d = dict()
+        if "trt" in self.exchange_list:
+            trt_order = Thread(target=lambda q, arg1, arg2: q.put(
+                self.order(arg1, arg2)),
+                               args=(q2, "trt", order1))
+            trt_order.start()
+        if "krk" in self.exchange_list:
+            krk_order = Thread(target=lambda q, arg1, arg2: q.put(
+                self.order(arg1, arg2)),
+                               args=(q2, "krk", order2))
+            krk_order.start()
+        if "bnb" in self.exchange_list:
+            bnb_order = Thread(target=lambda q, arg1, arg2: q.put(
+                self.order(arg1, arg2)),
+                               args=(q3, "bnb", order2))
+            bnb_order.start()
+        try:
+            krk_order.join()
+
+            d.update(q1.get())
+        except:
+            pass
+        try:
+            trt_order.join()
+
+            d.update(q2.get())
+        except:
+            pass
+        try:
+            bnb_order.join()
+
+            d.update(q3.get())
+        except Exception:
+            pass
+        return d
+    def order(self,exchange,order):
+        nonce = str(int(time.time() * 1e6))
+        d = dict()
+        if exchange == "trt":
+            url = "https://api.therocktrading.com/v1/funds/BTCEUR/orders/"+order
+            signature = hmac.new(self.secret_trt.encode(), msg=(str(nonce) + url).encode(),
+                                 digestmod=hashlib.sha512).hexdigest()
+            _headers = {"Content-Type": "application/json", "X-TRT-KEY": self.apikey_trt,
+                        "X-TRT-SIGN": signature, "X-TRT-NONCE": nonce}
+            resp = requests.get(url, headers=_headers)
+            d["status_trt"] = json.loads(resp.text)["status"]
+            return d
+        elif exchange == "krk":
+            print("FUNCTION NOT ENABLED ON KRAKEN EXCHANGE, USE OTHER EXCHANGES FOR THIS FEATURE TO WORK")
+            exit(2)
+            api = krakenex.API(self.apikey_krk, self.secret_krk)
+            k = KrakenAPI(api)
+            resp = pd.DataFrame(k.get_trade_volume("BTCEUR")[2])
+            d["feekrk"] = resp["XXBTZEUR"][0]
+            return d
+        elif exchange == "bnb":
+            client = Client(self.apikey_bnb, self.secret_bnb)
+            resp = client.get_order(symbol="BTCEUR",orderId=order)
+            d["status_bnb"] = resp["status"]
+            return d
     def fee(self, exchange):
         nonce = str(int(time.time() * 1e6))
         d = dict()
@@ -226,9 +287,9 @@ class Operation:
         try:
             value = json.loads(q1.get())
             if value["errors"]:
-                d["trt"]=value["errors"][0]["message"], "ERROR"
+                d["trt"] = value["errors"][0]["message"], "ERROR"
             else:
-                d["trt"]= value["order"]
+                d["trt"] = value["order"]
         except:
             d["trt"] = "ERROR"
         try:
