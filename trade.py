@@ -59,16 +59,15 @@ class Operation:
                         symbol=fund_id,
                         quantity=amount,
                         price=price)
-                    print(order)
+                    print("ciaone",order)
                 elif side == "sell":
                     order = client.order_limit_sell(
                         symbol=fund_id,
                         quantity=amount,
                         price=price)
-                    print(order)
+                    print("ciaone",order)
             except Exception:
                 order = "ERR"
-
             return order
 
     def balance(self, exchange):
@@ -227,16 +226,13 @@ class Operation:
         try:
             value = json.loads(q1.get())
             if value["errors"]:
-                d["trt"]=value["errors"][0]["message"]
-                print(d["trt"])
+                d["trt"]=value["errors"][0]["message"], "ERROR"
             else:
                 d["trt"]= value["order"]
         except:
             d["trt"] = "ERROR"
         try:
-            print(json.loads(q2.get()))
             d[self.exchange_list[1]] = json.loads(q2.get())["order"]
-            print("ciaone",d[self.exchange_list[1]])
         except:
             d[self.exchange_list[1]] = "ERROR"
 

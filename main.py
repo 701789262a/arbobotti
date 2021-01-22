@@ -93,23 +93,23 @@ def main():
         bids_trt = round(loaded_json_trt['bids'][0]['price'], 2)
 
         print(f"[i] ASK %s : %.2f                              EUR BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-        exchangelist[1].upper(), asks_krk, all_balance["bnbeur"]))
+            exchangelist[1].upper(), asks_krk, all_balance["bnbeur"]))
         print(f"[i] BID %s : %.2f                              BTC BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-        exchangelist[0].upper(), bids_trt, all_balance["trtbtc"]))
+            exchangelist[0].upper(), bids_trt, all_balance["trtbtc"]))
         print("[i]                           DIFFERENCE:", round(bids_trt - asks_krk, 2))
         print(f"[i]                     DIFFERENCE + FEE: {Fore.RED}%.2f{Style.RESET_ALL}"
               % (round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2)))
         print(f"[i] ASK %s : %.2f                              EUR BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-        exchangelist[0].upper(), asks_trt, all_balance["trteur"]))
+            exchangelist[0].upper(), asks_trt, all_balance["trteur"]))
         print(f"[i] BID %s : %.2f                              BTC BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-        exchangelist[1].upper(), bids_krk, all_balance["bnbbtc"]))
+            exchangelist[1].upper(), bids_krk, all_balance["bnbbtc"]))
         print("[i]                           DIFFERENCE:", round(bids_krk - asks_trt, 2))
         print(f"[i]                     DIFFERENCE + FEE: {Fore.RED}%.2f{Style.RESET_ALL}"
               % (round((bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), 2)))
         print("[i] FETCHED FEE       %s: %.4f%%;      %s: %.4f%%" % (
             exchangelist[0].upper(), taker_fee_trt * 100, exchangelist[1].upper(), taker_fee_bnb * 100))
 
-        if (bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)) > 0:
+        if (bids_trt + 1000 * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)) > 0:
             print(f"{Fore.CYAN}[#] %.2f < %.2f BUY %s | SELL TRT DIFF: %.2f (MENO FEE): %.3f" % (
                 asks_krk, bids_trt, exchangelist[1].upper(), bids_trt - asks_krk,
                 (bids_trt * (1 + taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb))))
@@ -118,18 +118,22 @@ def main():
             print("[#] DEPTH %f BTC" % depth)
             eff = (depth * bids_trt * (1 + taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
             prod = eff / (depth * bids_trt)
-            print("[#] GAIN DOPO FEE EFF %f € | PROD %f c/€" % (eff, prod * 100))
+            print("[#] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
             print(f"[#] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_krk * depth, depth))
             last_ask = asks_krk
             last_bid = bids_trt
-            if prod * 100 > prod_threshold:
+            if -prod * 100 > prod_threshold:
                 checkbalance = True
                 print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
                 resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, last_bid, "buy", "bnb", "BTCEUR", depth,
                                               last_ask)
 
-                if resp_dict['bnb'] != "ERROR" or resp_dict['trt'] == "ERROR":
-                    pass
+                if resp_dict['bnb'] != "ERROR" or resp_dict['trt'][1] == "ERROR":
+                    print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
+                        resp_dict["trt"][0].upper(), resp_dict["bnb"]))
+                else:
+                    print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
+                    resp_dict["trt"][0], resp_dict["bnb"]))
 
         elif (bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)) > 0:
             print("[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f" % (
@@ -140,7 +144,7 @@ def main():
             print("[!] DEPTH %f BTC" % depth)
             eff = (depth * bids_krk * (1 + taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
             prod = eff / (depth * bids_krk)
-            print("[i] GAIN DOPO FEE EFF %f € | PROD %f c/€" % (eff, prod * 100))
+            print("[i] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
             print("[i] NEED %.3f EUR | %f BTC" % (asks_trt * depth, depth))
             last_ask = asks_trt
             last_bid = bids_krk
@@ -149,9 +153,12 @@ def main():
                 print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
                 resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
                                               "sell", exchangelist[1], "BTCEUR", depth, last_bid)
-                if resp_dict['krk'] != "ERROR" or resp_dict['trt'] == "ERROR":
-                    print(resp_dict)
-                    pass
+                if resp_dict['bnb'] != "ERROR" or resp_dict['trt'][1] == "ERROR":
+                    print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
+                        resp_dict["trt"][0].upper(), resp_dict["bnb"]))
+                else:
+                    print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
+                    resp_dict["trt"][0], resp_dict["bnb"]))
 
         _end_time = time.time()
         if last_ask != 0:
