@@ -5,6 +5,7 @@ import json
 import queue
 import time
 from threading import Thread
+
 import krakenex
 import pandas as pd
 import requests
@@ -51,17 +52,23 @@ class Operation:
             resp = str(resp).replace("\'", "\"")
             return resp
         elif exchange == "bnb":
-            client = Client(self.apikey_bnb, self.apikey_bnb)
-            if side == "buy":
-                order = client.order_limit_buy(
-                    symbol=fund_id,
-                    quantity=amount,
-                    price=price)
-            elif side == "sell":
-                order = client.order_limit_sell(
-                    symbol=fund_id,
-                    quantity=amount,
-                    price=price)
+            client = Client(self.apikey_bnb, self.secret_bnb)
+            try:
+                if side == "buy":
+                    order = client.order_limit_buy(
+                        symbol=fund_id,
+                        quantity=amount,
+                        price=price)
+                    print(order)
+                elif side == "sell":
+                    order = client.order_limit_sell(
+                        symbol=fund_id,
+                        quantity=amount,
+                        price=price)
+                    print(order)
+            except Exception:
+                order = "ERR"
+
             return order
 
     def balance(self, exchange):
@@ -86,9 +93,9 @@ class Operation:
             d["krkbch"] = resp["vol"]["BCH"]
             return d
         elif exchange == "bnb":
-            client = Client(self.apikey_bnb, self.apikey_bnb)
-            d["bnbbtc"] = client.get_asset_balance(asset="BTC")
-            d["bnbeur"] = client.get_asset_balance(asset="EUR")
+            client = Client(self.apikey_bnb, self.secret_bnb)
+            d["bnbbtc"] = float(client.get_asset_balance(asset="BTC")["free"])
+            d["bnbeur"] = float(client.get_asset_balance(asset="EUR")["free"])
             return d
 
     def balancethreading(self):
@@ -96,17 +103,17 @@ class Operation:
         if "krk" in self.exchange_list:
             krk_balance = Thread(target=lambda q, arg1: q.put(
                 self.balance(arg1)),
-                                 args=(q1, "krk"))
+                                 args=(q2, "krk"))
             krk_balance.start()
         if "trt" in self.exchange_list:
             trt_balance = Thread(target=lambda q, arg1: q.put(
                 self.balance(arg1)),
-                                 args=(q2, "trt"))
+                                 args=(q1, "trt"))
             trt_balance.start()
         if "bnb" in self.exchange_list:
             bnb_balance = Thread(target=lambda q, arg1: q.put(
                 self.balance(arg1)),
-                                 args=(q3, "bnb"))
+                                 args=(q2, "bnb"))
             bnb_balance.start()
         try:
             trt_balance.join()
@@ -120,10 +127,9 @@ class Operation:
             pass
         try:
             bnb_balance.join()
-            d.update(q3.get())
+            d.update(q2.get())
         except:
             pass
-
         return d
 
     def fee(self, exchange):
@@ -145,9 +151,10 @@ class Operation:
             d["feekrk"] = resp["XXBTZEUR"][0]
             return d
         elif exchange == "bnb":
-            client = Client(self.apikey_bnb, self.apikey_bnb)
+            client = Client(self.apikey_bnb, self.secret_bnb)
             resp = client.get_trade_fee(symbol="BTCEUR")
-            print(resp)
+            d["feebnb"] = resp["tradeFee"][0]["taker"]
+            return d
 
     def feethreading(self):
         d = dict()
@@ -184,49 +191,53 @@ class Operation:
             d.update(q3.get())
         except Exception:
             pass
-
-
-        print (d)
         return d
 
     def tradethreading(self, side, exchange, fund_id, amount, price, side2, exchange2, fund_id2, amount2, price2):
-            d = dict()
-            if "trt" in self.exchangelist:
-                trt_trade = Thread(target=lambda q, arg1, arg2, arg3, arg4, arg5: q.put(
-                    self.trade(arg1, arg2, arg3, arg4, arg5)),
-                                   args=(q1, exchange, fund_id, side, amount, price))
-                trt_trade.start()
-            if "krk" in self.exchangelist:
-                krk_trade = Thread(target=lambda q, arg1, arg2, arg3, arg4, arg5: q.put(
-                    self.trade(arg1, arg2, arg3, arg4, arg5)),
-                                   args=(q2, exchange2, fund_id2, side2, amount2, price2))
-                krk_trade.start()
-            if "bnb" in self.exchangelist:
-                bnb_trade = Thread(target=lambda q, arg1, arg2, arg3, arg4, arg5: q.put(
-                    self.trade(arg1, arg2, arg3, arg4, arg5)),
-                                   args=(q2, exchange2, fund_id2, side2, amount2, price2))
-                bnb_trade.start()
+        d = dict()
+        if "trt" in self.exchange_list:
+            trt_trade = Thread(target=lambda q, arg1, arg2, arg3, arg4, arg5: q.put(
+                self.trade(arg1, arg2, arg3, arg4, arg5)),
+                               args=(q1, exchange, fund_id, side, amount, price))
+            trt_trade.start()
+        if "krk" in self.exchange_list:
+            krk_trade = Thread(target=lambda q, arg1, arg2, arg3, arg4, arg5: q.put(
+                self.trade(arg1, arg2, arg3, arg4, arg5)),
+                               args=(q2, exchange2, fund_id2, side2, amount2, price2))
+            krk_trade.start()
+        if "bnb" in self.exchange_list:
+            bnb_trade = Thread(target=lambda q, arg1, arg2, arg3, arg4, arg5: q.put(
+                self.trade(arg1, arg2, arg3, arg4, arg5)),
+                               args=(q2, exchange2, fund_id2, side2, amount2, price2))
+            bnb_trade.start()
 
-            try:
-                trt_trade.join()
-            except:
-                pass
-            try:
-                krk_trade.join()
-            except:
-                pass
-            try:
-                bnb_trade.join()
-            except:
-                pass
+        try:
+            trt_trade.join()
+        except:
+            pass
+        try:
+            krk_trade.join()
+        except:
+            pass
+        try:
+            bnb_trade.join()
+        except:
+            pass
 
-            try:
-                d["krk"] = json.loads(q1.get())["txid"]
-            except:
-                d["krk"] = "ERROR"
-            try:
-                d["trt"] = json.loads(q2.get())["order"]
-            except:
-                d["trt"] = "ERROR"
+        try:
+            value = json.loads(q1.get())
+            if value["errors"]:
+                d["trt"]=value["errors"][0]["message"]
+                print(d["trt"])
+            else:
+                d["trt"]= value["order"]
+        except:
+            d["trt"] = "ERROR"
+        try:
+            print(json.loads(q2.get()))
+            d[self.exchange_list[1]] = json.loads(q2.get())["order"]
+            print("ciaone",d[self.exchange_list[1]])
+        except:
+            d[self.exchange_list[1]] = "ERROR"
 
-            return d
+        return d
