@@ -87,8 +87,6 @@ def main():
         bnb_thread.join()
         trt_thread.join()
         resp_bnb = bnb_que.get()
-        if resp_bnb == 0:
-            continue
         resp_trt = trt_que.get()
         _query_time = time.time() - _query_time
         loaded_json_trt = json.loads(resp_trt)
@@ -120,6 +118,10 @@ def main():
                 (bids_trt * (1 + taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb))))
             depth = min(loaded_json_trt['bids'][0]['amount'],
                         float(resp_bnb['asks'][0][0]))
+            balance = min(all_balance["trtbtc"], all_balance["bnbeur"] / asks_krk)
+            if balance < depth:
+                depth = balance
+                print(f"{Fore.CYAN}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
             print("[#] DEPTH %f BTC" % depth)
             eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
             prod = eff / (depth * bids_trt)
@@ -148,9 +150,9 @@ def main():
                 (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt))))
             depth = min(loaded_json_trt['asks'][0]['amount'],
                         float(resp_bnb['bids'][0][0]))
-            balance=min(all_balance["bnbbtc"],all_balance["trteur"]/asks_trt)
-            if balance<depth:
-                depth=balance
+            balance = min(all_balance["bnbbtc"], all_balance["trteur"] / asks_trt)
+            if balance < depth:
+                depth = balance
                 print(f"{Fore.CYAN}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
 
             print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
@@ -212,13 +214,14 @@ def query(exchange, params, apikey, secret):
         return resp_krk.text
     elif exchange == "bnb":
         client = Client(apikey, secret)
-        try:
-            resp_bnb = client.get_order_book(symbol="BTCEUR")
-        except requests.exceptions.ConnectionError:
-            print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
-            resp_bnb = 0
-            pass
-        return resp_bnb
+
+        while 1:
+            try:
+                resp_bnb = client.get_order_book(symbol="BTCEUR")
+                return resp_bnb
+            except requests.exceptions.ConnectionError:
+                print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
+                time.sleep(1)
 
 
 if __name__ == "__main__":
