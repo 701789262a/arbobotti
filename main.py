@@ -1,8 +1,9 @@
+import datetime
 import json
 import queue
 import time
 from threading import Thread
-import datetime
+
 import pandas
 import requests
 from binance.client import Client
@@ -64,7 +65,7 @@ def main():
         exchangelist[0].upper(), taker_fee_trt, exchangelist[1].upper(), taker_fee_bnb))
     checkbalance = True
     while 1:
-        print(f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}"%(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
+        print(f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}" % (datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
         if checkbalance:
             print(f"{Fore.YELLOW}[#] RETRIEVING BALANCE{Style.RESET_ALL}")
             all_balance = op.balancethreading()
@@ -86,6 +87,8 @@ def main():
         bnb_thread.join()
         trt_thread.join()
         resp_bnb = bnb_que.get()
+        if resp_bnb == 0:
+            continue
         resp_trt = trt_que.get()
         _query_time = time.time() - _query_time
         loaded_json_trt = json.loads(resp_trt)
@@ -99,14 +102,14 @@ def main():
         print(f"[i] BID %s : %.2f                              BTC BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
             exchangelist[0].upper(), bids_trt, all_balance["trtbtc"]))
         print("[i]                           DIFFERENCE:", round(bids_trt - asks_krk, 2))
-        print(f"[i]                     DIFFERENCE + FEE: {Fore.RED}%.2f{Style.RESET_ALL}"
+        print(f"[i]                           DIFF + FEE: {Fore.RED}%.2f{Style.RESET_ALL}"
               % (round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2)))
         print(f"[i] ASK %s : %.2f                              EUR BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
             exchangelist[0].upper(), asks_trt, all_balance["trteur"]))
         print(f"[i] BID %s : %.2f                              BTC BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
             exchangelist[1].upper(), bids_krk, all_balance["bnbbtc"]))
         print("[i]                           DIFFERENCE:", round(bids_krk - asks_trt, 2))
-        print(f"[i]                     DIFFERENCE + FEE: {Fore.RED}%.2f{Style.RESET_ALL}"
+        print(f"[i]                           DIFF + FEE: {Fore.RED}%.2f{Style.RESET_ALL}"
               % (round((bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), 2)))
         print("[i] FETCHED FEE       %s: %.4f%%;      %s: %.4f%%" % (
             exchangelist[0].upper(), taker_fee_trt * 100, exchangelist[1].upper(), taker_fee_bnb * 100))
@@ -140,12 +143,17 @@ def main():
                     status = op.orderthreading(resp_dict["trt"][0], resp_dict[exchangelist[1]])  # executed or success
 
         elif (bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)) > 0:
-            print(f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f" % (
+            print(f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f{Style.RESET_ALL}" % (
                 asks_trt, bids_krk, exchangelist[1].capitalize(), bids_krk - asks_trt,
                 (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt))))
             depth = min(loaded_json_trt['asks'][0]['amount'],
                         float(resp_bnb['bids'][0][0]))
-            print("[!] DEPTH %f BTC" % depth)
+            balance=min(all_balance["bnbbtc"],all_balance["trteur"]/asks_trt)
+            if balance<depth:
+                depth=balance
+                print(f"{Fore.CYAN}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
+
+            print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
             eff = (depth * bids_krk * (1 - taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
             prod = eff / (depth * bids_krk)
             print("[i] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
@@ -204,7 +212,12 @@ def query(exchange, params, apikey, secret):
         return resp_krk.text
     elif exchange == "bnb":
         client = Client(apikey, secret)
-        resp_bnb = client.get_order_book(symbol="BTCEUR")
+        try:
+            resp_bnb = client.get_order_book(symbol="BTCEUR")
+        except requests.exceptions.ConnectionError:
+            print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
+            resp_bnb = 0
+            pass
         return resp_bnb
 
 
