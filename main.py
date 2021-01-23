@@ -2,7 +2,7 @@ import json
 import queue
 import time
 from threading import Thread
-
+import datetime
 import pandas
 import requests
 from binance.client import Client
@@ -64,6 +64,7 @@ def main():
         exchangelist[0].upper(), taker_fee_trt, exchangelist[1].upper(), taker_fee_bnb))
     checkbalance = True
     while 1:
+        print(f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}"%(datetime.datetime.now()))
         if checkbalance:
             print(f"{Fore.YELLOW}[#] RETRIEVING BALANCE{Style.RESET_ALL}")
             all_balance = op.balancethreading()
@@ -117,7 +118,7 @@ def main():
             depth = min(loaded_json_trt['bids'][0]['amount'],
                         float(resp_bnb['asks'][0][0]))
             print("[#] DEPTH %f BTC" % depth)
-            eff = (depth * bids_trt * (1 + taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
+            eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
             prod = eff / (depth * bids_trt)
             print("[#] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
             print(f"[#] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_krk * depth, depth))
@@ -145,7 +146,7 @@ def main():
             depth = min(loaded_json_trt['asks'][0]['amount'],
                         float(resp_bnb['bids'][0][0]))
             print("[!] DEPTH %f BTC" % depth)
-            eff = (depth * bids_krk * (1 + taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
+            eff = (depth * bids_krk * (1 - taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
             prod = eff / (depth * bids_krk)
             print("[i] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
             print(f"[i] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_trt * depth, depth))
