@@ -113,6 +113,7 @@ def main():
             exchangelist[0].upper(), taker_fee_trt * 100, exchangelist[1].upper(), taker_fee_bnb * 100))
 
         if (bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)) > 0:
+            low_balance = False
             print(f"{Fore.CYAN}[#] %.2f < %.2f BUY %s | SELL TRT DIFF: %.2f (MENO FEE): %.3f" % (
                 asks_krk, bids_trt, exchangelist[1].upper(), bids_trt - asks_krk,
                 (bids_trt * (1 + taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb))))
@@ -121,30 +122,37 @@ def main():
             balance = min(all_balance["trtbtc"], all_balance["bnbeur"] / asks_krk)
             if balance < depth:
                 depth = balance
-                print(f"{Fore.CYAN}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
-            print("[#] DEPTH %f BTC" % depth)
-            eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
-            prod = eff / (depth * bids_trt)
-            print("[#] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
-            print(f"[#] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_krk * depth, depth))
-            last_ask = asks_krk
-            last_bid = bids_trt
-            if prod * 100 > prod_threshold:
-                checkbalance = True
-                print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
-                resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, last_bid, "buy", "bnb", "BTCEUR", depth,
-                                              last_ask)
+                print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
+                if depth == 0:
+                    print(f"{Fore.RED}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
+                    low_balance = True
+            if not low_balance:
+                print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
+                eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
+                prod = eff / (depth * bids_trt)
+                print("[#] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
+                print(f"[#] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_krk * depth, depth))
+                last_ask = asks_krk
+                last_bid = bids_trt
+                if prod * 100 > prod_threshold:
+                    checkbalance = True
+                    print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
+                    resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, last_bid, "buy", "bnb", "BTCEUR",
+                                                  depth,
+                                                  last_ask)
 
-                if resp_dict['bnb'] != "ERROR" or resp_dict['trt'][1] == "ERROR":
-                    print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
-                        resp_dict["trt"][0].upper(), resp_dict["bnb"]))
-                else:
-                    print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
-                        resp_dict["trt"][0], resp_dict["bnb"]))
-                    time.sleep(sleep_check_order)
-                    status = op.orderthreading(resp_dict["trt"][0], resp_dict[exchangelist[1]])  # executed or success
+                    if resp_dict['bnb'] != "ERROR" or resp_dict['trt'][1] == "ERROR":
+                        print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
+                            resp_dict["trt"][0].upper(), resp_dict["bnb"]))
+                    else:
+                        print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
+                            resp_dict["trt"][0], resp_dict["bnb"]))
+                        time.sleep(sleep_check_order)
+                        status = op.orderthreading(resp_dict["trt"][0],
+                                                   resp_dict[exchangelist[1]])  # executed or success
 
         elif (bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)) > 0:
+            low_balance = False
             print(f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f{Style.RESET_ALL}" % (
                 asks_trt, bids_krk, exchangelist[1].capitalize(), bids_krk - asks_trt,
                 (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt))))
@@ -154,27 +162,31 @@ def main():
             if balance < depth:
                 depth = balance
                 print(f"{Fore.CYAN}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
-
-            print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
-            eff = (depth * bids_krk * (1 - taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
-            prod = eff / (depth * bids_krk)
-            print("[i] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
-            print(f"[i] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_trt * depth, depth))
-            last_ask = asks_trt
-            last_bid = bids_krk
-            if prod * 100 > prod_threshold:
-                checkbalance = True
-                print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
-                resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
-                                              "sell", exchangelist[1], "BTCEUR", depth, last_bid)
-                if resp_dict['bnb'] != "ERROR" or resp_dict['trt'][1] == "ERROR":
-                    print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
-                        resp_dict["trt"][0].upper(), resp_dict["bnb"]))
-                else:
-                    print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
-                        resp_dict["trt"][0], resp_dict["bnb"]))
-                    time.sleep(sleep_check_order)
-                    status = op.orderthreading(resp_dict["trt"][0], resp_dict[exchangelist[1]])  # executed or success
+                if depth == 0:
+                    print(f"{Fore.MAGENTA}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
+                    low_balance = True
+            if not low_balance:
+                print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
+                eff = (depth * bids_krk * (1 - taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
+                prod = eff / (depth * bids_krk)
+                print("[i] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
+                print(f"[i] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_trt * depth, depth))
+                last_ask = asks_trt
+                last_bid = bids_krk
+                if prod * 100 > prod_threshold:
+                    checkbalance = True
+                    print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
+                    resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
+                                                  "sell", exchangelist[1], "BTCEUR", depth, last_bid)
+                    if resp_dict['bnb'] != "ERROR" or resp_dict['trt'][1] == "ERROR":
+                        print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
+                            resp_dict["trt"][0].upper(), resp_dict["bnb"]))
+                    else:
+                        print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
+                            resp_dict["trt"][0], resp_dict["bnb"]))
+                        time.sleep(sleep_check_order)
+                        status = op.orderthreading(resp_dict["trt"][0],
+                                                   resp_dict[exchangelist[1]])  # executed or success
 
         _end_time = time.time()
         if last_ask != 0:
