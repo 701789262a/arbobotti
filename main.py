@@ -64,7 +64,7 @@ def main():
         exchangelist[0].upper(), taker_fee_trt, exchangelist[1].upper(), taker_fee_bnb))
     checkbalance = True
     while 1:
-        print(f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}"%(datetime.datetime.now()))
+        print(f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}"%(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
         if checkbalance:
             print(f"{Fore.YELLOW}[#] RETRIEVING BALANCE{Style.RESET_ALL}")
             all_balance = op.balancethreading()
