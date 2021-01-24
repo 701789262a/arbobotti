@@ -167,6 +167,69 @@ class Operation:
         except Exception:
             pass
         return d
+    def cancel(self,exchange,order):
+        nonce = str(int(time.time() * 1e6))
+        d = dict()
+        if exchange == "trt":
+            url = "https://api.therocktrading.com/v1/funds/BTCEUR/orders/" + order
+            signature = hmac.new(self.secret_trt.encode(), msg=(str(nonce) + url).encode(),
+                                 digestmod=hashlib.sha512).hexdigest()
+            _headers = {"Content-Type": "application/json", "X-TRT-KEY": self.apikey_trt,
+                        "X-TRT-SIGN": signature, "X-TRT-NONCE": nonce}
+            resp = requests.delete(url, headers=_headers)
+            d["status_trt"] = json.loads(resp.text)["status"]
+            return d
+        elif exchange == "krk":
+            print("FUNCTION NOT ENABLED ON KRAKEN EXCHANGE, USE OTHER EXCHANGES FOR THIS FEATURE TO WORK")
+            exit(2)
+            api = krakenex.API(self.apikey_krk, self.secret_krk)
+            k = KrakenAPI(api)
+            resp = pd.DataFrame(k.get_trade_volume("BTCEUR")[2])
+            d["feekrk"] = resp["XXBTZEUR"][0]
+            return d
+        elif exchange == "bnb":
+            client = Client(self.apikey_bnb, self.secret_bnb)
+            resp = client.cancel_order(symbol="BTCEUR", orderId=order)
+            d["status_bnb"] = resp["status"]
+            return d
+
+    def cancelthreading(self,order1,order2):
+        d = dict()
+        if "trt" in self.exchange_list:
+            trt_cancel = Thread(target=lambda q, arg1, arg2: q.put(
+                self.cancel(arg1, arg2)),
+                               args=(q1, "trt", order1))
+            trt_cancel.start()
+        if "krk" in self.exchange_list:
+            krk_cancel = Thread(target=lambda q, arg1, arg2: q.put(
+                self.cancel(arg1, arg2)),
+                               args=(q2, "krk", order2))
+            krk_cancel.start()
+        if "bnb" in self.exchange_list:
+            bnb_cancel = Thread(target=lambda q, arg1, arg2: q.put(
+                self.cancel(arg1, arg2)),
+                               args=(q2, "bnb", order2))
+            bnb_cancel.start()
+        try:
+            trt_cancel.join()
+
+            d.update(q1.get())
+        except:
+            pass
+        try:
+            krk_cancel.join()
+
+            d.update(q2.get())
+        except:
+            pass
+        try:
+            bnb_cancel.join()
+
+            d.update(q2.get())
+        except Exception:
+            pass
+        return d
+
     def order(self,exchange,order):
         nonce = str(int(time.time() * 1e6))
         d = dict()

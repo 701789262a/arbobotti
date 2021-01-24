@@ -149,7 +149,14 @@ def main():
                             resp_dict["trt"][0], resp_dict["bnb"]))
                         time.sleep(sleep_check_order)
                         status = op.orderthreading(resp_dict["trt"][0],
-                                                   resp_dict[exchangelist[1]])  # executed or success
+                                                   resp_dict[exchangelist[1]])  # EXECUTED OR SUCCESS
+                        # IF BOTH ORDER ARE NOT COMPLETED, DELETE ORDER
+                        if(status["trt"]!="executed"or status["bnb"]=="NEW"):
+                            pass
+                            op.cancelthreading(resp_dict["trt"],resp_dict["bnb"])
+                            # ONE OR THE OTHER IS NOT COMPLETED
+
+
 
         elif (bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)) > 0:
             low_balance = False
@@ -187,6 +194,9 @@ def main():
                         time.sleep(sleep_check_order)
                         status = op.orderthreading(resp_dict["trt"][0],
                                                    resp_dict[exchangelist[1]])  # executed or success
+                        if (status["trt"] != "executed" or status["bnb"] == "NEW"):
+                            pass
+                            op.cancelthreading(resp_dict["trt"], resp_dict["bnb"])
 
         _end_time = time.time()
         if last_ask != 0:
@@ -203,7 +213,7 @@ def main():
             taker_fee_trt = float(fee["fee" + exchangelist[0]]) / 100
             taker_fee_krk = float(fee["fee" + exchangelist[1]]) / 100
 
-        print("[-] ------------------------------------------------ %d ms (%d ms(q) + %d ms(p))" % (
+        print("[-] ------------------------------------------------- %d ms (%d ms(q) + %d ms(p))" % (
             int((_end_time - _start_time) * 1000), int(_query_time * 1000),
             (int((_end_time - _start_time) * 1000) - int(_query_time * 1000))))
 
