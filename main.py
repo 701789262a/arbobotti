@@ -152,7 +152,6 @@ def main():
                                                    resp_dict[exchangelist[1]])  # EXECUTED OR SUCCESS
                         # IF BOTH ORDER ARE NOT COMPLETED, DELETE ORDER
                         if(status["trt"]!="executed"or status["bnb"]=="NEW"):
-                            pass
                             op.cancelthreading(resp_dict["trt"],resp_dict["bnb"])
                             # ONE OR THE OTHER IS NOT COMPLETED
 
@@ -195,7 +194,6 @@ def main():
                         status = op.orderthreading(resp_dict["trt"][0],
                                                    resp_dict[exchangelist[1]])  # executed or success
                         if (status["trt"] != "executed" or status["bnb"] == "NEW"):
-                            pass
                             op.cancelthreading(resp_dict["trt"], resp_dict["bnb"])
 
         _end_time = time.time()
