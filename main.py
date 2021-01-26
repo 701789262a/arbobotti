@@ -222,7 +222,7 @@ def main():
             print(f"{Fore.YELLOW}[!] SAVING...{Style.RESET_ALL}")
             if _list:
                 save_data(_list)
-        if int(_end_time % save_trade_interval):
+        if int(_end_time % save_trade_interval==0):
             print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
             if _trade_list:
                 save_trade(_trade_list)
