@@ -13,12 +13,13 @@ from colorama import Style
 from trade import Operation
 
 _list = []
-exchangelist = []
+_trade_list = []
+exchange_list = []
 login_data = json.loads(open("keydict.txt", "r").readline().strip().replace("\n", ""))
 try:
     trt_apikey = str(login_data["trt_apikey"])
     trt_secret = str(login_data["trt_secret"])
-    exchangelist.append("trt")
+    exchange_list.append("trt")
 except:
     trt_apikey = ""
     trt_secret = ""
@@ -26,7 +27,7 @@ except:
 try:
     krk_apikey = str(login_data["krk_apikey"])
     krk_secret = str(login_data["krk_secret"])
-    exchangelist.append("krk")
+    exchange_list.append("krk")
 except:
     krk_apikey = ""
     krk_secret = ""
@@ -34,7 +35,7 @@ except:
 try:
     bnb_apikey = str(login_data["bnb_apikey"])
     bnb_secret = str(login_data["bnb_secret"])
-    exchangelist.append("bnb")
+    exchange_list.append("bnb")
 except:
     bnb_apikey = ""
     bnb_secret = ""
@@ -44,6 +45,7 @@ taker_fee_krk = .0024
 taker_fee_trt = .002
 taker_fee_bnb = .00075
 save_interval = 20
+save_trade_interval = 180
 fee_interval = 100
 rate = 100
 prod_threshold = 0.1
@@ -57,12 +59,12 @@ all_balance = dict()
 
 
 def main():
-    op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret, bnb_apikey, bnb_secret, exchangelist)
+    op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret, bnb_apikey, bnb_secret, exchange_list)
     fee = op.feethreading()
     taker_fee_trt = float(fee["feetrt"]) / 1000
-    taker_fee_bnb = 75 * float(fee["fee" + exchangelist[1]]) / 100
+    taker_fee_bnb = 75 * float(fee["fee" + exchange_list[1]]) / 100
     print("GOT FEE FROM EXCHANGE; %s: %f;    %s: %f" % (
-        exchangelist[0].upper(), taker_fee_trt, exchangelist[1].upper(), taker_fee_bnb))
+        exchange_list[0].upper(), taker_fee_trt, exchange_list[1].upper(), taker_fee_bnb))
     checkbalance = True
     while 1:
         print(f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}" % (datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
@@ -96,26 +98,26 @@ def main():
         bids_trt = round(loaded_json_trt['bids'][0]['price'], 2)
 
         print(f"[i] ASK %s : %.2f                              EUR BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-            exchangelist[1].upper(), asks_krk, all_balance["bnbeur"]))
+            exchange_list[1].upper(), asks_krk, all_balance["bnbeur"]))
         print(f"[i] BID %s : %.2f                              BTC BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-            exchangelist[0].upper(), bids_trt, all_balance["trtbtc"]))
+            exchange_list[0].upper(), bids_trt, all_balance["trtbtc"]))
         print("[i]                           DIFFERENCE:", round(bids_trt - asks_krk, 2))
         print(f"[i]                           DIFF + FEE: {Fore.RED}%.2f{Style.RESET_ALL}"
               % (round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2)))
         print(f"[i] ASK %s : %.2f                              EUR BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-            exchangelist[0].upper(), asks_trt, all_balance["trteur"]))
+            exchange_list[0].upper(), asks_trt, all_balance["trteur"]))
         print(f"[i] BID %s : %.2f                              BTC BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-            exchangelist[1].upper(), bids_krk, all_balance["bnbbtc"]))
+            exchange_list[1].upper(), bids_krk, all_balance["bnbbtc"]))
         print("[i]                           DIFFERENCE:", round(bids_krk - asks_trt, 2))
         print(f"[i]                           DIFF + FEE: {Fore.RED}%.2f{Style.RESET_ALL}"
               % (round((bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), 2)))
         print("[i] FETCHED FEE       %s: %.4f%%;      %s: %.4f%%" % (
-            exchangelist[0].upper(), taker_fee_trt * 100, exchangelist[1].upper(), taker_fee_bnb * 100))
+            exchange_list[0].upper(), taker_fee_trt * 100, exchange_list[1].upper(), taker_fee_bnb * 100))
 
         if (bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)) > 0:
             low_balance = False
             print(f"{Fore.CYAN}[#] %.2f < %.2f BUY %s | SELL TRT DIFF: %.2f (MENO FEE): %.3f" % (
-                asks_krk, bids_trt, exchangelist[1].upper(), bids_trt - asks_krk,
+                asks_krk, bids_trt, exchange_list[1].upper(), bids_trt - asks_krk,
                 (bids_trt * (1 + taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb))))
             depth = min(loaded_json_trt['bids'][0]['amount'],
                         float(resp_bnb['asks'][0][0]))
@@ -144,23 +146,30 @@ def main():
                     if resp_dict['bnb'] != "ERROR" or resp_dict['trt'][1] == "ERROR":
                         print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"][0].upper(), resp_dict["bnb"]))
+                        status = op.orderthreading(resp_dict["trt"][0],
+                                                   resp_dict[exchange_list[1]])
+                        if status["trt"] != "executed" or status["bnb"] == "NEW":
+                            op.cancelthreading(resp_dict["trt"], resp_dict["bnb"])
                     else:
                         print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"][0], resp_dict["bnb"]))
                         time.sleep(sleep_check_order)
                         status = op.orderthreading(resp_dict["trt"][0],
-                                                   resp_dict[exchangelist[1]])  # EXECUTED OR SUCCESS
+                                                   resp_dict[exchange_list[1]])
+                        _trade_list.append(
+                            [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "buy", exchange_list[1], depth,
+                             last_ask,
+                             "sell", "trt", last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
+                             all_balance["bnbeur"], all_balance["trteur"]])
+                        if status["trt"] != "executed" or status["bnb"] == "NEW":
+                            op.cancelthreading(resp_dict["trt"], resp_dict["bnb"])
+                        # EXECUTED OR SUCCESS
                         # IF BOTH ORDER ARE NOT COMPLETED, DELETE ORDER
-                        if(status["trt"]!="executed"or status["bnb"]=="NEW"):
-                            op.cancelthreading(resp_dict["trt"],resp_dict["bnb"])
-                            # ONE OR THE OTHER IS NOT COMPLETED
-
-
 
         elif (bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)) > 0:
             low_balance = False
             print(f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f{Style.RESET_ALL}" % (
-                asks_trt, bids_krk, exchangelist[1].capitalize(), bids_krk - asks_trt,
+                asks_trt, bids_krk, exchange_list[1].capitalize(), bids_krk - asks_trt,
                 (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt))))
             depth = min(loaded_json_trt['asks'][0]['amount'],
                         float(resp_bnb['bids'][0][0]))
@@ -183,17 +192,25 @@ def main():
                     checkbalance = True
                     print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
                     resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
-                                                  "sell", exchangelist[1], "BTCEUR", depth, last_bid)
+                                                  "sell", exchange_list[1], "BTCEUR", depth, last_bid)
                     if resp_dict['bnb'] != "ERROR" or resp_dict['trt'][1] == "ERROR":
                         print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"][0].upper(), resp_dict["bnb"]))
+                        status = op.orderthreading(resp_dict["trt"][0],
+                                                   resp_dict[exchange_list[1]])
+                        if status["trt"] != "executed" or status["bnb"] == "NEW":
+                            op.cancelthreading(resp_dict["trt"], resp_dict["bnb"])
                     else:
                         print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"][0], resp_dict["bnb"]))
                         time.sleep(sleep_check_order)
                         status = op.orderthreading(resp_dict["trt"][0],
-                                                   resp_dict[exchangelist[1]])  # executed or success
-                        if (status["trt"] != "executed" or status["bnb"] == "NEW"):
+                                                   resp_dict[exchange_list[1]])  # executed or success
+                        _trade_list.append(
+                            [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "buy", "trt", depth, last_ask,
+                             "sell", exchange_list[1], last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
+                             all_balance["bnbeur"], all_balance["trteur"]])
+                        if status["trt"] != "executed" or status["bnb"] == "NEW":
                             op.cancelthreading(resp_dict["trt"], resp_dict["bnb"])
 
         _end_time = time.time()
@@ -204,25 +221,38 @@ def main():
         if int(_end_time % save_interval) == 0:
             print(f"{Fore.YELLOW}[!] SAVING...{Style.RESET_ALL}")
             if _list:
-                save(_list)
+                save_data(_list)
+        if int(_end_time % save_trade_interval):
+            print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
+            if _trade_list:
+                save_trade(_trade_list)
         if int(_end_time % fee_interval) == 0:
             print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
             fee = op.feethreading()
-            taker_fee_trt = float(fee["fee" + exchangelist[0]]) / 100
-            taker_fee_krk = float(fee["fee" + exchangelist[1]]) / 100
+            taker_fee_trt = float(fee["fee" + exchange_list[0]]) / 100
+            taker_fee_krk = float(fee["fee" + exchange_list[1]]) / 100
 
         print("[-] ------------------------------------------------- %d ms (%d ms(q) + %d ms(p))" % (
             int((_end_time - _start_time) * 1000), int(_query_time * 1000),
             (int((_end_time - _start_time) * 1000) - int(_query_time * 1000))))
 
 
-def save(list):
-    df = pandas.DataFrame(list)
+def save_data(_list):
+    df = pandas.DataFrame(_list)
     try:
         df.to_csv('file.csv', index=False, sep=';', mode='a', header=False, decimal=',')
-    except:
+    except FileNotFoundError:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO{Style.RESET_ALL}")
-    list.clear()
+    _list.clear()
+
+
+def save_trade(_list):
+    df = pandas.DataFrame(_list)
+    try:
+        df.to_csv('file_trade.csv', index=False, sep=';', mode='a', header=False, decimal=',')
+    except FileNotFoundError:
+        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST{Style.RESET_ALL}")
+    _list.clear()
 
 
 def query(exchange, params, apikey, secret):
