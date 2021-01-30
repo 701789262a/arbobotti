@@ -47,7 +47,7 @@ class Operation:
                         "X-TRT-SIGN": signature, "X-TRT-NONCE": nonce}
             resp = requests.post(url, data=json.dumps(payload_trt), headers=_headers)
             print("trtciaone", resp.text)
-            return resp.text
+            return dict(resp.text)["status"]
         elif exchange == "krk":
             api = krakenex.API(self.apikey_krk, self.secret_krk)
             k = KrakenAPI(api)
@@ -72,7 +72,7 @@ class Operation:
                 print("ciaone", order)
                 print("ERRORE")
                 order = "ERR"
-            return order["status"]
+            return dict(order)["status"]
 
     def balance(self, exchange):
         nonce = str(int(time.time() * 1e6))
@@ -357,15 +357,15 @@ class Operation:
             pass
 
         try:
-            value = json.loads(q1.get())
+            value = q1.get()
             if value["errors"]:
                 d["trt"] = value["errors"][0]["message"], "ERROR"
             else:
-                d["trt"] = value["order"]
+                d["trt"] = value
         except:
             d["trt"] = "ERROR"
         try:
-            d[self.exchange_list[1]] = json.loads(q2.get())["order"]
+            d[self.exchange_list[1]] = q2.get()
         except:
             d[self.exchange_list[1]] = "ERROR"
 

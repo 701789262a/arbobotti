@@ -46,7 +46,7 @@ save_trade_interval = 50
 fee_interval = 100
 rate = 5
 prod_threshold = 0.01
-sleep_check_order = 1
+sleep_check_order = 2
 min_balance = 10
 
 bnb_que = queue.Queue()
@@ -144,19 +144,15 @@ def main():
                             resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                         op.cancelthreading()
                     else:
-                        print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
+                        print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER STATUS:[%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"][0], resp_dict["bnb"]))
                         time.sleep(sleep_check_order)
-                        status = op.orderthreading(resp_dict["trt"][0],
-                                                   resp_dict[exchange_list[1]])
                         _trade_list.append(
                             [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "buy", exchange_list[1], depth,
                              last_ask,
                              "sell", "trt", last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
                              all_balance["bnbeur"], all_balance["trteur"]])
-                        if status["trt"] != "executed" or status["bnb"] == "NEW":
-                            print(f"{Fore.RED}[$] DELETE UNEXPECTED ORDER{Style.RESET_ALL}")
-                            op.cancelthreading()
+                        op.cancelthreading()
                         # EXECUTED OR SUCCESS
                         # IF BOTH ORDER ARE NOT COMPLETED, DELETE ORDER
 
@@ -195,15 +191,11 @@ def main():
                         print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"][0], resp_dict["bnb"]))
                         time.sleep(sleep_check_order)
-                        status = op.orderthreading(resp_dict["trt"][0],
-                                                   resp_dict[exchange_list[1]])  # executed or success
                         _trade_list.append(
                             [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "buy", "trt", depth, last_ask,
                              "sell", exchange_list[1], last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
                              all_balance["bnbeur"], all_balance["trteur"]])
-                        if status["trt"] != "executed" or status["bnb"] == "NEW":
-                            print(f"{Fore.RED}[$] DELETE UNEXPECTED ORDER{Style.RESET_ALL}")
-                            op.cancelthreading()
+                        op.cancelthreading()
 
         _end_time = time.time()
         totaltime = _end_time - _start_time
@@ -227,7 +219,7 @@ def main():
             taker_fee_krk = float(fee["fee" + exchange_list[1]]) / 100
 
         print(
-            "[-] ------------------------------------------------- %d ms (%d ms(q) + %d ms(p)) - avg last %d (%d ms) - global avg (%d ms)" % (
+            f"[-] ------------------------------------------------- {Fore.YELLOW}%d ms{Style.RESET_ALL} (%d ms(q) + %d ms(p)) - avg last %d ({Fore.YELLOW}%d ms{Style.RESET_ALL}) - global avg ({Fore.YELLOW}%d ms{Style.RESET_ALL})" % (
                 int(totaltime * 1000), int(_query_time * 1000),
                 (int(totaltime * 1000) - int(_query_time * 1000)), min(100, len(time_list)),
                 sum(time_list[-100:]) / min(100, len(time_list)), sum(time_list) / len(time_list)))
