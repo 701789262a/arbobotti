@@ -203,8 +203,6 @@ def main():
         _end_time = time.time()
         totaltime = _end_time - _start_time
         time_list.append(int(totaltime*1000))
-        if len(time_list) > 100:
-            time_list.pop(0)
         if last_ask != 0:
             _list.append([_end_time, time.time(), last_ask, last_bid, depth, eff, int(_query_time * 1000),
                           (int((_end_time - _start_time) * 1000) - int(_query_time * 1000)),
@@ -223,9 +221,9 @@ def main():
             taker_fee_trt = float(fee["fee" + exchange_list[0]]) / 100
             taker_fee_krk = float(fee["fee" + exchange_list[1]]) / 100
 
-        print("[-] ------------------------------------------------- %d ms (%d ms(q) + %d ms(p)) - avg last %d = %d" % (
+        print("[-] ------------------------------------------------- %d ms (%d ms(q) + %d ms(p)) - avg last %d = %d ms - global avg = %d ms" % (
             int(totaltime * 1000), int(_query_time * 1000),
-            (int(totaltime * 1000) - int(_query_time * 1000)), len(time_list), sum(time_list) / len(time_list)))
+            (int(totaltime * 1000) - int(_query_time * 1000)), len(time_list), sum(time_list[-100:]) / min(100,len(time_list)), sum(time_list)/len(time_list)))
 
 
 def save_data(_list):
