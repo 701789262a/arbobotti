@@ -2,11 +2,8 @@ import datetime
 import json
 import queue
 import time
-from threading import Thread
 
 import pandas
-import requests
-from binance.client import Client
 from colorama import Fore
 from colorama import Style
 
@@ -55,6 +52,7 @@ min_balance = 10
 bnb_que = queue.Queue()
 trt_que = queue.Queue()
 all_balance = dict()
+time_list = []
 
 
 def main():
@@ -79,7 +77,7 @@ def main():
         _query_time = time.time()
         price_dict = op.querythread()
         _query_time = time.time() - _query_time
-        asks_data_bnb=price_dict["bnb"]['asks'][0][0]
+        asks_data_bnb = price_dict["bnb"]['asks'][0][0]
         bids_data_bnb = price_dict["bnb"]['bids'][0][0]
 
         asks_data_trt = price_dict["trt"]['asks'][0]
@@ -203,6 +201,10 @@ def main():
                             op.cancelthreading()
 
         _end_time = time.time()
+        totaltime = _end_time - _start_time
+        time_list.append(int(totaltime*1000))
+        if len(time_list) > 100:
+            time_list.pop(0)
         if last_ask != 0:
             _list.append([_end_time, time.time(), last_ask, last_bid, depth, eff, int(_query_time * 1000),
                           (int((_end_time - _start_time) * 1000) - int(_query_time * 1000)),
@@ -221,9 +223,9 @@ def main():
             taker_fee_trt = float(fee["fee" + exchange_list[0]]) / 100
             taker_fee_krk = float(fee["fee" + exchange_list[1]]) / 100
 
-        print("[-] ------------------------------------------------- %d ms (%d ms(q) + %d ms(p))" % (
-            int((_end_time - _start_time) * 1000), int(_query_time * 1000),
-            (int((_end_time - _start_time) * 1000) - int(_query_time * 1000))))
+        print("[-] ------------------------------------------------- %d ms (%d ms(q) + %d ms(p)) - avg last %d = %d" % (
+            int(totaltime * 1000), int(_query_time * 1000),
+            (int(totaltime * 1000) - int(_query_time * 1000)), len(time_list), sum(time_list) / len(time_list)))
 
 
 def save_data(_list):
@@ -242,8 +244,6 @@ def save_trade(_list):
     except FileNotFoundError:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST{Style.RESET_ALL}")
     _list.clear()
-
-
 
 
 if __name__ == "__main__":
