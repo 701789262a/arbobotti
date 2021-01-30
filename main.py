@@ -3,7 +3,7 @@ import json
 import queue
 import time
 from threading import Thread
-
+import os
 import pandas
 import requests
 from binance.client import Client
@@ -42,13 +42,13 @@ except:
     pass
 
 taker_fee_krk = .0024
-taker_fee_trt = .002
+taker_fee_trt = .02
 taker_fee_bnb = .00075
 save_interval = 20
-save_trade_interval = 180
+save_trade_interval = 50
 fee_interval = 100
-rate = 100
-prod_threshold = 0.1
+rate = 5
+prod_threshold = 0.01
 sleep_check_order = 1
 
 _params_krk = {"pair": "BTCEUR", "count": "2"}
@@ -61,12 +61,13 @@ all_balance = dict()
 def main():
     op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret, bnb_apikey, bnb_secret, exchange_list)
     fee = op.feethreading()
-    taker_fee_trt = float(fee["feetrt"]) / 1000
+    taker_fee_trt = float(fee["feetrt"]) / 100
     taker_fee_bnb = 75 * float(fee["fee" + exchange_list[1]]) / 100
     print("GOT FEE FROM EXCHANGE; %s: %f;    %s: %f" % (
         exchange_list[0].upper(), taker_fee_trt, exchange_list[1].upper(), taker_fee_bnb))
     checkbalance = True
     while 1:
+
         print(f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}" % (datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
         if checkbalance:
             print(f"{Fore.YELLOW}[#] RETRIEVING BALANCE{Style.RESET_ALL}")
@@ -78,7 +79,6 @@ def main():
         time.sleep(1 / rate)
         _start_time = time.time()
         _query_time = time.time()
-
         bnb_thread = Thread(target=lambda q, arg1, arg2, arg3, arg4: q.put(query(arg1, arg2, arg3, arg4)),
                             args=(bnb_que, "bnb", _params_krk, bnb_apikey, bnb_secret))
         trt_thread = Thread(target=lambda q, arg1, arg2, arg3, arg4: q.put(query(arg1, arg2, arg3, arg4)),
@@ -143,13 +143,14 @@ def main():
                                                   depth,
                                                   last_ask)
 
-                    if resp_dict['bnb'] != "ERROR" or resp_dict['trt'][1] == "ERROR":
+                    if resp_dict["bnb"] != "ERROR" or resp_dict["trt"][1] == "ERROR":
                         print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                         status = op.orderthreading(resp_dict["trt"][0],
                                                    resp_dict[exchange_list[1]])
                         if status["trt"] != "executed" or status["bnb"] == "NEW":
-                            op.cancelthreading(resp_dict["trt"], resp_dict["bnb"])
+                            print(f"{Fore.RED}[$] DELETE UNEXPECTED ORDER{Style.RESET_ALL}")
+                            op.cancelthreading()
                     else:
                         print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"][0], resp_dict["bnb"]))
@@ -162,7 +163,8 @@ def main():
                              "sell", "trt", last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
                              all_balance["bnbeur"], all_balance["trteur"]])
                         if status["trt"] != "executed" or status["bnb"] == "NEW":
-                            op.cancelthreading(resp_dict["trt"], resp_dict["bnb"])
+                            print(f"{Fore.RED}[$] DELETE UNEXPECTED ORDER{Style.RESET_ALL}")
+                            op.cancelthreading()
                         # EXECUTED OR SUCCESS
                         # IF BOTH ORDER ARE NOT COMPLETED, DELETE ORDER
 
@@ -199,7 +201,8 @@ def main():
                         status = op.orderthreading(resp_dict["trt"][0],
                                                    resp_dict[exchange_list[1]])
                         if status["trt"] != "executed" or status["bnb"] == "NEW":
-                            op.cancelthreading(resp_dict["trt"], resp_dict["bnb"])
+                            print(f"{Fore.RED}[$] DELETE UNEXPECTED ORDER{Style.RESET_ALL}")
+                            op.cancelthreading()
                     else:
                         print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"][0], resp_dict["bnb"]))
@@ -211,7 +214,8 @@ def main():
                              "sell", exchange_list[1], last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
                              all_balance["bnbeur"], all_balance["trteur"]])
                         if status["trt"] != "executed" or status["bnb"] == "NEW":
-                            op.cancelthreading(resp_dict["trt"], resp_dict["bnb"])
+                            print(f"{Fore.RED}[$] DELETE UNEXPECTED ORDER{Style.RESET_ALL}")
+                            op.cancelthreading()
 
         _end_time = time.time()
         if last_ask != 0:
@@ -222,7 +226,7 @@ def main():
             print(f"{Fore.YELLOW}[!] SAVING...{Style.RESET_ALL}")
             if _list:
                 save_data(_list)
-        if int(_end_time % save_trade_interval==0):
+        if int(_end_time % save_trade_interval) == 0:
             print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
             if _trade_list:
                 save_trade(_trade_list)
@@ -235,6 +239,8 @@ def main():
         print("[-] ------------------------------------------------- %d ms (%d ms(q) + %d ms(p))" % (
             int((_end_time - _start_time) * 1000), int(_query_time * 1000),
             (int((_end_time - _start_time) * 1000) - int(_query_time * 1000))))
+
+
 
 
 def save_data(_list):
@@ -257,7 +263,10 @@ def save_trade(_list):
 
 def query(exchange, params, apikey, secret):
     if exchange == "trt":
-        resp_trt = requests.get('https://api.therocktrading.com/v1/funds/BTCEUR/orderbook', params=params)
+        try:
+            resp_trt = requests.get('https://api.therocktrading.com/v1/funds/BTCEUR/orderbook', params=params)
+        except requests.exceptions.ConnectionError:
+            print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
         return resp_trt.text
     elif exchange == "krk":
         resp_krk = requests.get('https://api.kraken.com/0/public/Depth', params=params)

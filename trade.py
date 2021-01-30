@@ -52,21 +52,22 @@ class Operation:
             resp = str(resp).replace("\'", "\"")
             return resp
         elif exchange == "bnb":
+            print (fund_id, side, amount,price)
             client = Client(self.apikey_bnb, self.secret_bnb)
-            try:
-                if side == "buy":
-                    order = client.order_limit_buy(
+
+            if side == "buy":
+                order = client.order_limit_buy(
                         symbol=fund_id,
-                        quantity=amount,
+                        quantity=round(amount,5),
                         price=price)
-                    print("ciaone", order)
-                elif side == "sell":
-                    order = client.order_limit_sell(
+                print("ciaone", order)
+            elif side == "sell":
+                order = client.order_limit_sell(
                         symbol=fund_id,
-                        quantity=amount,
+                        quantity=round(amount,5),
                         price=price)
-                    print("ciaone", order)
-            except Exception:
+                print("ciaone", order)
+                print("ERRORE")
                 order = "ERR"
             return order
 
@@ -167,11 +168,11 @@ class Operation:
         except Exception:
             pass
         return d
-    def cancel(self,exchange,order):
+    def cancel(self,exchange):
         nonce = str(int(time.time() * 1e6))
         d = dict()
         if exchange == "trt":
-            url = "https://api.therocktrading.com/v1/funds/BTCEUR/orders/" + order
+            url = "https://api.therocktrading.com/v1/funds/BTCEUR/orders/remove_all"
             signature = hmac.new(self.secret_trt.encode(), msg=(str(nonce) + url).encode(),
                                  digestmod=hashlib.sha512).hexdigest()
             _headers = {"Content-Type": "application/json", "X-TRT-KEY": self.apikey_trt,
@@ -189,26 +190,26 @@ class Operation:
             return d
         elif exchange == "bnb":
             client = Client(self.apikey_bnb, self.secret_bnb)
-            resp = client.cancel_order(symbol="BTCEUR", orderId=order)
+            resp = client.get_open_orders(symbol="BTCEUR",method="delete")
             d["status_bnb"] = resp["status"]
             return d
 
-    def cancelthreading(self,order1,order2):
+    def cancelthreading(self):
         d = dict()
         if "trt" in self.exchange_list:
             trt_cancel = Thread(target=lambda q, arg1, arg2: q.put(
-                self.cancel(arg1, arg2)),
-                               args=(q1, "trt", order1))
+                self.cancel(arg1)),
+                               args=(q1, "trt"))
             trt_cancel.start()
         if "krk" in self.exchange_list:
             krk_cancel = Thread(target=lambda q, arg1, arg2: q.put(
-                self.cancel(arg1, arg2)),
-                               args=(q2, "krk", order2))
+                self.cancel(arg1)),
+                               args=(q2, "krk"))
             krk_cancel.start()
         if "bnb" in self.exchange_list:
             bnb_cancel = Thread(target=lambda q, arg1, arg2: q.put(
-                self.cancel(arg1, arg2)),
-                               args=(q2, "bnb", order2))
+                self.cancel(arg1)),
+                               args=(q2, "bnb"))
             bnb_cancel.start()
         try:
             trt_cancel.join()
@@ -240,6 +241,8 @@ class Operation:
             _headers = {"Content-Type": "application/json", "X-TRT-KEY": self.apikey_trt,
                         "X-TRT-SIGN": signature, "X-TRT-NONCE": nonce}
             resp = requests.get(url, headers=_headers)
+
+            print("trt", resp)
             d["status_trt"] = json.loads(resp.text)["status"]
             return d
         elif exchange == "krk":
@@ -253,6 +256,7 @@ class Operation:
         elif exchange == "bnb":
             client = Client(self.apikey_bnb, self.secret_bnb)
             resp = client.get_order(symbol="BTCEUR",orderId=order)
+            print("binance", resp)
             d["status_bnb"] = resp["status"]
             return d
     def fee(self, exchange):
