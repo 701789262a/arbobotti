@@ -3,7 +3,7 @@ import json
 import queue
 import time
 from threading import Thread
-import os
+
 import pandas
 import requests
 from binance.client import Client
@@ -69,7 +69,6 @@ def main():
     checkbalance = True
     while 1:
 
-        print(f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}" % (datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
         if checkbalance:
             print(f"{Fore.YELLOW}[#] RETRIEVING BALANCE{Style.RESET_ALL}")
             all_balance = op.balancethreading()
@@ -97,6 +96,7 @@ def main():
         bids_krk = round(float(resp_bnb['bids'][0][0]), 2)
         asks_trt = round(loaded_json_trt['asks'][0]['price'], 2)
         bids_trt = round(loaded_json_trt['bids'][0]['price'], 2)
+        print(f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}" % (datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
 
         print(f"[i] ASK %s : %.2f                              EUR BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
             exchange_list[1].upper(), asks_krk, all_balance["bnbeur"]))
@@ -129,7 +129,7 @@ def main():
                 if depth == 0:
                     print(f"{Fore.RED}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                     low_balance = True
-            if not low_balance and (asks_krk * depth)>min():
+            if not low_balance and (asks_krk * depth) > min():
                 print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
                 eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
                 prod = eff / (depth * bids_trt)
@@ -168,7 +168,7 @@ def main():
         elif (bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)) > 0:
             low_balance = False
             print(f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f{Style.RESET_ALL}" % (
-                asks_trt, bids_krk, exchange_list[1].capitalize(), bids_krk - asks_trt,
+                asks_trt, bids_krk, exchange_list[1].upper(), bids_krk - asks_trt,
                 (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt))))
             depth = min(loaded_json_trt['asks'][0]['amount'],
                         float(resp_bnb['bids'][0][0]))
@@ -179,7 +179,7 @@ def main():
                 if depth == 0:
                     print(f"{Fore.MAGENTA}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                     low_balance = True
-            if not low_balance and (asks_krk * depth)>min_balance:
+            if not low_balance and (asks_krk * depth) > min_balance:
                 print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
                 eff = (depth * bids_krk * (1 - taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
                 prod = eff / (depth * bids_krk)
@@ -232,8 +232,6 @@ def main():
         print("[-] ------------------------------------------------- %d ms (%d ms(q) + %d ms(p))" % (
             int((_end_time - _start_time) * 1000), int(_query_time * 1000),
             (int((_end_time - _start_time) * 1000) - int(_query_time * 1000))))
-
-
 
 
 def save_data(_list):
