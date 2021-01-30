@@ -100,13 +100,13 @@ def main():
         print(f"[i] BID %s : %.2f                              BTC BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
             exchange_list[1].upper(), bids_krk, all_balance["bnbbtc"]))
         print(
-            f"[i]                           DIFFERENCE: %.2f                            TOT EUR: {Fore.GREEN}%.8f{Style.RESET_ALL}" % (
+            f"[i]                           DIFFERENCE: %.2f                             TOT EUR: {Fore.GREEN}%.8f{Style.RESET_ALL}" % (
                 round(bids_krk - asks_trt, 2), all_balance["bnbeur"] + all_balance["trteur"]))
         print(
-            f"[i]                           DIFF + FEE: {Fore.RED}%.2f{Style.RESET_ALL}                             TOT BTC: {Fore.GREEN}%.8f{Style.RESET_ALL}                       PF VALUE: {Fore.GREEN}%.4f{Style.RESET_ALL}"
+            f"[i]                           DIFF + FEE: {Fore.RED}%.2f{Style.RESET_ALL}                            TOT BTC: {Fore.GREEN}%.8f{Style.RESET_ALL}                       PF VALUE: {Fore.GREEN}%.4f{Style.RESET_ALL}"
             % (round((bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), 2),
                all_balance["bnbbtc"] + all_balance["trtbtc"], all_balance["bnbeur"] + all_balance["trteur"] + (
-                       (all_balance["bnbbtc"] + all_balance["trtbtc"]) * asks_trt)))
+                       (all_balance["bnbbtc"] + all_balance["trtbtc"]) * bids_trt)))
         print("[i] FETCHED FEE       %s: %.4f%%;      %s: %.4f%%" % (
             exchange_list[0].upper(), taker_fee_trt * 100, exchange_list[1].upper(), taker_fee_bnb * 100))
 

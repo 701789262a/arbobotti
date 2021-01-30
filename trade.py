@@ -47,7 +47,7 @@ class Operation:
                         "X-TRT-SIGN": signature, "X-TRT-NONCE": nonce}
             resp = requests.post(url, data=json.dumps(payload_trt), headers=_headers)
             print("trtciaone", resp.text)
-            return dict(resp.text)["status"]
+            return json.loads(resp.text)["status"]
         elif exchange == "krk":
             api = krakenex.API(self.apikey_krk, self.secret_krk)
             k = KrakenAPI(api)
