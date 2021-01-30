@@ -50,6 +50,7 @@ fee_interval = 100
 rate = 5
 prod_threshold = 0.01
 sleep_check_order = 1
+min_balance = 10
 
 _params_krk = {"pair": "BTCEUR", "count": "2"}
 _params_trt = {}
@@ -128,7 +129,7 @@ def main():
                 if depth == 0:
                     print(f"{Fore.RED}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                     low_balance = True
-            if not low_balance:
+            if not low_balance and (asks_krk * depth)>min():
                 print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
                 eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
                 prod = eff / (depth * bids_trt)
@@ -178,7 +179,7 @@ def main():
                 if depth == 0:
                     print(f"{Fore.MAGENTA}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                     low_balance = True
-            if not low_balance:
+            if not low_balance and (asks_krk * depth)>min_balance:
                 print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
                 eff = (depth * bids_krk * (1 - taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
                 prod = eff / (depth * bids_krk)
