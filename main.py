@@ -77,8 +77,8 @@ def main():
         _query_time = time.time()
         price_dict = op.querythread()
         _query_time = time.time() - _query_time
-        asks_data_bnb = price_dict["bnb"]['asks'][0][0]
-        bids_data_bnb = price_dict["bnb"]['bids'][0][0]
+        asks_data_bnb = price_dict["bnb"]['asks'][0]
+        bids_data_bnb = price_dict["bnb"]['bids'][0]
 
         asks_data_trt = price_dict["trt"]['asks'][0]
         bids_data_trt = price_dict["trt"]['bids'][0]
@@ -99,9 +99,14 @@ def main():
             exchange_list[0].upper(), asks_trt, all_balance["trteur"]))
         print(f"[i] BID %s : %.2f                              BTC BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
             exchange_list[1].upper(), bids_krk, all_balance["bnbbtc"]))
-        print("[i]                           DIFFERENCE:", round(bids_krk - asks_trt, 2))
-        print(f"[i]                           DIFF + FEE: {Fore.RED}%.2f{Style.RESET_ALL}"
-              % (round((bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), 2)))
+        print(
+            f"[i]                           DIFFERENCE: %.2f                            TOT EUR: {Fore.GREEN}%.8f{Style.RESET_ALL}" % (
+                round(bids_krk - asks_trt, 2), all_balance["bnbeur"] + all_balance["trteur"]))
+        print(
+            f"[i]                           DIFF + FEE: {Fore.RED}%.2f{Style.RESET_ALL}                             TOT BTC: {Fore.GREEN}%.8f{Style.RESET_ALL}                       PF VALUE: {Fore.GREEN}%.4f{Style.RESET_ALL}"
+            % (round((bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), 2),
+               all_balance["bnbbtc"] + all_balance["trtbtc"], all_balance["bnbeur"] + all_balance["trteur"] + (
+                       (all_balance["bnbbtc"] + all_balance["trtbtc"]) * asks_trt)))
         print("[i] FETCHED FEE       %s: %.4f%%;      %s: %.4f%%" % (
             exchange_list[0].upper(), taker_fee_trt * 100, exchange_list[1].upper(), taker_fee_bnb * 100))
 
@@ -111,7 +116,7 @@ def main():
                 asks_krk, bids_trt, exchange_list[1].upper(), bids_trt - asks_krk,
                 (bids_trt * (1 + taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb))))
             depth = min(bids_data_trt['amount'],
-                        float(asks_data_bnb['asks'][0][0]))
+                        float(asks_data_bnb[1]))
             balance = min(all_balance["trtbtc"], all_balance["bnbeur"] / asks_krk)
             if balance < depth:
                 depth = balance
@@ -161,7 +166,7 @@ def main():
                 asks_trt, bids_krk, exchange_list[1].upper(), bids_krk - asks_trt,
                 (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt))))
             depth = min(asks_data_trt['asks'][0]['amount'],
-                        float(bids_data_bnb['bids'][0][0]))
+                        float(bids_data_bnb[1]))
             balance = min(all_balance["bnbbtc"], all_balance["trteur"] / asks_trt)
             if balance < depth:
                 depth = balance
@@ -202,7 +207,7 @@ def main():
 
         _end_time = time.time()
         totaltime = _end_time - _start_time
-        time_list.append(int(totaltime*1000))
+        time_list.append(int(totaltime * 1000))
         if last_ask != 0:
             _list.append([_end_time, time.time(), last_ask, last_bid, depth, eff, int(_query_time * 1000),
                           (int((_end_time - _start_time) * 1000) - int(_query_time * 1000)),
@@ -221,9 +226,11 @@ def main():
             taker_fee_trt = float(fee["fee" + exchange_list[0]]) / 100
             taker_fee_krk = float(fee["fee" + exchange_list[1]]) / 100
 
-        print("[-] ------------------------------------------------- %d ms (%d ms(q) + %d ms(p)) - avg last %d = %d ms - global avg = %d ms" % (
-            int(totaltime * 1000), int(_query_time * 1000),
-            (int(totaltime * 1000) - int(_query_time * 1000)), len(time_list), sum(time_list[-100:]) / min(100,len(time_list)), sum(time_list)/len(time_list)))
+        print(
+            "[-] ------------------------------------------------- %d ms (%d ms(q) + %d ms(p)) - avg last %d (%d ms) - global avg (%d ms)" % (
+                int(totaltime * 1000), int(_query_time * 1000),
+                (int(totaltime * 1000) - int(_query_time * 1000)), min(100, len(time_list)),
+                sum(time_list[-100:]) / min(100, len(time_list)), sum(time_list) / len(time_list)))
 
 
 def save_data(_list):
