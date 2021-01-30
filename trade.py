@@ -10,6 +10,8 @@ import krakenex
 import pandas as pd
 import requests
 from binance.client import Client
+from colorama import Fore
+from colorama import Style
 from pykrakenapi import KrakenAPI
 
 q1 = queue.Queue()
@@ -44,6 +46,7 @@ class Operation:
             _headers = {'User-Agent': 'PyRock v1', "Content-Type": "application/json", "X-TRT-KEY": self.apikey_trt,
                         "X-TRT-SIGN": signature, "X-TRT-NONCE": nonce}
             resp = requests.post(url, data=json.dumps(payload_trt), headers=_headers)
+            print("trtciaone", resp.text)
             return resp.text
         elif exchange == "krk":
             api = krakenex.API(self.apikey_krk, self.secret_krk)
@@ -52,24 +55,24 @@ class Operation:
             resp = str(resp).replace("\'", "\"")
             return resp
         elif exchange == "bnb":
-            print (fund_id, side, amount,price)
+            print(fund_id, side, amount, price)
             client = Client(self.apikey_bnb, self.secret_bnb)
 
             if side == "buy":
                 order = client.order_limit_buy(
-                        symbol=fund_id,
-                        quantity=round(amount,5),
-                        price=price)
+                    symbol=fund_id,
+                    quantity=round(amount, 5),
+                    price=price)
                 print("ciaone", order)
             elif side == "sell":
                 order = client.order_limit_sell(
-                        symbol=fund_id,
-                        quantity=round(amount,5),
-                        price=price)
+                    symbol=fund_id,
+                    quantity=round(amount, 5),
+                    price=price)
                 print("ciaone", order)
                 print("ERRORE")
                 order = "ERR"
-            return order
+            return order["status"]
 
     def balance(self, exchange):
         nonce = str(int(time.time() * 1e6))
@@ -168,7 +171,8 @@ class Operation:
         except Exception:
             pass
         return d
-    def cancel(self,exchange):
+
+    def cancel(self, exchange):
         nonce = str(int(time.time() * 1e6))
         d = dict()
         if exchange == "trt":
@@ -190,7 +194,7 @@ class Operation:
             return d
         elif exchange == "bnb":
             client = Client(self.apikey_bnb, self.secret_bnb)
-            resp = client.get_open_orders(symbol="BTCEUR",method="delete")
+            resp = client.get_open_orders(symbol="BTCEUR", method="delete")
             d["status_bnb"] = resp["status"]
             return d
 
@@ -199,17 +203,17 @@ class Operation:
         if "trt" in self.exchange_list:
             trt_cancel = Thread(target=lambda q, arg1, arg2: q.put(
                 self.cancel(arg1)),
-                               args=(q1, "trt"))
+                                args=(q1, "trt"))
             trt_cancel.start()
         if "krk" in self.exchange_list:
             krk_cancel = Thread(target=lambda q, arg1, arg2: q.put(
                 self.cancel(arg1)),
-                               args=(q2, "krk"))
+                                args=(q2, "krk"))
             krk_cancel.start()
         if "bnb" in self.exchange_list:
             bnb_cancel = Thread(target=lambda q, arg1, arg2: q.put(
                 self.cancel(arg1)),
-                               args=(q2, "bnb"))
+                                args=(q2, "bnb"))
             bnb_cancel.start()
         try:
             trt_cancel.join()
@@ -231,11 +235,11 @@ class Operation:
             pass
         return d
 
-    def order(self,exchange,order):
+    def order(self, exchange, order):
         nonce = str(int(time.time() * 1e6))
         d = dict()
         if exchange == "trt":
-            url = "https://api.therocktrading.com/v1/funds/BTCEUR/orders/"+order
+            url = "https://api.therocktrading.com/v1/funds/BTCEUR/orders/" + order
             signature = hmac.new(self.secret_trt.encode(), msg=(str(nonce) + url).encode(),
                                  digestmod=hashlib.sha512).hexdigest()
             _headers = {"Content-Type": "application/json", "X-TRT-KEY": self.apikey_trt,
@@ -255,10 +259,11 @@ class Operation:
             return d
         elif exchange == "bnb":
             client = Client(self.apikey_bnb, self.secret_bnb)
-            resp = client.get_order(symbol="BTCEUR",orderId=order)
+            resp = client.get_order(symbol="BTCEUR", orderId=order)
             print("binance", resp)
             d["status_bnb"] = resp["status"]
             return d
+
     def fee(self, exchange):
         nonce = str(int(time.time() * 1e6))
         d = dict()
@@ -363,5 +368,51 @@ class Operation:
             d[self.exchange_list[1]] = json.loads(q2.get())["order"]
         except:
             d[self.exchange_list[1]] = "ERROR"
+
+        return d
+
+    def query(self, exchange, apikey, secret):
+        if exchange == "trt":
+            try:
+                resp_trt = requests.get('https://api.therocktrading.com/v1/funds/BTCEUR/orderbook')
+                return json.loads(resp_trt.text)
+            except requests.exceptions.ConnectionError:
+                print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
+        elif exchange == "krk":
+            resp_krk = requests.get('https://api.kraken.com/0/public/Depth')  # , params=params)
+            return resp_krk.text
+        elif exchange == "bnb":
+            client = Client(apikey, secret)
+
+            while 1:
+                try:
+                    resp_bnb = client.get_order_book(symbol="BTCEUR")
+                    return resp_bnb
+                except requests.exceptions.ConnectionError:
+                    print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
+                    time.sleep(1)
+
+    def querythread(self):
+        d = dict()
+        if "trt" in self.exchange_list:
+            trt_thread = Thread(target=lambda q, arg1, arg2, arg3: q.put(self.query(arg1, arg2, arg3)),
+                                args=(q1, "trt", self.apikey_trt, self.secret_trt))
+            trt_thread.start()
+        if "bnb" in self.exchange_list:
+            bnb_thread = Thread(target=lambda q, arg1, arg2, arg3: q.put(self.query(arg1, arg2, arg3)),
+                            args=(q2, "bnb", self.apikey_bnb, self.secret_bnb))
+            bnb_thread.start()
+
+
+        try:
+            trt_thread.join()
+            d["trt"] = q1.get()
+        except:
+            pass
+        try:
+            bnb_thread.join()
+            d["bnb"] = q2.get()
+        except:
+            pass
 
         return d

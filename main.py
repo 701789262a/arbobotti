@@ -52,8 +52,6 @@ prod_threshold = 0.01
 sleep_check_order = 1
 min_balance = 10
 
-_params_krk = {"pair": "BTCEUR", "count": "2"}
-_params_trt = {}
 bnb_que = queue.Queue()
 trt_que = queue.Queue()
 all_balance = dict()
@@ -79,23 +77,17 @@ def main():
         time.sleep(1 / rate)
         _start_time = time.time()
         _query_time = time.time()
-        bnb_thread = Thread(target=lambda q, arg1, arg2, arg3, arg4: q.put(query(arg1, arg2, arg3, arg4)),
-                            args=(bnb_que, "bnb", _params_krk, bnb_apikey, bnb_secret))
-        trt_thread = Thread(target=lambda q, arg1, arg2, arg3, arg4: q.put(query(arg1, arg2, arg3, arg4)),
-                            args=(trt_que, "trt", _params_trt, bnb_apikey, bnb_secret))
-
-        bnb_thread.start()
-        trt_thread.start()
-        bnb_thread.join()
-        trt_thread.join()
-        resp_bnb = bnb_que.get()
-        resp_trt = trt_que.get()
+        price_dict = op.querythread()
         _query_time = time.time() - _query_time
-        loaded_json_trt = json.loads(resp_trt)
-        asks_krk = round(float(resp_bnb['asks'][0][0]), 2)
-        bids_krk = round(float(resp_bnb['bids'][0][0]), 2)
-        asks_trt = round(loaded_json_trt['asks'][0]['price'], 2)
-        bids_trt = round(loaded_json_trt['bids'][0]['price'], 2)
+        asks_data_bnb=price_dict["bnb"]['asks'][0][0]
+        bids_data_bnb = price_dict["bnb"]['bids'][0][0]
+
+        asks_data_trt = price_dict["trt"]['asks'][0]
+        bids_data_trt = price_dict["trt"]['bids'][0]
+        asks_krk = round(float(price_dict["bnb"]['asks'][0][0]), 2)
+        bids_krk = round(float(price_dict["bnb"]['bids'][0][0]), 2)
+        asks_trt = round(float(price_dict["trt"]['asks'][0]['price']), 2)
+        bids_trt = round(float(price_dict["trt"]['bids'][0]['price']), 2)
         print(f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}" % (datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
 
         print(f"[i] ASK %s : %.2f                              EUR BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
@@ -120,8 +112,8 @@ def main():
             print(f"{Fore.CYAN}[#] %.2f < %.2f BUY %s | SELL TRT DIFF: %.2f (MENO FEE): %.3f" % (
                 asks_krk, bids_trt, exchange_list[1].upper(), bids_trt - asks_krk,
                 (bids_trt * (1 + taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb))))
-            depth = min(loaded_json_trt['bids'][0]['amount'],
-                        float(resp_bnb['asks'][0][0]))
+            depth = min(bids_data_trt['amount'],
+                        float(asks_data_bnb['asks'][0][0]))
             balance = min(all_balance["trtbtc"], all_balance["bnbeur"] / asks_krk)
             if balance < depth:
                 depth = balance
@@ -129,7 +121,7 @@ def main():
                 if depth == 0:
                     print(f"{Fore.RED}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                     low_balance = True
-            if not low_balance and (asks_krk * depth) > min():
+            if not low_balance and (asks_krk * depth) > min_balance:
                 print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
                 eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
                 prod = eff / (depth * bids_trt)
@@ -170,8 +162,8 @@ def main():
             print(f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f{Style.RESET_ALL}" % (
                 asks_trt, bids_krk, exchange_list[1].upper(), bids_krk - asks_trt,
                 (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt))))
-            depth = min(loaded_json_trt['asks'][0]['amount'],
-                        float(resp_bnb['bids'][0][0]))
+            depth = min(asks_data_trt['asks'][0]['amount'],
+                        float(bids_data_bnb['bids'][0][0]))
             balance = min(all_balance["bnbbtc"], all_balance["trteur"] / asks_trt)
             if balance < depth:
                 depth = balance
@@ -252,26 +244,6 @@ def save_trade(_list):
     _list.clear()
 
 
-def query(exchange, params, apikey, secret):
-    if exchange == "trt":
-        try:
-            resp_trt = requests.get('https://api.therocktrading.com/v1/funds/BTCEUR/orderbook', params=params)
-        except requests.exceptions.ConnectionError:
-            print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
-        return resp_trt.text
-    elif exchange == "krk":
-        resp_krk = requests.get('https://api.kraken.com/0/public/Depth', params=params)
-        return resp_krk.text
-    elif exchange == "bnb":
-        client = Client(apikey, secret)
-
-        while 1:
-            try:
-                resp_bnb = client.get_order_book(symbol="BTCEUR")
-                return resp_bnb
-            except requests.exceptions.ConnectionError:
-                print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
-                time.sleep(1)
 
 
 if __name__ == "__main__":
