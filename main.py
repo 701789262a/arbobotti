@@ -146,11 +146,7 @@ def main():
                     if resp_dict["bnb"] != "ERROR" or resp_dict["trt"][1] == "ERROR":
                         print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"][0].upper(), resp_dict["bnb"]))
-                        status = op.orderthreading(resp_dict["trt"][0],
-                                                   resp_dict[exchange_list[1]])
-                        if status["trt"] != "executed" or status["bnb"] == "NEW":
-                            print(f"{Fore.RED}[$] DELETE UNEXPECTED ORDER{Style.RESET_ALL}")
-                            op.cancelthreading()
+                        op.cancelthreading()
                     else:
                         print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"][0], resp_dict["bnb"]))
@@ -195,14 +191,10 @@ def main():
                     print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
                     resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
                                                   "sell", exchange_list[1], "BTCEUR", depth, last_bid)
-                    if resp_dict['bnb'] != "ERROR" or resp_dict['trt'][1] == "ERROR":
+                    if resp_dict['bnb'] == "ERROR" or resp_dict['trt'][1] == "ERROR":
                         print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"][0].upper(), resp_dict["bnb"]))
-                        status = op.orderthreading(resp_dict["trt"][0],
-                                                   resp_dict[exchange_list[1]])
-                        if status["trt"] != "executed" or status["bnb"] == "NEW":
-                            print(f"{Fore.RED}[$] DELETE UNEXPECTED ORDER{Style.RESET_ALL}")
-                            op.cancelthreading()
+                        op.cancelthreading()
                     else:
                         print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"][0], resp_dict["bnb"]))
