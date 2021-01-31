@@ -48,6 +48,7 @@ rate = 5
 prod_threshold = 0.01
 sleep_check_order = 2
 min_balance = 10
+balance_interval=50
 
 bnb_que = queue.Queue()
 trt_que = queue.Queue()
@@ -88,17 +89,17 @@ def main():
         bids_trt = round(float(price_dict["trt"]['bids'][0]['price']), 2)
         print(f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}" % (datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
 
-        print(f"[i] ASK %s : %.2f                              EUR BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-            exchange_list[1].upper(), asks_krk, all_balance["bnbeur"]))
-        print(f"[i] BID %s : %.2f                              BTC BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-            exchange_list[0].upper(), bids_trt, all_balance["trtbtc"]))
+        print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
+            exchange_list[1].upper(), asks_krk, exchange_list[1].upper(),all_balance["bnbeur"]))
+        print(f"[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
+            exchange_list[0].upper(), bids_trt, exchange_list[0].upper(),all_balance["trtbtc"]))
         print("[i]                           DIFFERENCE:", round(bids_trt - asks_krk, 2))
         print(f"[i]                           DIFF + FEE: {Fore.RED}%.2f{Style.RESET_ALL}"
               % (round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2)))
-        print(f"[i] ASK %s : %.2f                              EUR BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-            exchange_list[0].upper(), asks_trt, all_balance["trteur"]))
-        print(f"[i] BID %s : %.2f                              BTC BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-            exchange_list[1].upper(), bids_krk, all_balance["bnbbtc"]))
+        print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
+            exchange_list[0].upper(), asks_trt, exchange_list[0].upper(),all_balance["trteur"]))
+        print(f"[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
+            exchange_list[1].upper(), bids_krk, exchange_list[1].upper(),all_balance["bnbbtc"]))
         print(
             f"[i]                           DIFFERENCE: %.2f                             TOT EUR: {Fore.GREEN}%.8f{Style.RESET_ALL}" % (
                 round(bids_krk - asks_trt, 2), all_balance["bnbeur"] + all_balance["trteur"]))
@@ -214,6 +215,8 @@ def main():
             print(f"{Fore.YELLOW}[!] SAVING...{Style.RESET_ALL}")
             if _list:
                 save_data(_list)
+        if int(_end_time % balance_interval) == 0:
+            checkbalance=True
         if int(_end_time % save_trade_interval) == 0:
             if _trade_list:
                 print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
