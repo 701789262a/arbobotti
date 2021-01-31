@@ -47,7 +47,10 @@ class Operation:
                         "X-TRT-SIGN": signature, "X-TRT-NONCE": nonce}
             resp = requests.post(url, data=json.dumps(payload_trt), headers=_headers)
             print("trtciaone", resp.text)
-            return json.loads(resp.text)["status"]
+            try:
+                return json.loads(resp.text)["status"]
+            except KeyError:
+                return "ERROR"
         elif exchange == "krk":
             api = krakenex.API(self.apikey_krk, self.secret_krk)
             k = KrakenAPI(api)
@@ -182,8 +185,6 @@ class Operation:
             _headers = {"Content-Type": "application/json", "X-TRT-KEY": self.apikey_trt,
                         "X-TRT-SIGN": signature, "X-TRT-NONCE": nonce}
             resp = requests.delete(url, headers=_headers)
-            d["status_trt"] = json.loads(resp.text)["status"]
-            return d
         elif exchange == "krk":
             print("FUNCTION NOT ENABLED ON KRAKEN EXCHANGE, USE OTHER EXCHANGES FOR THIS FEATURE TO WORK")
             exit(2)
@@ -194,24 +195,25 @@ class Operation:
             return d
         elif exchange == "bnb":
             client = Client(self.apikey_bnb, self.secret_bnb)
-            resp = client.get_open_orders(symbol="BTCEUR", method="delete")
-            d["status_bnb"] = resp["status"]
-            return d
+            resp = client.get_open_orders(symbol="BTCEUR")
+            if len(resp) > 0:
+                for i in range(len(resp)):
+                    client.cancel_order(symbol="BTCEUR",orderId=resp[i]["clientOrderId"])
 
     def cancelthreading(self):
         d = dict()
         if "trt" in self.exchange_list:
-            trt_cancel = Thread(target=lambda q, arg1, arg2: q.put(
+            trt_cancel = Thread(target=lambda q, arg1: q.put(
                 self.cancel(arg1)),
                                 args=(q1, "trt"))
             trt_cancel.start()
         if "krk" in self.exchange_list:
-            krk_cancel = Thread(target=lambda q, arg1, arg2: q.put(
+            krk_cancel = Thread(target=lambda q, arg1: q.put(
                 self.cancel(arg1)),
                                 args=(q2, "krk"))
             krk_cancel.start()
         if "bnb" in self.exchange_list:
-            bnb_cancel = Thread(target=lambda q, arg1, arg2: q.put(
+            bnb_cancel = Thread(target=lambda q, arg1: q.put(
                 self.cancel(arg1)),
                                 args=(q2, "bnb"))
             bnb_cancel.start()
