@@ -145,7 +145,7 @@ def main():
                         op.cancelthreading()
                     else:
                         print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER STATUS:[%s, %s]{Style.RESET_ALL}" % (
-                            resp_dict["trt"][0], resp_dict["bnb"]))
+                            resp_dict["trt"].upper(), resp_dict["bnb"]))
                         time.sleep(sleep_check_order)
                         _trade_list.append(
                             [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "buy", exchange_list[1], depth,
@@ -155,13 +155,16 @@ def main():
                         op.cancelthreading()
                         # EXECUTED OR SUCCESS
                         # IF BOTH ORDER ARE NOT COMPLETED, DELETE ORDER
+            else:
+                print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
+                checkbalance=True
 
         elif (bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)) > 0:
             low_balance = False
             print(f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f{Style.RESET_ALL}" % (
                 asks_trt, bids_krk, exchange_list[1].upper(), bids_krk - asks_trt,
                 (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt))))
-            depth = min(asks_data_trt['asks'][0]['amount'],
+            depth = min(asks_data_trt['amount'],
                         float(bids_data_bnb[1]))
             balance = min(all_balance["bnbbtc"], all_balance["trteur"] / asks_trt)
             if balance < depth:
@@ -189,13 +192,16 @@ def main():
                         op.cancelthreading()
                     else:
                         print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
-                            resp_dict["trt"][0], resp_dict["bnb"]))
+                            resp_dict["trt"].upper(), resp_dict["bnb"]))
                         time.sleep(sleep_check_order)
                         _trade_list.append(
                             [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", "TRT", depth, last_ask,
                              "SELL", exchange_list[1].upper(), last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
                              all_balance["bnbeur"], all_balance["trteur"]])
                         op.cancelthreading()
+            else:
+                print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
+                checkbalance=True
 
         _end_time = time.time()
         totaltime = _end_time - _start_time
@@ -238,8 +244,8 @@ def save_data(_list):
 def save_trade(_list):
     df = pandas.DataFrame(_list)
     try:
-        with open('file_trade.csv', 'a') as f:
-            df.to_csv(f ,index=False, sep=';',  header=False, decimal=',')
+        with open('file_trade.xlsx', 'a') as f:
+            df.to_excel(f ,index=False,  header=False, decimal=',')
     except FileNotFoundError:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST{Style.RESET_ALL}")
     _list.clear()
