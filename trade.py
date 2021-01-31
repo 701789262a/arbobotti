@@ -192,7 +192,7 @@ class Operation:
             resp = client.get_open_orders(symbol="BTCEUR")
             if len(resp) > 0:
                 for i in range(len(resp)):
-                    client.cancel_order(symbol="BTCEUR",orderId=resp[i]["clientOrderId"])
+                    client.cancel_order(symbol="BTCEUR",orderId=resp[i]["orderId"])
 
     def cancelthreading(self):
         d = dict()

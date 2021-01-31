@@ -48,9 +48,10 @@ rate = 5
 prod_threshold = 0.01
 sleep_check_order = 2
 min_balance = 10
-balance_interval=50
+balance_interval = 50
 
 bnb_que = queue.Queue()
+
 trt_que = queue.Queue()
 all_balance = dict()
 time_list = []
@@ -64,6 +65,7 @@ def main():
     print("GOT FEE FROM EXCHANGE; %s: %f;    %s: %f" % (
         exchange_list[0].upper(), taker_fee_trt, exchange_list[1].upper(), taker_fee_bnb))
     checkbalance = True
+    bal_list = False
     while 1:
 
         if checkbalance:
@@ -87,19 +89,20 @@ def main():
         bids_krk = round(float(price_dict["bnb"]['bids'][0][0]), 2)
         asks_trt = round(float(price_dict["trt"]['asks'][0]['price']), 2)
         bids_trt = round(float(price_dict["trt"]['bids'][0]['price']), 2)
-        print(f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}" % (datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
+        print(f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s{Style.RESET_ALL} " % (
+            datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:]))
 
         print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-            exchange_list[1].upper(), asks_krk, exchange_list[1].upper(),all_balance["bnbeur"]))
+            exchange_list[1].upper(), asks_krk, exchange_list[1].upper(), all_balance["bnbeur"]))
         print(f"[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-            exchange_list[0].upper(), bids_trt, exchange_list[0].upper(),all_balance["trtbtc"]))
+            exchange_list[0].upper(), bids_trt, exchange_list[0].upper(), all_balance["trtbtc"]))
         print("[i]                           DIFFERENCE:", round(bids_trt - asks_krk, 2))
         print(f"[i]                           DIFF + FEE: {Fore.RED}%.2f{Style.RESET_ALL}"
               % (round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2)))
         print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-            exchange_list[0].upper(), asks_trt, exchange_list[0].upper(),all_balance["trteur"]))
+            exchange_list[0].upper(), asks_trt, exchange_list[0].upper(), all_balance["trteur"]))
         print(f"[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-            exchange_list[1].upper(), bids_krk, exchange_list[1].upper(),all_balance["bnbbtc"]))
+            exchange_list[1].upper(), bids_krk, exchange_list[1].upper(), all_balance["bnbbtc"]))
         print(
             f"[i]                           DIFFERENCE: %.2f                             TOT EUR: {Fore.GREEN}%.8f{Style.RESET_ALL}" % (
                 round(bids_krk - asks_trt, 2), all_balance["bnbeur"] + all_balance["trteur"]))
@@ -147,18 +150,21 @@ def main():
                     else:
                         print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER STATUS:[%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"].upper(), resp_dict["bnb"]))
+                        bal_list = True
                         time.sleep(sleep_check_order)
                         _trade_list.append(
                             [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "buy", exchange_list[1], depth,
                              last_ask,
                              "sell", "trt", last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
-                             all_balance["bnbeur"], all_balance["trteur"]])
+                             all_balance["bnbeur"], all_balance["trteur"],
+                             all_balance["trteur"] + all_balance["bnbeur"] + (
+                                         all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_bid])
                         op.cancelthreading()
                         # EXECUTED OR SUCCESS
                         # IF BOTH ORDER ARE NOT COMPLETED, DELETE ORDER
             else:
                 print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
-                checkbalance=True
+                checkbalance = True
 
         elif (bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)) > 0:
             low_balance = False
@@ -194,16 +200,24 @@ def main():
                     else:
                         print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"].upper(), resp_dict["bnb"]))
+                        bal_list = True
                         time.sleep(sleep_check_order)
                         _trade_list.append(
                             [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", "TRT", depth, last_ask,
                              "SELL", exchange_list[1].upper(), last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
-                             all_balance["bnbeur"], all_balance["trteur"]])
+                             all_balance["bnbeur"], all_balance["trteur"],
+                             all_balance["trteur"] + all_balance["bnbeur"] + (
+                                         all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_bid])
                         op.cancelthreading()
             else:
                 print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
-                checkbalance=True
-
+                checkbalance = True
+        if bal_list:
+            _trade_list.append(
+                ["", "", "", "", "", "", "", "", all_balance["bnbbtc"], all_balance["trtbtc"], all_balance["bnbeur"],
+                 all_balance["trteur"], all_balance["trteur"] + all_balance["bnbeur"] + (
+                             all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_bid])
+            bal_list = False
         _end_time = time.time()
         totaltime = _end_time - _start_time
         time_list.append(int(totaltime * 1000))
@@ -216,7 +230,7 @@ def main():
             if _list:
                 save_data(_list)
         if int(_end_time % balance_interval) == 0:
-            checkbalance=True
+            checkbalance = True
         if int(_end_time % save_trade_interval) == 0:
             if _trade_list:
                 print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
@@ -238,7 +252,7 @@ def save_data(_list):
     df = pandas.DataFrame(_list)
     try:
         with open('file.csv', 'a') as f:
-            df.to_csv(f, index=False, sep=';', header=False, decimal=',')
+            df.to_csv(f, index=False, sep=';', header=False)
     except FileNotFoundError:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO{Style.RESET_ALL}")
     _list.clear()
@@ -248,11 +262,10 @@ def save_trade(_list):
     df = pandas.DataFrame(_list)
     try:
         with open('file_trade.xlsx', 'a') as f:
-            df.to_excel(f ,index=False,  header=False, decimal=',')
+            df.to_excel(f, index=False, header=False)
     except FileNotFoundError:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST{Style.RESET_ALL}")
     _list.clear()
-
 
 
 if __name__ == "__main__":
