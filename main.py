@@ -192,8 +192,8 @@ def main():
                             resp_dict["trt"][0], resp_dict["bnb"]))
                         time.sleep(sleep_check_order)
                         _trade_list.append(
-                            [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "buy", "trt", depth, last_ask,
-                             "sell", exchange_list[1], last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
+                            [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", "TRT", depth, last_ask,
+                             "SELL", exchange_list[1].upper(), last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
                              all_balance["bnbeur"], all_balance["trteur"]])
                         op.cancelthreading()
 
@@ -209,8 +209,8 @@ def main():
             if _list:
                 save_data(_list)
         if int(_end_time % save_trade_interval) == 0:
-            print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
             if _trade_list:
+                print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
                 save_trade(_trade_list)
         if int(_end_time % fee_interval) == 0:
             print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
@@ -228,7 +228,8 @@ def main():
 def save_data(_list):
     df = pandas.DataFrame(_list)
     try:
-        df.to_csv('file.csv', index=False, sep=';', mode='a', header=False, decimal=',')
+        with open('file.csv', 'a') as f:
+            df.to_csv(f, index=False, sep=';', header=False, decimal=',')
     except FileNotFoundError:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO{Style.RESET_ALL}")
     _list.clear()
@@ -237,10 +238,12 @@ def save_data(_list):
 def save_trade(_list):
     df = pandas.DataFrame(_list)
     try:
-        df.to_csv('file_trade.csv', index=False, sep=';', mode='a', header=False, decimal=',')
+        with open('file_trade.csv', 'a') as f:
+            df.to_csv(f ,index=False, sep=';',  header=False, decimal=',')
     except FileNotFoundError:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST{Style.RESET_ALL}")
     _list.clear()
+
 
 
 if __name__ == "__main__":
