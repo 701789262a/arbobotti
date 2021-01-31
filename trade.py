@@ -46,7 +46,6 @@ class Operation:
             _headers = {'User-Agent': 'PyRock v1', "Content-Type": "application/json", "X-TRT-KEY": self.apikey_trt,
                         "X-TRT-SIGN": signature, "X-TRT-NONCE": nonce}
             resp = requests.post(url, data=json.dumps(payload_trt), headers=_headers)
-            print("trtciaone", resp.text)
             try:
                 return json.loads(resp.text)["status"]
             except KeyError:
@@ -58,7 +57,6 @@ class Operation:
             resp = str(resp).replace("\'", "\"")
             return resp
         elif exchange == "bnb":
-            print(fund_id, side, amount, price)
             client = Client(self.apikey_bnb, self.secret_bnb)
 
             if side == "buy":
@@ -66,15 +64,11 @@ class Operation:
                     symbol=fund_id,
                     quantity=round(amount, 5),
                     price=price)
-                print("ciaone", order)
             elif side == "sell":
                 order = client.order_limit_sell(
                     symbol=fund_id,
                     quantity=round(amount, 5),
                     price=price)
-                print("ciaone", order)
-                print("ERRORE")
-                order = "ERR"
             return dict(order)["status"]
 
     def balance(self, exchange):
@@ -360,10 +354,7 @@ class Operation:
 
         try:
             value = q1.get()
-            if value["errors"]:
-                d["trt"] = value["errors"][0]["message"], "ERROR"
-            else:
-                d["trt"] = value
+            d["trt"] = value
         except:
             d["trt"] = "ERROR"
         try:

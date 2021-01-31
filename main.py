@@ -139,7 +139,7 @@ def main():
                                                   depth,
                                                   last_ask)
 
-                    if resp_dict["bnb"] != "ERROR" or resp_dict["trt"][1] == "ERROR":
+                    if resp_dict["bnb"] == "ERROR" or resp_dict["trt"][1] == "ERROR":
                         print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                         op.cancelthreading()
