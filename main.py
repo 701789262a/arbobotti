@@ -3,8 +3,7 @@ import json
 import queue
 import time
 from multiprocessing import Process
-from openpyxl import load_workbook
-import matplotlib.pyplot as plt
+
 import pandas
 from colorama import Fore
 from colorama import Style
@@ -15,6 +14,7 @@ from trade import Operation
 _list = []
 _trade_list = []
 exchange_list = []
+d = {}
 login_data = json.loads(open("keydict.txt", "r").readline().strip().replace("\n", ""))
 try:
     trt_apikey = str(login_data["trt_apikey"])
@@ -41,21 +41,12 @@ except:
     bnb_secret = ""
     pass
 
-taker_fee_krk = .0024
-taker_fee_trt = .02
-taker_fee_bnb = .00075
-save_interval = 20
-save_trade_interval = 50
-fee_interval = 100
-rate = 5
-prod_threshold = 0.01
-sleep_check_order = 2
-min_balance = 10
-balance_interval = 50
-graph = True
+with open("config.txt") as f:
+    for line in f:
+        (key, val) = line.replace(" ", "").split("=")
+        d[key] = val
 
 bnb_que = queue.Queue()
-
 trt_que = queue.Queue()
 all_balance = dict()
 time_list = []
@@ -70,12 +61,9 @@ def main():
         exchange_list[0].upper(), taker_fee_trt, exchange_list[1].upper(), taker_fee_bnb))
     checkbalance = True
     bal_list = False
-    if graph:
+    if d["graph"].lower() == "true":
         g = Process(target=data_visual.ru)
         g.start()
-        fig, ax = plt.subplots()
-        ax.plot([1, 2, 3, 4], [1, 4, 2, 3])
-        plt.plot([1, 2, 3, 4], [1, 4, 2, 3])
     while 1:
         eff = 0
         prod = 0
@@ -86,7 +74,7 @@ def main():
         last_bid = 0
         last_ask = 0
         depth = 0
-        time.sleep(1 / rate)
+        time.sleep(1 / int(d["rate"]))
         _start_time = time.time()
         _query_time = time.time()
         price_dict = op.querythread()
@@ -139,7 +127,7 @@ def main():
                 if depth == 0:
                     print(f"{Fore.RED}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                     low_balance = True
-            if not low_balance and (asks_krk * depth) > min_balance:
+            if not low_balance and (asks_krk * depth) > d["min_balance"]:
                 print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
                 eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
                 prod = eff / (depth * bids_trt)
@@ -147,7 +135,7 @@ def main():
                 print(f"[#] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_krk * depth, depth))
                 last_ask = asks_krk
                 last_bid = bids_trt
-                if prod * 100 > prod_threshold:
+                if prod * 100 > d["prod_threshold"]:
                     checkbalance = True
                     print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
                     resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, last_bid, "buy", "bnb", "BTCEUR",
@@ -162,7 +150,7 @@ def main():
                         print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER STATUS:[%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"].upper(), resp_dict["bnb"]))
                         bal_list = True
-                        time.sleep(sleep_check_order)
+                        time.sleep(d["sleep_check_order"])
                         _trade_list.append(
                             [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "buy", exchange_list[1], depth,
                              last_ask,
@@ -191,7 +179,7 @@ def main():
                 if depth == 0:
                     print(f"{Fore.MAGENTA}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                     low_balance = True
-            if not low_balance and (asks_krk * depth) > min_balance:
+            if not low_balance and (asks_krk * depth) > d["min_balance"]:
                 print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
                 eff = (depth * bids_krk * (1 - taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
                 prod = eff / (depth * bids_krk)
@@ -199,7 +187,7 @@ def main():
                 print(f"[i] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_trt * depth, depth))
                 last_ask = asks_trt
                 last_bid = bids_krk
-                if prod * 100 > prod_threshold:
+                if prod * 100 > d["prod_threshold"]:
                     checkbalance = True
                     print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
                     resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
@@ -212,7 +200,7 @@ def main():
                         print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"].upper(), resp_dict["bnb"]))
                         bal_list = True
-                        time.sleep(sleep_check_order)
+                        time.sleep(d["sleep_check_order"])
                         _trade_list.append(
                             [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", "TRT", depth, last_ask,
                              "SELL", exchange_list[1].upper(), last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
@@ -238,17 +226,17 @@ def main():
                       round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2),
                       round(bids_krk - asks_trt, 2),
                       round((bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), 2)])
-        if int(_end_time % save_interval) == 0:
+        if int(_end_time % int(d["save_interval"])) == 0:
             print(f"{Fore.YELLOW}[!] SAVING...{Style.RESET_ALL}")
             if _list:
                 save_data(_list)
-        if int(_end_time % balance_interval) == 0:
+        if int(_end_time % int(d["balance_interval"])) == 0:
             checkbalance = True
-        if int(_end_time % save_trade_interval) == 0:
+        if int(_end_time % int(d["save_trade_interval"])) == 0:
             if _trade_list:
                 print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
                 save_trade(_trade_list)
-        if int(_end_time % fee_interval) == 0:
+        if int(_end_time % int(d["fee_interval"])) == 0:
             print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
             fee = op.feethreading()
             taker_fee_trt = float(fee["fee" + exchange_list[0]]) / 100
@@ -271,7 +259,6 @@ def save_data(_list):
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [resource busy]{Style.RESET_ALL}")
 
     _list.clear()
-
 
 
 def save_trade(_list):
