@@ -3,11 +3,11 @@ import json
 import queue
 import time
 from multiprocessing import Process
-from openpyxl import load_workbook
-import matplotlib.pyplot as plt
+
 import pandas
 from colorama import Fore
 from colorama import Style
+from openpyxl import load_workbook
 
 import data_visual
 from trade import Operation
@@ -15,7 +15,7 @@ from trade import Operation
 _list = []
 _trade_list = []
 exchange_list = []
-d={}
+d = {}
 login_data = json.loads(open("keydict.txt", "r").readline().strip().replace("\n", ""))
 try:
     trt_apikey = str(login_data["trt_apikey"])
@@ -44,8 +44,8 @@ except:
 
 with open("config.txt") as f:
     for line in f:
-        (key,val)= line.replace(" ","").split("=")
-        d[key]=val
+        (key, val) = line.replace(" ", "").split("=")
+        d[key] = val
 
 bnb_que = queue.Queue()
 trt_que = queue.Queue()
@@ -62,7 +62,7 @@ def main():
         exchange_list[0].upper(), taker_fee_trt, exchange_list[1].upper(), taker_fee_bnb))
     checkbalance = True
     bal_list = False
-    if d["graph"].lower()=="true":
+    if d["graph"].lower() == "true":
         g = Process(target=data_visual.ru)
         g.start()
     while 1:
@@ -128,7 +128,7 @@ def main():
                 if depth == 0:
                     print(f"{Fore.RED}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                     low_balance = True
-            if not low_balance and (asks_krk * depth) > d["min_balance"]:
+            if not low_balance and (asks_krk * depth) > int(d["min_balance"]):
                 print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
                 eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
                 prod = eff / (depth * bids_trt)
@@ -151,7 +151,7 @@ def main():
                         print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER STATUS:[%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"].upper(), resp_dict["bnb"]))
                         bal_list = True
-                        time.sleep(d["sleep_check_order"])
+                        time.sleep(int(d["sleep_check_order"]))
                         _trade_list.append(
                             [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "buy", exchange_list[1], depth,
                              last_ask,
@@ -180,7 +180,7 @@ def main():
                 if depth == 0:
                     print(f"{Fore.MAGENTA}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                     low_balance = True
-            if not low_balance and (asks_krk * depth) > d["min_balance"]:
+            if not low_balance and (asks_krk * depth) > int(d["min_balance"]):
                 print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
                 eff = (depth * bids_krk * (1 - taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
                 prod = eff / (depth * bids_krk)
@@ -201,7 +201,7 @@ def main():
                         print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"].upper(), resp_dict["bnb"]))
                         bal_list = True
-                        time.sleep(d["sleep_check_order"])
+                        time.sleep(int(d["sleep_check_order"]))
                         _trade_list.append(
                             [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", "TRT", depth, last_ask,
                              "SELL", exchange_list[1].upper(), last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
@@ -262,17 +262,55 @@ def save_data(_list):
     _list.clear()
 
 
-
 def save_trade(_list):
     df = pandas.DataFrame(_list)
     try:
-        with open('file_trade.xlsx', 'a') as f:
-            df.to_excel(f, index=False, header=False)
+        # with open('file_trade.xlsx', 'a') as f:
+        #    df.to_excel(f, index=False, header=False)
+        append(df, filename='file_trade.xlsx', startrow=None, sheet_name='Sheet1', truncate_sheet=True)
+        _list.clear()
     except FileNotFoundError:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [file not found]{Style.RESET_ALL}")
     except PermissionError:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [resource busy]{Style.RESET_ALL}")
-    _list.clear()
+    except TypeError:
+        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [type error]{Style.RESET_ALL}")
+
+
+def append(df, filename='file_trade.xlsx', startrow=None, sheet_name='Sheet1', truncate_sheet=True):
+    writer = pandas.ExcelWriter(filename, engine='openpyxl')
+    try:
+        # try to open an existing workbook
+        writer.book = load_workbook(filename)
+
+        # get the last row in the existing Excel sheet
+        # if it was not specified explicitly
+        if startrow is None and sheet_name in writer.book.sheetnames:
+            startrow = writer.book[sheet_name].max_row
+
+        # truncate sheet
+        if truncate_sheet and sheet_name in writer.book.sheetnames:
+            # index of [sheet_name] sheet
+            idx = writer.book.sheetnames.index(sheet_name)
+            # remove [sheet_name]
+            writer.book.remove(writer.book.worksheets[idx])
+            # create an empty sheet [sheet_name] using old index
+            writer.book.create_sheet(sheet_name, idx)
+
+        # copy existing sheets
+        writer.sheets = {ws.title: ws for ws in writer.book.worksheets}
+    except FileNotFoundError:
+        # file does not exist yet, we will create it
+        pass
+
+    if startrow is None:
+        startrow = 0
+
+        # write out the new sheet
+    df.to_excel(writer, sheet_name, startrow=startrow)
+
+    # save the workbook
+    writer.save()
 
 
 if __name__ == "__main__":
