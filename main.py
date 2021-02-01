@@ -2,11 +2,14 @@ import datetime
 import json
 import queue
 import time
-
+from multiprocessing import Process
+from openpyxl import load_workbook
+import matplotlib.pyplot as plt
 import pandas
 from colorama import Fore
 from colorama import Style
 
+import data_visual
 from trade import Operation
 
 _list = []
@@ -49,6 +52,7 @@ prod_threshold = 0.01
 sleep_check_order = 2
 min_balance = 10
 balance_interval = 50
+graph = True
 
 bnb_que = queue.Queue()
 
@@ -66,8 +70,15 @@ def main():
         exchange_list[0].upper(), taker_fee_trt, exchange_list[1].upper(), taker_fee_bnb))
     checkbalance = True
     bal_list = False
+    if graph:
+        g = Process(target=data_visual.ru)
+        g.start()
+        fig, ax = plt.subplots()
+        ax.plot([1, 2, 3, 4], [1, 4, 2, 3])
+        plt.plot([1, 2, 3, 4], [1, 4, 2, 3])
     while 1:
-
+        eff = 0
+        prod = 0
         if checkbalance:
             print(f"{Fore.YELLOW}[#] RETRIEVING BALANCE{Style.RESET_ALL}")
             all_balance = op.balancethreading()
@@ -158,7 +169,7 @@ def main():
                              "sell", "trt", last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
                              all_balance["bnbeur"], all_balance["trteur"],
                              all_balance["trteur"] + all_balance["bnbeur"] + (
-                                         all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_bid])
+                                     all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_bid])
                         op.cancelthreading()
                         # EXECUTED OR SUCCESS
                         # IF BOTH ORDER ARE NOT COMPLETED, DELETE ORDER
@@ -207,7 +218,7 @@ def main():
                              "SELL", exchange_list[1].upper(), last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
                              all_balance["bnbeur"], all_balance["trteur"],
                              all_balance["trteur"] + all_balance["bnbeur"] + (
-                                         all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_bid])
+                                     all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_bid])
                         op.cancelthreading()
             else:
                 print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
@@ -216,15 +227,17 @@ def main():
             _trade_list.append(
                 ["", "", "", "", "", "", "", "", all_balance["bnbbtc"], all_balance["trtbtc"], all_balance["bnbeur"],
                  all_balance["trteur"], all_balance["trteur"] + all_balance["bnbeur"] + (
-                             all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_bid])
+                         all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_bid])
             bal_list = False
         _end_time = time.time()
         totaltime = _end_time - _start_time
         time_list.append(int(totaltime * 1000))
-        if last_ask != 0:
-            _list.append([_end_time, time.time(), last_ask, last_bid, depth, eff, int(_query_time * 1000),
-                          (int((_end_time - _start_time) * 1000) - int(_query_time * 1000)),
-                          int((_end_time - _start_time) * 1000)])
+        _list.append([datetime.datetime.now(), asks_krk, bids_krk, asks_trt, bids_trt,
+                      all_balance["bnbbtc"], all_balance["trtbtc"], all_balance["bnbeur"],
+                      all_balance["trteur"], eff, prod, int(totaltime * 1000), round(bids_trt - asks_krk, 2),
+                      round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2),
+                      round(bids_krk - asks_trt, 2),
+                      round((bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), 2)])
         if int(_end_time % save_interval) == 0:
             print(f"{Fore.YELLOW}[!] SAVING...{Style.RESET_ALL}")
             if _list:
@@ -251,11 +264,14 @@ def main():
 def save_data(_list):
     df = pandas.DataFrame(_list)
     try:
-        with open('file.csv', 'a') as f:
-            df.to_csv(f, index=False, sep=';', header=False)
+        df.to_csv('filev2.csv', index=False, sep=';', mode='a', header=False, decimal=',')
     except FileNotFoundError:
-        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO{Style.RESET_ALL}")
+        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [file not found]{Style.RESET_ALL}")
+    except PermissionError:
+        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [resource busy]{Style.RESET_ALL}")
+
     _list.clear()
+
 
 
 def save_trade(_list):
@@ -264,7 +280,9 @@ def save_trade(_list):
         with open('file_trade.xlsx', 'a') as f:
             df.to_excel(f, index=False, header=False)
     except FileNotFoundError:
-        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST{Style.RESET_ALL}")
+        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [file not found]{Style.RESET_ALL}")
+    except PermissionError:
+        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [resource busy]{Style.RESET_ALL}")
     _list.clear()
 
 
