@@ -12,6 +12,7 @@ ax2p = ax2.twinx()
 last_n = 200
 interval = 5000
 _p = True
+show_price=True
 
 
 def exe():
@@ -75,6 +76,8 @@ def animate(i):
         s2 = []
         p1 = []
         p2 = []
+        p1x = []
+        p2x = []
         ax1.clear()
         ax1p.clear()
         ax2.clear()
@@ -85,9 +88,11 @@ def animate(i):
         for i in range(last_n):
             s1.append(float(_list[len(df) - last_n + i][13].replace(",", ".")))  # sell trt
             p1.append(float(_list[len(df) - last_n + i][3].replace(",", ".")) / float(
-                _list[len(df) - last_n + i - 1][3].replace(",", ".")))
-            p2.append(float(_list[len(df) - last_n + i][4].replace(",", ".")) / float(
                 _list[len(df) - last_n + i - 1][4].replace(",", ".")))
+            p2.append(float(_list[len(df) - last_n + i][4].replace(",", ".")) / float(
+                _list[len(df) - last_n + i - 1][2].replace(",", ".")))
+            p1x.append(float(_list[len(df) - last_n + i][3].replace(",", ".")))
+            p2x.append(float(_list[len(df) - last_n + i][4].replace(",", ".")))
             y1.append(i)
             s2.append(float(_list[len(df) - last_n + i][15].replace(",", ".")))
         ax1.grid()
@@ -95,6 +100,10 @@ def animate(i):
         ax1.set_title("BUT BNB SELL TRT")
         ax2.set_title("BUT TRT SELL BNB")
         ax1.plot(y1, s1, "b")
-        ax1p.plot(y1, p1, "r--")
         ax2.plot(y1, s2, "g")
-        ax2p.plot(y1, p2, "r--")
+        if show_price:
+            ax1p.plot(y1, p2x, "r--")
+            ax2p.plot(y1, p1x, "r--")
+        else:
+            ax1p.plot(y1, p1, "r--")
+            ax2p.plot(y1, p2, "r--")
