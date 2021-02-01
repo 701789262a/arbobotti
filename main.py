@@ -3,7 +3,8 @@ import json
 import queue
 import time
 from multiprocessing import Process
-
+from openpyxl import load_workbook
+import matplotlib.pyplot as plt
 import pandas
 from colorama import Fore
 from colorama import Style
@@ -14,7 +15,7 @@ from trade import Operation
 _list = []
 _trade_list = []
 exchange_list = []
-d = {}
+d={}
 login_data = json.loads(open("keydict.txt", "r").readline().strip().replace("\n", ""))
 try:
     trt_apikey = str(login_data["trt_apikey"])
@@ -43,8 +44,8 @@ except:
 
 with open("config.txt") as f:
     for line in f:
-        (key, val) = line.replace(" ", "").split("=")
-        d[key] = val
+        (key,val)= line.replace(" ","").split("=")
+        d[key]=val
 
 bnb_que = queue.Queue()
 trt_que = queue.Queue()
@@ -61,7 +62,7 @@ def main():
         exchange_list[0].upper(), taker_fee_trt, exchange_list[1].upper(), taker_fee_bnb))
     checkbalance = True
     bal_list = False
-    if d["graph"].lower() == "true":
+    if d["graph"].lower()=="true":
         g = Process(target=data_visual.ru)
         g.start()
     while 1:
@@ -135,7 +136,7 @@ def main():
                 print(f"[#] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_krk * depth, depth))
                 last_ask = asks_krk
                 last_bid = bids_trt
-                if prod * 100 > d["prod_threshold"]:
+                if prod * 100 > float(d["prod_threshold"]):
                     checkbalance = True
                     print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
                     resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, last_bid, "buy", "bnb", "BTCEUR",
@@ -187,7 +188,7 @@ def main():
                 print(f"[i] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_trt * depth, depth))
                 last_ask = asks_trt
                 last_bid = bids_krk
-                if prod * 100 > d["prod_threshold"]:
+                if prod * 100 > float(d["prod_threshold"]):
                     checkbalance = True
                     print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
                     resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
@@ -259,6 +260,7 @@ def save_data(_list):
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [resource busy]{Style.RESET_ALL}")
 
     _list.clear()
+
 
 
 def save_trade(_list):
