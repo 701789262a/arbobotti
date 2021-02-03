@@ -6,11 +6,11 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.widgets import Button
 
 fig = plt.figure(figsize=(15, 7))
-(ax1, ax2) = fig.subplots(1, 2)
+(ax1, ax2,ax3) = fig.subplots(1, 3)
 ax1p = ax1.twinx()
 ax2p = ax2.twinx()
 last_n = 200
-interval = 5000
+interval = 500
 _p = True
 show_price=True
 
@@ -78,9 +78,11 @@ def animate(i):
         p2 = []
         p1x = []
         p2x = []
+        q=[]
         ax1.clear()
         ax1p.clear()
         ax2.clear()
+        ax3.clear()
         ax2p.clear()
         df = pandas.read_csv("filev2.csv", sep=';')
         _list = df.values.tolist()
@@ -95,12 +97,14 @@ def animate(i):
             p2x.append(float(_list[len(df) - last_n + i][4].replace(",", ".")))
             y1.append(i)
             s2.append(float(_list[len(df) - last_n + i][15].replace(",", ".")))
+            q.append(int(_list[len(df) - last_n + i][11]))
         ax1.grid()
         ax2.grid()
         ax1.set_title("BUT BNB SELL TRT")
         ax2.set_title("BUT TRT SELL BNB")
         ax1.plot(y1, s1, "b")
         ax2.plot(y1, s2, "g")
+        ax3.plot(y1,q,"k,")
         if show_price:
             ax1p.plot(y1, p2x, "r--")
             ax2p.plot(y1, p1x, "r--")

@@ -72,9 +72,6 @@ def main():
             print(f"{Fore.YELLOW}[#] RETRIEVING BALANCE{Style.RESET_ALL}")
             all_balance = op.balancethreading()
             checkbalance = False
-        last_bid = 0
-        last_ask = 0
-        depth = 0
         time.sleep(1 / int(d["rate"]))
         _start_time = time.time()
         _query_time = time.time()
@@ -89,6 +86,15 @@ def main():
         bids_krk = round(float(price_dict["bnb"]['bids'][0][0]), 2)
         asks_trt = round(float(price_dict["trt"]['asks'][0]['price']), 2)
         bids_trt = round(float(price_dict["trt"]['bids'][0]['price']), 2)
+        if bal_list:
+            _trade_list.append(
+                ["", "", "", "", "", "", "", "", all_balance["bnbbtc"], all_balance["trtbtc"], all_balance["bnbeur"],
+                 all_balance["trteur"], all_balance["trteur"] + all_balance["bnbeur"] + (
+                         all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_bid])
+        last_bid = 0
+        last_ask = 0
+        depth = 0
+        bal_list = False
         print(f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s{Style.RESET_ALL} " % (
             datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:]))
 
@@ -176,7 +182,7 @@ def main():
             balance = min(all_balance["bnbbtc"], all_balance["trteur"] / asks_trt)
             if balance < depth:
                 depth = balance
-                print(f"{Fore.CYAN}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
+                print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
                 if depth == 0:
                     print(f"{Fore.MAGENTA}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                     low_balance = True
@@ -193,7 +199,7 @@ def main():
                     print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
                     resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
                                                   "sell", exchange_list[1], "BTCEUR", depth, last_bid)
-                    if resp_dict['bnb'] == "ERROR" or resp_dict['trt'][1] == "ERROR":
+                    if resp_dict['bnb'] == "ERROR" or resp_dict['bnb'] == "NEW" or resp_dict['trt'].upper() == "ERROR":
                         print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                             resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                         op.cancelthreading()
@@ -203,8 +209,10 @@ def main():
                         bal_list = True
                         time.sleep(int(d["sleep_check_order"]))
                         _trade_list.append(
-                            [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", "TRT", depth, last_ask,
-                             "SELL", exchange_list[1].upper(), last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
+                            [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", "TRT",
+                             str(depth).replace(".", ","), str(last_ask).replace(".", ","),
+                             "SELL", exchange_list[1].upper(), str(last_bid).replace(".", ","), all_balance["bnbbtc"],
+                             all_balance["trtbtc"],
                              all_balance["bnbeur"], all_balance["trteur"],
                              all_balance["trteur"] + all_balance["bnbeur"] + (
                                      all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_bid])
@@ -212,12 +220,6 @@ def main():
             else:
                 print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
                 checkbalance = True
-        if bal_list:
-            _trade_list.append(
-                ["", "", "", "", "", "", "", "", all_balance["bnbbtc"], all_balance["trtbtc"], all_balance["bnbeur"],
-                 all_balance["trteur"], all_balance["trteur"] + all_balance["bnbeur"] + (
-                         all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_bid])
-            bal_list = False
         _end_time = time.time()
         totaltime = _end_time - _start_time
         time_list.append(int(totaltime * 1000))
@@ -254,6 +256,8 @@ def save_data(_list):
     df = pandas.DataFrame(_list)
     try:
         df.to_csv('filev2.csv', index=False, sep=';', mode='a', header=False, decimal=',')
+        # append(df, filename='filev2.xlsx', startrow=None, sheet_name='Sheet1', truncate_sheet=True,engine="openpyxl")
+        _list.clear()
     except FileNotFoundError:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [file not found]{Style.RESET_ALL}")
     except PermissionError:
@@ -266,8 +270,8 @@ def save_trade(_list):
     df = pandas.DataFrame(_list)
     try:
         # with open('file_trade.xlsx', 'a') as f:
-        #    df.to_excel(f, index=False, header=False)
-        append(df, filename='file_trade.xlsx', startrow=None, sheet_name='Sheet1', truncate_sheet=True)
+        df.to_csv("file_trade.csv", sep=';', mode='a', index=False, header=False, decimal=',')
+        # append(df, filename='file_trade.xlsx', startrow=None, sheet_name='Sheet1', truncate_sheet=True,engine="openpyxl")
         _list.clear()
     except FileNotFoundError:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [file not found]{Style.RESET_ALL}")
@@ -277,8 +281,8 @@ def save_trade(_list):
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [type error]{Style.RESET_ALL}")
 
 
-def append(df, filename='file_trade.xlsx', startrow=None, sheet_name='Sheet1', truncate_sheet=True):
-    writer = pandas.ExcelWriter(filename, engine='openpyxl')
+def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True, engine="xlrd"):
+    writer = pandas.ExcelWriter(filename, engine=engine)
     try:
         # try to open an existing workbook
         writer.book = load_workbook(filename)
