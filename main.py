@@ -186,6 +186,8 @@ def main():
                 if depth == 0:
                     print(f"{Fore.MAGENTA}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                     low_balance = True
+            else:
+                print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
             if not low_balance and (asks_krk * depth) > int(d["min_balance"]):
                 print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
                 eff = (depth * bids_krk * (1 - taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))

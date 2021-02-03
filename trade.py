@@ -93,7 +93,13 @@ class Operation:
             d["krkbch"] = resp["vol"]["BCH"]
             return d
         elif exchange == "bnb":
-            client = Client(self.apikey_bnb, self.secret_bnb)
+            is_fine = True
+            while is_fine:
+                try:
+                    client = Client(self.apikey_bnb, self.secret_bnb)
+                    is_fine=False
+                except ConnectionError:
+                    print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
             d["bnbbtc"] = float(client.get_asset_balance(asset="BTC")["free"])
             d["bnbeur"] = float(client.get_asset_balance(asset="EUR")["free"])
             return d
