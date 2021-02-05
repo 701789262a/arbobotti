@@ -78,11 +78,14 @@ def main():
         _query_time = time.time()
         price_dict = op.querythread()
         _query_time = time.time() - _query_time
-        asks_data_bnb = price_dict["bnb"]['asks'][0]
-        bids_data_bnb = price_dict["bnb"]['bids'][0]
-
-        asks_data_trt = price_dict["trt"]['asks'][0]
-        bids_data_trt = price_dict["trt"]['bids'][0]
+        try:
+            asks_data_bnb = price_dict["bnb"]['asks'][0]
+            bids_data_bnb = price_dict["bnb"]['bids'][0]
+            asks_data_trt = price_dict["trt"]['asks'][0]
+            bids_data_trt = price_dict["trt"]['bids'][0]
+        except TypeError:
+            print(f"{Fore.RED}[#] ERROR WHILE FETCHING DATA [typeError - nonetype]{Style.RESET_ALL}")
+            continue
         asks_krk = round(float(price_dict["bnb"]['asks'][0][0]), 2)
         bids_krk = round(float(price_dict["bnb"]['bids'][0][0]), 2)
         asks_trt = round(float(price_dict["trt"]['asks'][0]['price']), 2)
