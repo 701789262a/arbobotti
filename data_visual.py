@@ -16,6 +16,7 @@ show_price=True
 
 
 def exe():
+
     anim = FuncAnimation(fig, animate, interval=interval)
     plt.show()
 

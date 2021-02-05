@@ -1,6 +1,7 @@
 import datetime
 import json
 import queue
+import threading
 import time
 from multiprocessing import Process
 
@@ -234,13 +235,16 @@ def main():
         if int(_end_time % int(d["save_interval"])) == 0:
             print(f"{Fore.YELLOW}[!] SAVING...{Style.RESET_ALL}")
             if _list:
-                save_data(_list)
+                save_data_thread=threading.Thread(target=save_data, args=(_list,))
+                save_data_thread.start()
+
         if int(_end_time % int(d["balance_interval"])) == 0:
             checkbalance = True
         if int(_end_time % int(d["save_trade_interval"])) == 0:
             if _trade_list:
                 print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
-                save_trade(_trade_list)
+                save_trade_thread=threading.Thread(target=save_trade, args=(_trade_list,))
+                save_trade_thread.start()
         if int(_end_time % int(d["fee_interval"])) == 0:
             print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
             fee = op.feethreading()
@@ -264,8 +268,8 @@ def save_data(_list):
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [file not found]{Style.RESET_ALL}")
     except PermissionError:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [resource busy]{Style.RESET_ALL}")
-
-    _list.clear()
+    except:
+        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
 
 
 def save_trade(_list):
@@ -281,6 +285,8 @@ def save_trade(_list):
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [resource busy]{Style.RESET_ALL}")
     except TypeError:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [type error]{Style.RESET_ALL}")
+    except:
+        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
 
 
 def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True, engine="xlrd"):

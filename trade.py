@@ -34,6 +34,7 @@ class Operation:
         self.apikey_bnb = apikey_bnb
         self.secret_bnb = secret_bnb
         self.exchange_list = exchange_list
+        self.client = Client(self.apikey_bnb, self.secret_bnb)
 
     def trade(self, exchange, fund_id, side, amount, price):
         nonce = str(int(time.time() * 1e6))
@@ -57,15 +58,15 @@ class Operation:
             resp = str(resp).replace("\'", "\"")
             return resp
         elif exchange == "bnb":
-            client = Client(self.apikey_bnb, self.secret_bnb)
+
 
             if side == "buy":
-                order = client.order_limit_buy(
+                order = self.client.order_limit_buy(
                     symbol=fund_id,
                     quantity=round(amount, 5),
                     price=price)
             elif side == "sell":
-                order = client.order_limit_sell(
+                order = self.client.order_limit_sell(
                     symbol=fund_id,
                     quantity=round(amount, 5),
                     price=price)
@@ -96,12 +97,11 @@ class Operation:
             is_fine = True
             while is_fine:
                 try:
-                    client = Client(self.apikey_bnb, self.secret_bnb)
                     is_fine=False
                 except ConnectionError:
                     print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
-            d["bnbbtc"] = float(client.get_asset_balance(asset="BTC")["free"])
-            d["bnbeur"] = float(client.get_asset_balance(asset="EUR")["free"])
+            d["bnbbtc"] = float(self.client.get_asset_balance(asset="BTC")["free"])
+            d["bnbeur"] = float(self.client.get_asset_balance(asset="EUR")["free"])
             return d
 
     def balancethreading(self):
@@ -194,11 +194,10 @@ class Operation:
             d["feekrk"] = resp["XXBTZEUR"][0]
             return d
         elif exchange == "bnb":
-            client = Client(self.apikey_bnb, self.secret_bnb)
-            resp = client.get_open_orders(symbol="BTCEUR")
+            resp = self.client.get_open_orders(symbol="BTCEUR")
             if len(resp) > 0:
                 for i in range(len(resp)):
-                    client.cancel_order(symbol="BTCEUR",orderId=resp[i]["orderId"])
+                    self.client.cancel_order(symbol="BTCEUR",orderId=resp[i]["orderId"])
 
     def cancelthreading(self):
         d = dict()
@@ -247,7 +246,6 @@ class Operation:
             _headers = {"Content-Type": "application/json", "X-TRT-KEY": self.apikey_trt,
                         "X-TRT-SIGN": signature, "X-TRT-NONCE": nonce}
             resp = requests.get(url, headers=_headers)
-
             print("trt", resp)
             d["status_trt"] = json.loads(resp.text)["status"]
             return d
@@ -260,8 +258,7 @@ class Operation:
             d["feekrk"] = resp["XXBTZEUR"][0]
             return d
         elif exchange == "bnb":
-            client = Client(self.apikey_bnb, self.secret_bnb)
-            resp = client.get_order(symbol="BTCEUR", orderId=order)
+            resp = self.client.get_order(symbol="BTCEUR", orderId=order)
             print("binance", resp)
             d["status_bnb"] = resp["status"]
             return d
@@ -285,8 +282,7 @@ class Operation:
             d["feekrk"] = resp["XXBTZEUR"][0]
             return d
         elif exchange == "bnb":
-            client = Client(self.apikey_bnb, self.secret_bnb)
-            resp = client.get_trade_fee(symbol="BTCEUR")
+            resp = self.client.get_trade_fee(symbol="BTCEUR")
             d["feebnb"] = resp["tradeFee"][0]["taker"]
             return d
 
@@ -381,11 +377,9 @@ class Operation:
             resp_krk = requests.get('https://api.kraken.com/0/public/Depth')  # , params=params)
             return resp_krk.text
         elif exchange == "bnb":
-            client = Client(apikey, secret)
-
             while 1:
                 try:
-                    resp_bnb = client.get_order_book(symbol="BTCEUR")
+                    resp_bnb = self.client.get_order_book(symbol="BTCEUR")
                     return resp_bnb
                 except requests.exceptions.ConnectionError:
                     print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
