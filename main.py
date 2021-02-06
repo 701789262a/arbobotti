@@ -107,9 +107,13 @@ def main():
             bal_list = False
             os.system('cls' if os.name == 'nt' else 'clear')
             a = datetime.datetime.now()
+            if not str(a.microsecond)[:-5]:
+                small_index=0
+            else:
+                small_index=str(a.microsecond)[:-5]
             print(
                 f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL} " % (
-                    a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:],str(a.microsecond)[:-5]))
+                    a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:],small_index))
 
             print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
                 exchange_list[1].upper(), asks_krk, exchange_list[1].upper(), all_balance["bnbeur"]))
