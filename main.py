@@ -7,6 +7,7 @@ import time
 from multiprocessing import Process
 import signal
 import pandas
+import os
 from colorama import Fore
 from colorama import Style
 from openpyxl import load_workbook
@@ -104,9 +105,11 @@ def main():
             last_ask = 0
             depth = 0
             bal_list = False
+            os.system('cls' if os.name == 'nt' else 'clear')
+            a = datetime.datetime.now()
             print(
-                f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s{Style.RESET_ALL} " % (
-                    datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:]))
+                f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL} " % (
+                    a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:],str(a.microsecond)[:-5]))
 
             print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
                 exchange_list[1].upper(), asks_krk, exchange_list[1].upper(), all_balance["bnbeur"]))
