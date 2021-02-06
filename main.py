@@ -115,9 +115,9 @@ def main():
             print("[i]                           DIFFERENCE:", round(bids_trt - asks_krk, 2))
             print(f"[i]                           DIFF + FEE: {Fore.RED}%.2f{Style.RESET_ALL}"
                   % (round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2)))
-            print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
+            print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f" % (
                 exchange_list[0].upper(), asks_trt, exchange_list[0].upper(), all_balance["trteur"]))
-            print(f"[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
+            print(f"{Style.RESET_ALL}[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
                 exchange_list[1].upper(), bids_krk, exchange_list[1].upper(), all_balance["bnbbtc"]))
             print(
                 f"[i]                           DIFFERENCE: %.2f                             TOT EUR: {Fore.GREEN}%.8f{Style.RESET_ALL}" % (
