@@ -191,11 +191,11 @@ def main():
 
             elif (bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)) > 0:
                 low_balance = False
-                print(f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f{Style.RESET_ALL}" % (
-                    asks_trt, bids_krk, exchange_list[1].upper(), bids_krk - asks_trt,
-                    (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt))))
                 depth = min(asks_data_trt['amount'],
                             float(bids_data_bnb[1]))
+                print(f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f | DEPTH: %.8f{Style.RESET_ALL}" % (
+                    asks_trt, bids_krk, exchange_list[1].upper(), bids_krk - asks_trt,
+                    (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)),depth))
                 balance = min(all_balance["bnbbtc"], all_balance["trteur"] / asks_trt)
                 if balance < depth:
                     depth = balance
