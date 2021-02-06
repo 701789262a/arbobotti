@@ -56,7 +56,7 @@ class Operation:
                     self.trt = self.trt + self.prtrt
                     self.prtrt.clear()
                     self.prbnb.clear()
-                    time.sleep(100)
+                    time.sleep(50)
 
     def threadCreation(self):
         x = Thread(target=self.thread_func)
