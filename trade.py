@@ -125,8 +125,12 @@ class Operation:
                     is_fine = False
                 except ConnectionError:
                     print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
-            d["bnbbtc"] = float(self.client.get_asset_balance(asset="BTC")["free"])
-            d["bnbeur"] = float(self.client.get_asset_balance(asset="EUR")["free"])
+            try:
+                d["bnbbtc"] = float(self.client.get_asset_balance(asset="BTC")["free"])
+                d["bnbeur"] = float(self.client.get_asset_balance(asset="EUR")["free"])
+            except Exception:
+                d["bnbbtc"] = float(self.client.get_asset_balance(asset="BTC")["free"])
+                d["bnbeur"] = float(self.client.get_asset_balance(asset="EUR")["free"])
             return d
 
     def balancethreading(self):
@@ -413,6 +417,7 @@ class Operation:
     def querythread(self):
         d = dict()
         if "trt" in self.exchange_list:
+            print(self.trt[1], len(self.trt))
             trt_thread = self.trt[1]
             trt_thread.start()
 
