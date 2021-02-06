@@ -56,6 +56,8 @@ time_list = []
 
 def main():
     op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret, bnb_apikey, bnb_secret, exchange_list)
+    op.threadCreation()
+    time.sleep(2)
     fee = op.feethreading()
     taker_fee_trt = float(fee["feetrt"]) / 100
     taker_fee_bnb = 75 * float(fee["fee" + exchange_list[1]]) / 100

@@ -35,6 +35,32 @@ class Operation:
         self.secret_bnb = secret_bnb
         self.exchange_list = exchange_list
         self.client = Client(self.apikey_bnb, self.secret_bnb)
+        self.trt = []
+        self.prtrt = []
+        self.bnb=[]
+        self.prbnb=[]
+
+    def thread_func(self):
+        while (1):
+            if len(self.prtrt) < 200:
+                tr = Thread(target=lambda q, arg1, arg2, arg3: q.put(self.query(arg1, arg2, arg3)),
+                            args=(q1, "trt", self.apikey_trt, self.secret_trt))
+                self.prtrt.append(tr)
+                bn=Thread(target=lambda q, arg1, arg2, arg3: q.put(self.query(arg1, arg2, arg3)),
+                       args=(q2, "bnb", self.apikey_bnb, self.secret_bnb))
+                self.prbnb.append(bn)
+            else:
+                time.sleep(1)
+                if len(self.trt) < 20:
+                    self.bnb=self.bnb+self.prbnb
+                    self.trt = self.trt + self.prtrt
+                    self.prtrt.clear()
+                    self.prbnb.clear()
+                    time.sleep(100)
+
+    def threadCreation(self):
+        x = Thread(target=self.thread_func)
+        x.start()
 
     def trade(self, exchange, fund_id, side, amount, price):
         nonce = str(int(time.time() * 1e6))
@@ -58,7 +84,6 @@ class Operation:
             resp = str(resp).replace("\'", "\"")
             return resp
         elif exchange == "bnb":
-
 
             if side == "buy":
                 order = self.client.order_limit_buy(
@@ -97,7 +122,7 @@ class Operation:
             is_fine = True
             while is_fine:
                 try:
-                    is_fine=False
+                    is_fine = False
                 except ConnectionError:
                     print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
             d["bnbbtc"] = float(self.client.get_asset_balance(asset="BTC")["free"])
@@ -197,7 +222,7 @@ class Operation:
             resp = self.client.get_open_orders(symbol="BTCEUR")
             if len(resp) > 0:
                 for i in range(len(resp)):
-                    self.client.cancel_order(symbol="BTCEUR",orderId=resp[i]["orderId"])
+                    self.client.cancel_order(symbol="BTCEUR", orderId=resp[i]["orderId"])
 
     def cancelthreading(self):
         d = dict()
@@ -368,8 +393,9 @@ class Operation:
 
     def query(self, exchange, apikey, secret):
         if exchange == "trt":
+            self.trt.pop(1)
             try:
-                resp_trt = requests.get('https://api.therocktrading.com/v1/funds/BTCEUR/orderbook')
+                resp_trt = requests.get('https://api.therocktrading.com/v1/funds/BTCEUR/orderbook?limit=1')
                 return json.loads(resp_trt.text)
             except requests.exceptions.ConnectionError:
                 print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
@@ -377,25 +403,23 @@ class Operation:
             resp_krk = requests.get('https://api.kraken.com/0/public/Depth')  # , params=params)
             return resp_krk.text
         elif exchange == "bnb":
-            while 1:
-                try:
-                    resp_bnb = self.client.get_order_book(symbol="BTCEUR")
-                    return resp_bnb
-                except requests.exceptions.ConnectionError:
-                    print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
-                    time.sleep(1)
+            self.bnb.pop(1)
+            try:
+                resp_bnb = self.client.get_order_book(symbol="BTCEUR",limit=5)
+                return resp_bnb
+            except requests.exceptions.ConnectionError:
+                print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
 
     def querythread(self):
         d = dict()
         if "trt" in self.exchange_list:
-            trt_thread = Thread(target=lambda q, arg1, arg2, arg3: q.put(self.query(arg1, arg2, arg3)),
-                                args=(q1, "trt", self.apikey_trt, self.secret_trt))
+            print(self.trt[1], len(self.trt))
+            trt_thread = self.trt[1]
             trt_thread.start()
-        if "bnb" in self.exchange_list:
-            bnb_thread = Thread(target=lambda q, arg1, arg2, arg3: q.put(self.query(arg1, arg2, arg3)),
-                            args=(q2, "bnb", self.apikey_bnb, self.secret_bnb))
-            bnb_thread.start()
 
+        if "bnb" in self.exchange_list:
+            bnb_thread = self.bnb[1]
+            bnb_thread.start()
 
         try:
             trt_thread.join()
