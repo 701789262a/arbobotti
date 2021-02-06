@@ -166,13 +166,13 @@ def main():
                                                       depth,
                                                       last_ask)
 
-                        if resp_dict["bnb"] == "ERROR" or resp_dict["trt"][1] == "ERROR":
+                        if resp_dict["bnb"]["status"] == "ERROR" or resp_dict["trt"][1]["status"] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                             op.cancelthreading()
                         else:
                             print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER STATUS:[%s, %s]{Style.RESET_ALL}" % (
-                                resp_dict["trt"].upper(), resp_dict["bnb"]))
+                                resp_dict["trt"]["status"].upper(), resp_dict["bnb"]["status"]))
                             bal_list = True
                             time.sleep(int(d["sleep_check_order"]))
                             _trade_list.append(
@@ -218,14 +218,13 @@ def main():
                         print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
                         resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
                                                       "sell", exchange_list[1], "BTCEUR", depth, last_bid)
-                        if resp_dict['bnb'] == "ERROR" or resp_dict['bnb'] == "NEW" or resp_dict[
-                            'trt'].upper() == "ERROR":
+                        if resp_dict["bnb"]["status"] == "ERROR" or resp_dict["trt"][1]["status"] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                             op.cancelthreading()
                         else:
                             print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
-                                resp_dict["trt"].upper(), resp_dict["bnb"]))
+                                resp_dict["trt"]["status"].upper(), resp_dict["bnb"]["status"]))
                             bal_list = True
                             time.sleep(int(d["sleep_check_order"]))
                             _trade_list.append(

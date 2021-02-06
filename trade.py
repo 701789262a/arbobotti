@@ -74,7 +74,7 @@ class Operation:
                         "X-TRT-SIGN": signature, "X-TRT-NONCE": nonce}
             resp = requests.post(url, data=json.dumps(payload_trt), headers=_headers)
             try:
-                return json.loads(resp.text)["status"]
+                return json.loads(resp.text)
             except KeyError:
                 return "ERROR"
         elif exchange == "krk":
@@ -95,7 +95,7 @@ class Operation:
                     symbol=fund_id,
                     quantity=round(amount, 5),
                     price=price)
-            return dict(order)["status"]
+            return dict(order)
 
     def balance(self, exchange):
         nonce = str(int(time.time() * 1e6))
