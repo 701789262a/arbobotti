@@ -108,14 +108,14 @@ def main():
                 f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s{Style.RESET_ALL} " % (
                     datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:]))
 
-            print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
+            print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
                 exchange_list[1].upper(), asks_krk, exchange_list[1].upper(), all_balance["bnbeur"]))
             print(f"[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
                 exchange_list[0].upper(), bids_trt, exchange_list[0].upper(), all_balance["trtbtc"]))
             print("[i]                           DIFFERENCE:", round(bids_trt - asks_krk, 2))
             print(f"[i]                           DIFF + FEE: {Fore.RED}%.2f{Style.RESET_ALL}"
                   % (round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2)))
-            print(f"[i] ASK %s : %f                              EUR %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
+            print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
                 exchange_list[0].upper(), asks_trt, exchange_list[0].upper(), all_balance["trteur"]))
             print(f"[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
                 exchange_list[1].upper(), bids_krk, exchange_list[1].upper(), all_balance["bnbbtc"]))
