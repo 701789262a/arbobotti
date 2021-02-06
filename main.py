@@ -166,7 +166,7 @@ def main():
                                                       depth,
                                                       last_ask)
 
-                        if resp_dict["bnb"]["status"] == "ERROR" or resp_dict["trt"][1]["status"] == "ERROR":
+                        if resp_dict["bnb"]["status"] == "ERROR" or resp_dict["trt"]["status"] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                             op.cancelthreading()
@@ -219,7 +219,7 @@ def main():
                         print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
                         resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
                                                       "sell", exchange_list[1], "BTCEUR", depth, last_bid)
-                        if resp_dict["bnb"]["status"] == "ERROR" or resp_dict["trt"][1]["status"] == "ERROR":
+                        if resp_dict["bnb"]["status"] == "ERROR" or resp_dict["trt"]["status"] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                             op.cancelthreading()
