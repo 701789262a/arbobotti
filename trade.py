@@ -413,7 +413,6 @@ class Operation:
     def querythread(self):
         d = dict()
         if "trt" in self.exchange_list:
-            print(self.trt[1], len(self.trt))
             trt_thread = self.trt[1]
             trt_thread.start()
 
