@@ -112,7 +112,7 @@ def main():
             else:
                 small_index=str(a.microsecond)[:-5]
             print(
-                f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL} THREAD_POOL: %s" % (
+                f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}        THREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}" % (
                     a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:],small_index,str(op.len)))
 
             print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
