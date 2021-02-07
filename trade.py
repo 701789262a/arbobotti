@@ -39,6 +39,7 @@ class Operation:
         self.prtrt = []
         self.bnb=[]
         self.prbnb=[]
+        self.len=0
 
     def thread_func(self):
         while (1):
@@ -417,7 +418,7 @@ class Operation:
     def querythread(self):
         d = dict()
         if "trt" in self.exchange_list:
-            print(self.trt[1], len(self.trt))
+            self.len=len(self.trt)
             trt_thread = self.trt[1]
             trt_thread.start()
 

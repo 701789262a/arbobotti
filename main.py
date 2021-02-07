@@ -112,8 +112,8 @@ def main():
             else:
                 small_index=str(a.microsecond)[:-5]
             print(
-                f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL} " % (
-                    a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:],small_index))
+                f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL} THREAD_POOL: %s" % (
+                    a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:],small_index,str(op.len)))
 
             print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
                 exchange_list[1].upper(), asks_krk, exchange_list[1].upper(), all_balance["bnbeur"]))
