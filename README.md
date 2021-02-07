@@ -9,7 +9,7 @@
     pip install matplotlib
 
 
-### FILE NEEDED
+### File generated or needed
 keydict.txt
 
     {"trt_apikey": [API KEY],"trt_secret":[SECRET KEY],
@@ -30,6 +30,9 @@ config.txt
     balance_interval = 50
     graph = True
     
+version
+    
+    v1.0
 ### START
     cd arbobotti
     py /main.py
