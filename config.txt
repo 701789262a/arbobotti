@@ -9,4 +9,5 @@ prod_threshold = 0.01
 sleep_check_order = 2
 min_balance = 10
 balance_interval = 50
-graph = True
+graph = False
+trade_tp = Taker

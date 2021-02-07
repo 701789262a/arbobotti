@@ -1,5 +1,5 @@
-## ARBOBOTTI
-### USAGE
+# Arbobotti
+### Usage
 
     pip install pandas
     pip install python-binance
@@ -33,6 +33,7 @@ config.txt
 version
     
     v1.0
-### START
+    
+### Start
     cd arbobotti
-    py /main.py
+    py /arbo.py
