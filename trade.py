@@ -404,6 +404,9 @@ class Operation:
                 return json.loads(resp_trt.text)
             except requests.exceptions.ConnectionError:
                 print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
+            except json.decoder.JSONDecodeError:
+                print(f"{Fore.RED}[ERR] ERROR WHILE CONVERTING TO JSON [expecting value]{Style.RESET_ALL}")
+
         elif exchange == "krk":
             resp_krk = requests.get('https://api.kraken.com/0/public/Depth')  # , params=params)
             return resp_krk.text

@@ -1,13 +1,13 @@
 import datetime
 import json
+import os
 import queue
 import sys
 import threading
 import time
 from multiprocessing import Process
-import signal
+
 import pandas
-import os
 from colorama import Fore
 from colorama import Style
 from openpyxl import load_workbook
@@ -57,6 +57,8 @@ time_list = []
 
 
 def arbo():
+    f = open("version", "r")
+    ver = f.read()
     op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret, bnb_apikey, bnb_secret, exchange_list)
     op.threadCreation()
     time.sleep(2)
@@ -108,12 +110,13 @@ def arbo():
             os.system('cls' if os.name == 'nt' else 'clear')
             a = datetime.datetime.now()
             if not str(a.microsecond)[:-5]:
-                small_index=0
+                small_index = 0
             else:
-                small_index=str(a.microsecond)[:-5]
+                small_index = str(a.microsecond)[:-5]
+            print(f"{Fore.MAGENTA}[!] ARBOBOTTI VERSION %s, MURINEDDU CAPITAL 2021{Style.RESET_ALL}\n" % (ver))
             print(
                 f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}        THREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}" % (
-                    a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:],small_index,str(op.len)))
+                    a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len)))
 
             print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
                 exchange_list[1].upper(), asks_krk, exchange_list[1].upper(), all_balance["bnbeur"]))
@@ -124,8 +127,9 @@ def arbo():
                   % (round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2)))
             print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f" % (
                 exchange_list[0].upper(), asks_trt, exchange_list[0].upper(), all_balance["trteur"]))
-            print(f"{Style.RESET_ALL}[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-                exchange_list[1].upper(), bids_krk, exchange_list[1].upper(), all_balance["bnbbtc"]))
+            print(
+                f"{Style.RESET_ALL}[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
+                    exchange_list[1].upper(), bids_krk, exchange_list[1].upper(), all_balance["bnbbtc"]))
             print(
                 f"[i]                           DIFFERENCE: %.2f                             TOT EUR: {Fore.GREEN}%.8f{Style.RESET_ALL}" % (
                     round(bids_krk - asks_trt, 2), all_balance["bnbeur"] + all_balance["trteur"]))
@@ -193,9 +197,10 @@ def arbo():
                 depth = min(asks_data_trt['amount'],
                             float(bids_data_bnb[1]))
                 balance = min(all_balance["bnbbtc"], all_balance["trteur"] / asks_trt)
-                print(f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f | DEPTH: %.8f | MINBAL: %.8f{Style.RESET_ALL}" % (
-                    asks_trt, bids_krk, exchange_list[1].upper(), bids_krk - asks_trt,
-                    (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)),depth,balance))
+                print(
+                    f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f | DEPTH: %.8f | MINBAL: %.8f{Style.RESET_ALL}" % (
+                        asks_trt, bids_krk, exchange_list[1].upper(), bids_krk - asks_trt,
+                        (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), depth, balance))
 
                 if balance < depth:
                     depth = balance
@@ -259,9 +264,9 @@ def arbo():
             if int(_end_time % int(d["balance_interval"])) == 0:
                 checkbalance = True
             if _trade_list:
-                    print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
-                    save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list,))
-                    save_trade_thread.start()
+                print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
+                save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list,))
+                save_trade_thread.start()
             if int(_end_time % int(d["fee_interval"])) == 0:
                 print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
                 fee = op.feethreading()
