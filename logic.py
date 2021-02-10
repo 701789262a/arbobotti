@@ -154,7 +154,7 @@ def arbo():
                             float(asks_data_bnb[1]))
                 balance = min(all_balance["trtbtc"], all_balance["bnbeur"] / asks_krk)
                 if balance < depth:
-                    depth = balance / d["max_each_trade"]
+                    depth = balance / float(d["max_each_trade"])
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
                     if depth == 0:
                         print(f"{Fore.RED}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
