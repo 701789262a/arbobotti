@@ -161,7 +161,7 @@ def arbo():
                         low_balance = True
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
-                    depth=depth/d["max_each_trade"]
+                    depth=depth/float(d["max_each_trade"])
                 if not low_balance and (asks_krk * depth) > int(d["min_balance"]):
                     print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
                     eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
@@ -210,14 +210,14 @@ def arbo():
                         (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), depth, balance))
 
                 if balance < depth:
-                    depth = balance / d["max_each_trade"]
+                    depth = balance / float(d["max_each_trade"])
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
                     if depth == 0:
                         print(f"{Fore.MAGENTA}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                         low_balance = True
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
-                    depth=depth/d["max_each_trade"]
+                    depth=depth/float(d["max_each_trade"])
                 if not low_balance and (asks_krk * depth) > int(d["min_balance"]):
                     print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
                     eff = (depth * bids_krk * (1 - taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
