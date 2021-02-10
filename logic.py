@@ -63,8 +63,10 @@ def arbo():
     op.threadCreation()
     time.sleep(2)
     fee = op.feethreading()
-    taker_fee_trt = float(fee["feetrt"]) / 100
-    taker_fee_bnb = 75 * float(fee["fee" + exchange_list[1]]) / 100
+    taker_fee_trt = float(fee["fee" + exchange_list[0] + "taker"]) / 100
+    taker_fee_bnb = 75 * float(fee["fee" + exchange_list[1] + "taker"]) / 100
+    maker_fee_trt = float(fee["fee" + exchange_list[0] + "maker"]) / 100
+    maker_fee_bnb = 75 * float(fee["fee" + exchange_list[1] + "maker"]) / 100
     print("GOT FEE FROM EXCHANGE; %s: %f;    %s: %f" % (
         exchange_list[0].upper(), taker_fee_trt, exchange_list[1].upper(), taker_fee_bnb))
     checkbalance = True
@@ -138,8 +140,10 @@ def arbo():
                 % (round((bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), 2),
                    all_balance["bnbbtc"] + all_balance["trtbtc"], all_balance["bnbeur"] + all_balance["trteur"] + (
                            (all_balance["bnbbtc"] + all_balance["trtbtc"]) * bids_trt)))
-            print("[i] FETCHED FEE       %s: %.4f%%;      %s: %.4f%%" % (
+            print("[i] FETCHED TAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
                 exchange_list[0].upper(), taker_fee_trt * 100, exchange_list[1].upper(), taker_fee_bnb * 100))
+            print("[i] FETCHED MAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
+                exchange_list[0].upper(), maker_fee_trt * 100, exchange_list[1].upper(), maker_fee_bnb * 100))
 
             if (bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)) > 0:
                 low_balance = False
@@ -150,11 +154,14 @@ def arbo():
                             float(asks_data_bnb[1]))
                 balance = min(all_balance["trtbtc"], all_balance["bnbeur"] / asks_krk)
                 if balance < depth:
-                    depth = balance
+                    depth = balance / d["max_each_trade"]
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
                     if depth == 0:
                         print(f"{Fore.RED}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                         low_balance = True
+                else:
+                    print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
+                    depth=depth/d["max_each_trade"]
                 if not low_balance and (asks_krk * depth) > int(d["min_balance"]):
                     print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
                     eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
@@ -203,13 +210,14 @@ def arbo():
                         (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), depth, balance))
 
                 if balance < depth:
-                    depth = balance
+                    depth = balance / d["max_each_trade"]
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
                     if depth == 0:
                         print(f"{Fore.MAGENTA}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                         low_balance = True
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
+                    depth=depth/d["max_each_trade"]
                 if not low_balance and (asks_krk * depth) > int(d["min_balance"]):
                     print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
                     eff = (depth * bids_krk * (1 - taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
@@ -270,8 +278,10 @@ def arbo():
             if int(_end_time % int(d["fee_interval"])) == 0:
                 print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
                 fee = op.feethreading()
-                taker_fee_trt = float(fee["fee" + exchange_list[0]]) / 100
-                taker_fee_krk = float(fee["fee" + exchange_list[1]]) / 100
+                taker_fee_trt = float(fee["fee" + exchange_list[0] + "taker"]) / 100
+                taker_fee_bnb = 75 * float(fee["fee" + exchange_list[1] + "taker"]) / 100
+                maker_fee_trt = float(fee["fee" + exchange_list[0] + "maker"]) / 100
+                maker_fee_bnb = 75 * float(fee["fee" + exchange_list[1] + "maker"]) / 100
 
             print(
                 f"[-] ------------------------------------------------- {Fore.YELLOW}%d ms{Style.RESET_ALL} (%d ms(q) + %d ms(p)) - avg last %d ({Fore.YELLOW}%d ms{Style.RESET_ALL}) - global avg ({Fore.YELLOW}%d ms{Style.RESET_ALL})" % (

@@ -303,7 +303,9 @@ class Operation:
             _headers = {"Content-Type": "application/json", "X-TRT-KEY": self.apikey_trt,
                         "X-TRT-SIGN": signature, "X-TRT-NONCE": nonce}
             resp = requests.get(url, headers=_headers)
-            d["feetrt"] = json.loads(resp.text)["buy_fee"]
+            d["feetrttaker"] = json.loads(resp.text)["buy_fee"]
+            d["feetrtmaker"] = json.loads(resp.text)["sell_fee"]
+
             return d
         elif exchange == "krk":
             api = krakenex.API(self.apikey_krk, self.secret_krk)
@@ -313,7 +315,9 @@ class Operation:
             return d
         elif exchange == "bnb":
             resp = self.client.get_trade_fee(symbol="BTCEUR")
-            d["feebnb"] = resp["tradeFee"][0]["taker"]
+            print(resp)
+            d["feebnbtaker"] = resp["tradeFee"][0]["taker"]
+            d["feebnbmaker"] = resp["tradeFee"][0]["maker"]
             return d
 
     def feethreading(self):

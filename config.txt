@@ -11,3 +11,4 @@ min_balance = 10
 balance_interval = 50
 graph = False
 trade_tp = Taker
+max_each_trade = 10
