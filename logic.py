@@ -48,6 +48,7 @@ except:
 with open("config.txt") as f:
     for line in f:
         (key, val) = line.replace(" ", "").split("=")
+        val = val.split("#")[0]
         d[key] = val
 
 bnb_que = queue.Queue()
@@ -161,7 +162,7 @@ def arbo():
                         low_balance = True
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
-                    depth=depth/float(d["max_each_trade"])
+                    depth = depth / float(d["max_each_trade"])
                 if not low_balance and (asks_krk * depth) > int(d["min_balance"]):
                     print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
                     eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
@@ -176,7 +177,7 @@ def arbo():
                         resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, last_bid, "buy", "bnb", "BTCEUR",
                                                       depth,
                                                       last_ask)
-                        print(resp_dict["bnb"], resp_dict["trt"])
+                        print("BNB",resp_dict["bnb"],"\nTRT", resp_dict["trt"])
                         if resp_dict["bnb"]["status"] == "ERROR" or resp_dict["trt"]["status"] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
@@ -217,7 +218,7 @@ def arbo():
                         low_balance = True
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
-                    depth=depth/float(d["max_each_trade"])
+                    depth = depth / float(d["max_each_trade"])
                 if not low_balance and (asks_krk * depth) > int(d["min_balance"]):
                     print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
                     eff = (depth * bids_krk * (1 - taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
@@ -231,7 +232,7 @@ def arbo():
                         print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
                         resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
                                                       "sell", exchange_list[1], "BTCEUR", depth, last_bid)
-                        print(resp_dict["bnb"], resp_dict["trt"])
+                        print("BNB",resp_dict["bnb"],"\nTRT", resp_dict["trt"])
                         if resp_dict["bnb"]["status"] == "ERROR" or resp_dict["trt"]["status"] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
