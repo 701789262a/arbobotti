@@ -174,11 +174,17 @@ def arbo():
                     if prod * 100 > float(d["prod_threshold"]):
                         checkbalance = True
                         print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
+                        print(f"{Fore.YELLOW}[H] SELL %f BTC ON TRT, BUYING %f (%f) BTC ON BNB{Style.RESET_ALL}"%(depth,depth,depth*last_ask))
                         resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, last_bid, "buy", "bnb", "BTCEUR",
                                                       depth,
                                                       last_ask)
                         print("BNB",resp_dict["bnb"],"\nTRT", resp_dict["trt"])
-                        if resp_dict["bnb"]["status"] == "ERROR" or resp_dict["trt"]["status"] == "ERROR":
+                        try:
+                            status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
+                        except KeyError:
+                            print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
+                            status = (resp_dict["bnb"]["status"], resp_dict["trt"]["errors"][0]["message"])
+                        if status[0] == "ERROR" or status[1] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                             op.cancelthreading()
@@ -230,10 +236,16 @@ def arbo():
                     if prod * 100 > float(d["prod_threshold"]):
                         checkbalance = True
                         print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
+                        print(f"{Fore.YELLOW}[H] SELL %f BTC ON BNB, BUYING %f (%f) BTC ON TRT{Style.RESET_ALL}"%(depth,depth,depth*last_ask))
                         resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
                                                       "sell", exchange_list[1], "BTCEUR", depth, last_bid)
                         print("BNB",resp_dict["bnb"],"\nTRT", resp_dict["trt"])
-                        if resp_dict["bnb"]["status"] == "ERROR" or resp_dict["trt"]["status"] == "ERROR":
+                        try:
+                            status=(resp_dict["bnb"]["status"],resp_dict["trt"]["status"])
+                        except KeyError:
+                            print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
+                            status=(resp_dict["bnb"]["status"],resp_dict["trt"]["errors"][0]["message"])
+                        if status[0]=="ERROR"or status[1]=="ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                             op.cancelthreading()
