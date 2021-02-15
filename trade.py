@@ -37,9 +37,9 @@ class Operation:
         self.client = Client(self.apikey_bnb, self.secret_bnb)
         self.trt = []
         self.prtrt = []
-        self.bnb=[]
-        self.prbnb=[]
-        self.len=0
+        self.bnb = []
+        self.prbnb = []
+        self.len = 0
 
     def thread_func(self):
         while (1):
@@ -47,13 +47,13 @@ class Operation:
                 tr = Thread(target=lambda q, arg1, arg2, arg3: q.put(self.query(arg1, arg2, arg3)),
                             args=(q1, "trt", self.apikey_trt, self.secret_trt))
                 self.prtrt.append(tr)
-                bn=Thread(target=lambda q, arg1, arg2, arg3: q.put(self.query(arg1, arg2, arg3)),
-                       args=(q2, "bnb", self.apikey_bnb, self.secret_bnb))
+                bn = Thread(target=lambda q, arg1, arg2, arg3: q.put(self.query(arg1, arg2, arg3)),
+                            args=(q2, "bnb", self.apikey_bnb, self.secret_bnb))
                 self.prbnb.append(bn)
             else:
                 time.sleep(1)
                 if len(self.trt) < 20:
-                    self.bnb=self.bnb+self.prbnb
+                    self.bnb = self.bnb + self.prbnb
                     self.trt = self.trt + self.prtrt
                     self.prtrt.clear()
                     self.prbnb.clear()
@@ -400,6 +400,15 @@ class Operation:
 
         return d
 
+    def min_qty_trt(self):
+        try:
+            resp_trt = requests.get("https://api.therocktrading.com/v1/funds/?id=BTCEUR")
+            return json.loads(resp_trt.text)
+        except requests.exceptions.ConnectionError:
+            print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
+        except json.decoder.JSONDecodeError:
+            print(f"{Fore.RED}[ERR] ERROR WHILE CONVERTING TO JSON [expecting value]{Style.RESET_ALL}")
+
     def query(self, exchange, apikey, secret):
         if exchange == "trt":
             self.trt.pop(1)
@@ -417,7 +426,7 @@ class Operation:
         elif exchange == "bnb":
             self.bnb.pop(1)
             try:
-                resp_bnb = self.client.get_order_book(symbol="BTCEUR",limit=5)
+                resp_bnb = self.client.get_order_book(symbol="BTCEUR", limit=5)
                 return resp_bnb
             except requests.exceptions.ConnectionError:
                 print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
@@ -425,7 +434,7 @@ class Operation:
     def querythread(self):
         d = dict()
         if "trt" in self.exchange_list:
-            self.len=len(self.trt)
+            self.len = len(self.trt)
             trt_thread = self.trt[1]
             trt_thread.start()
 
