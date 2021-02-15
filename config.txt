@@ -12,4 +12,4 @@ balance_interval = 50
 graph = True
 trade_tp = Taker
 max_each_trade = 1
-only_see = False
+only_see = 15
