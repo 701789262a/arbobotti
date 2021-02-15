@@ -64,7 +64,6 @@ def arbo():
     op.threadCreation()
     time.sleep(2)
     fee = op.feethreading()
-    min_trt_qty=op.min_qty_trt()
     taker_fee_trt = float(fee["fee" + exchange_list[0] + "taker"]) / 100
     taker_fee_bnb = 75 * float(fee["fee" + exchange_list[1] + "taker"]) / 100
     maker_fee_trt = float(fee["fee" + exchange_list[0] + "maker"]) / 100
@@ -164,7 +163,7 @@ def arbo():
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
                     depth = depth / float(d["max_each_trade"])
-                if not low_balance and depth > min_trt_qty:
+                if not low_balance and  (depth > int(d["min_balance"])):
                     print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
                     eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
                     prod = eff / (depth * bids_trt)
@@ -228,7 +227,7 @@ def arbo():
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
                     depth = depth / float(d["max_each_trade"])
-                if not low_balance and depth > min_trt_qty:
+                if not low_balance and (depth > int(d["min_balance"])):
                     print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
                     eff = (depth * bids_krk * (1 - taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
                     prod = eff / (depth * bids_krk)
