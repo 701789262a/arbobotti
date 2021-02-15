@@ -163,7 +163,7 @@ def arbo():
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
                     depth = depth / float(d["max_each_trade"])
-                if not low_balance and  (depth > int(d["min_balance"])):
+                if not low_balance and  (depth > float(d["min_balance"])):
                     print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
                     eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
                     prod = eff / (depth * bids_trt)
@@ -227,7 +227,7 @@ def arbo():
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
                     depth = depth / float(d["max_each_trade"])
-                if not low_balance and (depth > int(d["min_balance"])):
+                if not low_balance and (depth > float(d["min_balance"])):
                     print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
                     eff = (depth * bids_krk * (1 - taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
                     prod = eff / (depth * bids_krk)
