@@ -171,14 +171,15 @@ def arbo():
                     print(f"[#] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_krk * depth, depth))
                     last_ask = asks_krk
                     last_bid = bids_trt
-                    if prod * 100 > float(d["prod_threshold"]):
+                    if prod * 100 > float(d["prod_threshold"]) and d["only_see"].lower() == "false":
                         checkbalance = True
                         print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
-                        print(f"{Fore.YELLOW}[H] SELL %f BTC ON TRT, BUYING %f (%f) BTC ON BNB{Style.RESET_ALL}"%(depth,depth,depth*last_ask))
+                        print(f"{Fore.YELLOW}[H] SELL %f BTC ON TRT, BUYING %f (%f) BTC ON BNB{Style.RESET_ALL}" % (
+                        depth, depth, depth * last_ask))
                         resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, last_bid, "buy", "bnb", "BTCEUR",
                                                       depth,
                                                       last_ask)
-                        print("BNB",resp_dict["bnb"],"\nTRT", resp_dict["trt"])
+                        print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
                         try:
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
                         except KeyError:
@@ -201,6 +202,7 @@ def arbo():
                                  all_balance["trteur"] + all_balance["bnbeur"] + (
                                          all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_bid])
                             op.cancelthreading()
+                            pass
                             # EXECUTED OR SUCCESS
                             # IF BOTH ORDER ARE NOT COMPLETED, DELETE ORDER
                 else:
@@ -233,22 +235,24 @@ def arbo():
                     print(f"[i] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_trt * depth, depth))
                     last_ask = asks_trt
                     last_bid = bids_krk
-                    if prod * 100 > float(d["prod_threshold"]):
+                    if prod * 100 > float(d["prod_threshold"]) and d["only_see"].lower() == "false":
                         checkbalance = True
                         print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
-                        print(f"{Fore.YELLOW}[H] SELL %f BTC ON BNB, BUYING %f (%f) BTC ON TRT{Style.RESET_ALL}"%(depth,depth,depth*last_ask))
+                        print(f"{Fore.YELLOW}[H] SELL %f BTC ON BNB, BUYING %f (%f) BTC ON TRT{Style.RESET_ALL}" % (
+                        depth, depth, depth * last_ask))
                         resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
                                                       "sell", exchange_list[1], "BTCEUR", depth, last_bid)
-                        print("BNB",resp_dict["bnb"],"\nTRT", resp_dict["trt"])
+                        print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
                         try:
-                            status=(resp_dict["bnb"]["status"],resp_dict["trt"]["status"])
+                            status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
                         except KeyError:
                             print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
-                            status=(resp_dict["bnb"]["status"],resp_dict["trt"]["errors"][0]["message"])
-                        if status[0]=="ERROR"or status[1]=="ERROR":
+                            status = (resp_dict["bnb"]["status"], resp_dict["trt"]["errors"][0]["message"])
+                        if status[0] == "ERROR" or status[1] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                             op.cancelthreading()
+                            pass
                         else:
                             print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"]["status"].upper(), resp_dict["bnb"]["status"]))
