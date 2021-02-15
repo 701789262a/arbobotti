@@ -157,12 +157,16 @@ def arbo():
                 if balance < depth:
                     depth = balance / float(d["max_each_trade"])
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
+                    print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}"%(depth))
+
                     if depth == 0:
                         print(f"{Fore.RED}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                         low_balance = True
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
                     depth = depth / float(d["max_each_trade"])
+                    print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}"%(depth))
+
                 if not low_balance and  (depth > float(d["min_balance"])):
                     print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
                     eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
@@ -221,12 +225,15 @@ def arbo():
                 if balance < depth:
                     depth = balance / float(d["max_each_trade"])
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
+                    print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}"%(depth))
                     if depth == 0:
                         print(f"{Fore.MAGENTA}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                         low_balance = True
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
                     depth = depth / float(d["max_each_trade"])
+                    print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}"%(depth))
+
                 if not low_balance and (depth > float(d["min_balance"])):
                     print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
                     eff = (depth * bids_krk * (1 - taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
