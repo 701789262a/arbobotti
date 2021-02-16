@@ -65,6 +65,7 @@ class Operation:
 
     def trade(self, exchange, fund_id, side, amount, price):
         nonce = str(int(time.time() * 1e6))
+        print("riga 68",exchange,fund_id,side,amount,price)
         if exchange == "trt":
             url = "https://api.therocktrading.com/v1/funds/" + fund_id + "/orders"
             payload_trt = {"fund_id": "BTCEUR", "side": "sell", "amount": amount, "price": price}
