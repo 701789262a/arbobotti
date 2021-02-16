@@ -112,6 +112,7 @@ def arbo():
             bal_list = False
             os.system('cls' if os.name == 'nt' else 'clear')
             a = datetime.datetime.now()
+            only_see=bool(int(d["only_see"]))
             if not str(a.microsecond)[:-5]:
                 small_index = 0
             else:
@@ -119,7 +120,7 @@ def arbo():
             print(f"{Fore.MAGENTA}[!] ARBOBOTTI VERSION %s, MURINEDDU CAPITAL 2021{Style.RESET_ALL}\n" % (ver))
             print(
                 f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}        THREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}         ONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}" % (
-                    a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), bool(int(d["only_see"]))))
+                    a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len),only_see))
 
             print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
                 exchange_list[1].upper(), asks_krk, exchange_list[1].upper(), all_balance["bnbeur"]))
@@ -157,7 +158,7 @@ def arbo():
                 if balance < depth:
                     depth = balance / float(d["max_each_trade"])
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
-                    print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}"%(depth))
+                    print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
                     if depth == 0:
                         print(f"{Fore.RED}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
@@ -165,9 +166,9 @@ def arbo():
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
                     depth = depth / float(d["max_each_trade"])
-                    print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}"%(depth))
+                    print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
-                if not low_balance and  (depth > float(d["min_balance"])):
+                if not low_balance and depth > float(d["min_balance"]):
                     print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
                     eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
                     prod = eff / (depth * bids_trt)
@@ -175,11 +176,11 @@ def arbo():
                     print(f"[#] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_krk * depth, depth))
                     last_ask = asks_krk
                     last_bid = bids_trt
-                    if prod * 100 > float(d["prod_threshold"]) and d["only_see"].lower() == "false":
+                    if prod * 100 > float(d["prod_threshold"]) and only_see:
                         checkbalance = True
                         print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
                         print(f"{Fore.YELLOW}[H] SELL %f BTC ON TRT, BUYING %f (%f) BTC ON BNB{Style.RESET_ALL}" % (
-                        depth, depth, depth * last_ask))
+                            depth, depth, depth * last_ask))
                         resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, last_bid, "buy", "bnb", "BTCEUR",
                                                       depth,
                                                       last_ask)
@@ -225,14 +226,14 @@ def arbo():
                 if balance < depth:
                     depth = balance / float(d["max_each_trade"])
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
-                    print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}"%(depth))
+                    print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
                     if depth == 0:
                         print(f"{Fore.MAGENTA}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                         low_balance = True
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
                     depth = depth / float(d["max_each_trade"])
-                    print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}"%(depth))
+                    print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
                 if not low_balance and (depth > float(d["min_balance"])):
                     print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
@@ -242,11 +243,11 @@ def arbo():
                     print(f"[i] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_trt * depth, depth))
                     last_ask = asks_trt
                     last_bid = bids_krk
-                    if prod * 100 > float(d["prod_threshold"]) and d["only_see"].lower() == "false":
+                    if prod * 100 > float(d["prod_threshold"]) and only_see:
                         checkbalance = True
                         print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
                         print(f"{Fore.YELLOW}[H] SELL %f BTC ON BNB, BUYING %f (%f) BTC ON TRT{Style.RESET_ALL}" % (
-                        depth, depth, depth * last_ask))
+                            depth, depth, depth * last_ask))
                         resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
                                                       "sell", exchange_list[1], "BTCEUR", depth, last_bid)
                         print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
