@@ -68,7 +68,7 @@ class Operation:
         amount = round(amount,8)
         if exchange == "trt":
             url = "https://api.therocktrading.com/v1/funds/" + fund_id + "/orders"
-            payload_trt = {"fund_id": "BTCEUR", "side": "sell", "amount": amount, "price": price}
+            payload_trt = {"fund_id": "BTCEUR", "side": side, "amount": amount, "price": price}
             signature = hmac.new(self.secret_trt.encode(), msg=(str(nonce) + url).encode(),
                                  digestmod=hashlib.sha512).hexdigest()
 
