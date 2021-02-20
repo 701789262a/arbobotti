@@ -176,7 +176,7 @@ def arbo():
                     print(f"[#] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_krk * depth, depth))
                     last_ask = asks_krk
                     last_bid = bids_trt
-                    if prod * 100 > float(d["prod_threshold"]) and only_see:
+                    if prod * 100 > float(d["prod_threshold"]) and not only_see:
                         checkbalance = True
                         print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
                         print(f"{Fore.YELLOW}[H] SELL %f BTC ON TRT, BUYING %f (%f) BTC ON BNB{Style.RESET_ALL}" % (
@@ -200,9 +200,9 @@ def arbo():
                             bal_list = True
                             time.sleep(int(d["sleep_check_order"]))
                             _trade_list.append(
-                                [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "buy", exchange_list[1], depth,
+                                [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", exchange_list[1].upper(), depth,
                                  last_ask,
-                                 "sell", "trt", last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
+                                 "SELL", "TRT", last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
                                  all_balance["bnbeur"], all_balance["trteur"],
                                  all_balance["trteur"] + all_balance["bnbeur"] + (
                                          all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_bid])
@@ -243,7 +243,7 @@ def arbo():
                     print(f"[i] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_trt * depth, depth))
                     last_ask = asks_trt
                     last_bid = bids_krk
-                    if prod * 100 > float(d["prod_threshold"]) and only_see:
+                    if prod * 100 > float(d["prod_threshold"]) and not only_see:
                         checkbalance = True
                         print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
                         print(f"{Fore.YELLOW}[H] SELL %f BTC ON BNB, BUYING %f (%f) BTC ON TRT{Style.RESET_ALL}" % (
@@ -291,14 +291,14 @@ def arbo():
             if int(_end_time % int(d["save_interval"])) == 0:
                 print(f"{Fore.YELLOW}[!] SAVING...{Style.RESET_ALL}")
                 if _list:
-                    save_data_thread = threading.Thread(target=save_data, args=(_list,))
+                    save_data_thread = threading.Thread(target=save_data, args=(_list,d["sep"],))
                     save_data_thread.start()
 
             if int(_end_time % int(d["balance_interval"])) == 0:
                 checkbalance = True
             if _trade_list:
                 print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
-                save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list,))
+                save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list,d["sep"],))
                 save_trade_thread.start()
             if int(_end_time % int(d["fee_interval"])) == 0:
                 print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
@@ -317,10 +317,10 @@ def arbo():
             sys.exit()
 
 
-def save_data(_list):
+def save_data(_list, sep):
     df = pandas.DataFrame(_list)
     try:
-        df.to_csv('filev2.csv', index=False, sep=';', mode='a', header=False, decimal=',')
+        df.to_csv('filev2.csv', index=False, sep=sep, mode='a', header=False, decimal=',')
         # append(df, filename='filev2.xlsx', startrow=None, sheet_name='Sheet1', truncate_sheet=True,engine="openpyxl")
         _list.clear()
     except FileNotFoundError:
@@ -331,11 +331,11 @@ def save_data(_list):
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
 
 
-def save_trade(_list):
+def save_trade(_list,sep):
     df = pandas.DataFrame(_list)
     try:
         # with open('file_trade.xlsx', 'a') as f:
-        df.to_csv("file_trade.csv", sep=';', mode='a', index=False, header=False, decimal=',')
+        df.to_csv("file_trade.csv", sep=sep, mode='a', index=False, header=False, decimal=',')
         # append(df, filename='file_trade.xlsx', startrow=None, sheet_name='Sheet1', truncate_sheet=True,engine="openpyxl")
         _list.clear()
     except FileNotFoundError:
