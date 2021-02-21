@@ -7,6 +7,7 @@ import threading
 import time
 from multiprocessing import Process
 
+import mysql.connector
 import pandas
 from colorama import Fore
 from colorama import Style
@@ -75,6 +76,7 @@ def arbo():
     if d["graph"].lower() == "true":
         g = Process(target=data_visual.ru)
         g.start()
+
     while 1:
         try:
             eff = 0
@@ -105,14 +107,16 @@ def arbo():
                     ["", "", "", "", "", "", "", "", all_balance["bnbbtc"], all_balance["trtbtc"],
                      all_balance["bnbeur"],
                      all_balance["trteur"], all_balance["trteur"] + all_balance["bnbeur"] + (
-                             all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_bid])
+                     all_balance["bnbbtc"] + all_balance["trtbtc"]) * _trade_list[0][3], float(_trade_list[0][12]) -
+                     (all_balance["trteur"] + all_balance["bnbeur"] +
+                     all_balance["bnbbtc"] + all_balance["trtbtc"]) * _trade_list[0][3]])
             last_bid = 0
             last_ask = 0
             depth = 0
             bal_list = False
             os.system('cls' if os.name == 'nt' else 'clear')
             a = datetime.datetime.now()
-            only_see=bool(int(d["only_see"]))
+            only_see = bool(int(d["only_see"]))
             if not str(a.microsecond)[:-5]:
                 small_index = 0
             else:
@@ -120,7 +124,7 @@ def arbo():
             print(f"{Fore.MAGENTA}[!] ARBOBOTTI VERSION %s, MURINEDDU CAPITAL 2021{Style.RESET_ALL}\n" % (ver))
             print(
                 f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}        THREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}         ONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}" % (
-                    a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len),only_see))
+                    a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), only_see))
 
             print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
                 exchange_list[1].upper(), asks_krk, exchange_list[1].upper(), all_balance["bnbeur"]))
@@ -200,12 +204,13 @@ def arbo():
                             bal_list = True
                             time.sleep(int(d["sleep_check_order"]))
                             _trade_list.append(
-                                [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", exchange_list[1].upper(), depth,
+                                [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", exchange_list[1].upper(),
+                                 depth,
                                  last_ask,
                                  "SELL", "TRT", last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
                                  all_balance["bnbeur"], all_balance["trteur"],
                                  all_balance["trteur"] + all_balance["bnbeur"] + (
-                                         all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_bid])
+                                         all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask])
                             op.cancelthreading()
                             pass
                             # EXECUTED OR SUCCESS
@@ -291,14 +296,14 @@ def arbo():
             if int(_end_time % int(d["save_interval"])) == 0:
                 print(f"{Fore.YELLOW}[!] SAVING...{Style.RESET_ALL}")
                 if _list:
-                    save_data_thread = threading.Thread(target=save_data, args=(_list,d["sep"],))
+                    save_data_thread = threading.Thread(target=save_data, args=(_list, d["sep"],))
                     save_data_thread.start()
 
             if int(_end_time % int(d["balance_interval"])) == 0:
                 checkbalance = True
             if _trade_list:
                 print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
-                save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list,d["sep"],))
+                save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list, d["sep"],))
                 save_trade_thread.start()
             if int(_end_time % int(d["fee_interval"])) == 0:
                 print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
@@ -317,6 +322,28 @@ def arbo():
             sys.exit()
 
 
+def db(_list):
+    server = d["gbhost"]
+    database = d["dbname"]
+    username = d["dbuser"]
+    password = d["dbpass"]
+    port = d["dbport"]
+    print(d["dbpass"])
+    conn = mysql.connector.connect(host=server, user=username, password=password, port=port, database=database)
+    cursor = conn.cursor()
+    add_trade = (
+        'INSERT INTO `tradelist` '
+        '(`side1`,`exch1`,`ask`,`side2`,`exch2`,`bid`,`depth`,`bnbbtc_in`,`trtbtc_in`,`bnbeur_in`,`trteur_in`,`bal_in`,`bnbbtc_en`,`trtbtc_en`,`bnbeur_en`,`trteur_en`,`bal_en`,`gain`,`date`,`order_id_1`,`order_id_2`,`success`) '
+        'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);')
+    data_trade = (
+    _list[0][1], _list[0][2], _list[0][4], _list[0][5], _list[0][6], _list[0][7], _list[0][3], _list[0][8], _list[0][9], _list[0][10], _list[0][11],
+    _list[0][12], _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12], _list[1][13], _list[0][0], "1337",
+    "1337", "1")
+    cursor.execute(add_trade, data_trade)
+    conn.commit()
+    cursor.close()
+    conn.close()
+
 def save_data(_list, sep):
     df = pandas.DataFrame(_list)
     try:
@@ -331,8 +358,12 @@ def save_data(_list, sep):
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
 
 
-def save_trade(_list,sep):
+def save_trade(_list, sep):
     df = pandas.DataFrame(_list)
+    try:
+        db(_list)
+    except mysql.connector.Error:
+        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
     try:
         # with open('file_trade.xlsx', 'a') as f:
         df.to_csv("file_trade.csv", sep=sep, mode='a', index=False, header=False, decimal=',')
