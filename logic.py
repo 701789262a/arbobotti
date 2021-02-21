@@ -324,7 +324,7 @@ def arbo():
 def save_data(_list, sep):
     df = pandas.DataFrame(_list)
     try:
-        df.to_csv('filev2.csv', index=False, sep=sep, mode='a', header=False, decimal=',')
+        df.to_csv('filev2.csv', index=False, sep=',', mode='a', header=False, decimal=',')
         # append(df, filename='filev2.xlsx', startrow=None, sheet_name='Sheet1', truncate_sheet=True,engine="openpyxl")
         _list.clear()
     except FileNotFoundError:
