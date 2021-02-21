@@ -298,7 +298,6 @@ def arbo():
                 if _list:
                     save_data_thread = threading.Thread(target=save_data, args=(_list, d["sep"],))
                     save_data_thread.start()
-
             if int(_end_time % int(d["balance_interval"])) == 0:
                 checkbalance = True
             if _trade_list:
@@ -321,28 +320,6 @@ def arbo():
         except KeyboardInterrupt:
             sys.exit()
 
-
-def db(_list):
-    server = d["gbhost"]
-    database = d["dbname"]
-    username = d["dbuser"]
-    password = d["dbpass"]
-    port = d["dbport"]
-    print(d["dbpass"])
-    conn = mysql.connector.connect(host=server, user=username, password=password, port=port, database=database)
-    cursor = conn.cursor()
-    add_trade = (
-        'INSERT INTO `tradelist` '
-        '(`side1`,`exch1`,`ask`,`side2`,`exch2`,`bid`,`depth`,`bnbbtc_in`,`trtbtc_in`,`bnbeur_in`,`trteur_in`,`bal_in`,`bnbbtc_en`,`trtbtc_en`,`bnbeur_en`,`trteur_en`,`bal_en`,`gain`,`date`,`order_id_1`,`order_id_2`,`success`) '
-        'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);')
-    data_trade = (
-    _list[0][1], _list[0][2], _list[0][4], _list[0][5], _list[0][6], _list[0][7], _list[0][3], _list[0][8], _list[0][9], _list[0][10], _list[0][11],
-    _list[0][12], _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12], _list[1][13], _list[0][0], "1337",
-    "1337", "1")
-    cursor.execute(add_trade, data_trade)
-    conn.commit()
-    cursor.close()
-    conn.close()
 
 def save_data(_list, sep):
     df = pandas.DataFrame(_list)
@@ -413,3 +390,25 @@ def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True
 
     # save the workbook
     writer.save()
+
+def db(_list):
+    server = d["gbhost"]
+    database = d["dbname"]
+    username = d["dbuser"]
+    password = d["dbpass"]
+    port = d["dbport"]
+    print(d["dbpass"])
+    conn = mysql.connector.connect(host=server, user=username, password=password, port=port, database=database)
+    cursor = conn.cursor()
+    add_trade = (
+        'INSERT INTO `tradelist` '
+        '(`side1`,`exch1`,`ask`,`side2`,`exch2`,`bid`,`depth`,`bnbbtc_in`,`trtbtc_in`,`bnbeur_in`,`trteur_in`,`bal_in`,`bnbbtc_en`,`trtbtc_en`,`bnbeur_en`,`trteur_en`,`bal_en`,`gain`,`date`,`order_id_1`,`order_id_2`,`success`) '
+        'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);')
+    data_trade = (
+    _list[0][1], _list[0][2], _list[0][4], _list[0][5], _list[0][6], _list[0][7], _list[0][3], _list[0][8], _list[0][9], _list[0][10], _list[0][11],
+    _list[0][12], _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12], _list[1][13], _list[0][0], "1337",
+    "1337", "1")
+    cursor.execute(add_trade, data_trade)
+    conn.commit()
+    cursor.close()
+    conn.close()
