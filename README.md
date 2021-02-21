@@ -7,6 +7,9 @@
     pip install pykrakenapi
     pip install openpyxl
     pip install matplotlib
+    pip install mysql.connector
+    pip install telebot
+    pip install telethon
 
 
 ### File generated or needed

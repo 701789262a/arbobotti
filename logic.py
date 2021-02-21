@@ -9,6 +9,7 @@ from multiprocessing import Process
 
 import mysql.connector
 import pandas
+import requests
 from colorama import Fore
 from colorama import Style
 from openpyxl import load_workbook
@@ -20,6 +21,7 @@ _list = []
 _trade_list = []
 exchange_list = []
 d = {}
+t = {}
 login_data = json.loads(open("keydict.txt", "r").readline().strip().replace("\n", ""))
 try:
     trt_apikey = str(login_data["trt_apikey"])
@@ -51,6 +53,11 @@ with open("config.txt") as f:
         (key, val) = line.replace(" ", "").split("=")
         val = val.split("#")[0]
         d[key] = val
+with open("telegram.txt") as f:
+    for line in f:
+        (key, val) = line.replace(" ", "").split("=")
+        val = val.split("#")[0]
+        t[key] = val
 
 bnb_que = queue.Queue()
 trt_que = queue.Queue()
@@ -107,9 +114,10 @@ def arbo():
                     ["", "", "", "", "", "", "", "", all_balance["bnbbtc"], all_balance["trtbtc"],
                      all_balance["bnbeur"],
                      all_balance["trteur"], all_balance["trteur"] + all_balance["bnbeur"] + (
-                     all_balance["bnbbtc"] + all_balance["trtbtc"]) * _trade_list[0][3], float(_trade_list[0][12]) -
+                             all_balance["bnbbtc"] + all_balance["trtbtc"]) * _trade_list[0][3],
+                     float(_trade_list[0][12]) -
                      (all_balance["trteur"] + all_balance["bnbeur"] +
-                     all_balance["bnbbtc"] + all_balance["trtbtc"]) * _trade_list[0][3]])
+                      all_balance["bnbbtc"] + all_balance["trtbtc"]) * _trade_list[0][3]])
             last_bid = 0
             last_ask = 0
             depth = 0
@@ -336,6 +344,7 @@ def save_data(_list, sep):
 
 
 def save_trade(_list, sep):
+    telegram(_list)
     df = pandas.DataFrame(_list)
     try:
         db(_list)
@@ -391,6 +400,7 @@ def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True
     # save the workbook
     writer.save()
 
+
 def db(_list):
     server = d["gbhost"]
     database = d["dbname"]
@@ -405,10 +415,28 @@ def db(_list):
         '(`side1`,`exch1`,`ask`,`side2`,`exch2`,`bid`,`depth`,`bnbbtc_in`,`trtbtc_in`,`bnbeur_in`,`trteur_in`,`bal_in`,`bnbbtc_en`,`trtbtc_en`,`bnbeur_en`,`trteur_en`,`bal_en`,`gain`,`date`,`order_id_1`,`order_id_2`,`success`) '
         'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);')
     data_trade = (
-    _list[0][1], _list[0][2], _list[0][4], _list[0][5], _list[0][6], _list[0][7], _list[0][3], _list[0][8], _list[0][9], _list[0][10], _list[0][11],
-    _list[0][12], _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12], _list[1][13], _list[0][0], "1337",
-    "1337", "1")
+        _list[0][1], _list[0][2], _list[0][4], _list[0][5], _list[0][6], _list[0][7], _list[0][3], _list[0][8],
+        _list[0][9], _list[0][10], _list[0][11],
+        _list[0][12], _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12], _list[1][13], _list[0][0],
+        "1337",
+        "1337", "1")
     cursor.execute(add_trade, data_trade)
     conn.commit()
     cursor.close()
     conn.close()
+
+
+def telegram(_list):
+    message = "EXECUTED TRADE: BOUGHT" + str(_list[0][3]) + "BTC @" + str(_list[0][4]) + "ON" + str(
+        _list[0][2]) + "SOLD @" + str(_list[0][
+                                          7]) + "ON" + str(_list[0][6]) + ". RESULTED PROFIT=" + str(
+        _list[1][12] - _list[0][12])
+    bot_token = "1632926529:AAE37LVrJ_Js7bYJ9jR39Nu5uroHRu3jK5E"
+    bot_chatID = str(t["app_id"])
+    print(str(bot_token))
+    print(str(bot_chatID))
+    send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=Markdown&text=' + message
+
+    response = requests.get(send_text)
+    print(response.json())
+    return response.json()
