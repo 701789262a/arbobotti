@@ -115,7 +115,7 @@ def arbo():
                      all_balance["bnbeur"],
                      all_balance["trteur"], all_balance["trteur"] + all_balance["bnbeur"] + (
                              all_balance["bnbbtc"] + all_balance["trtbtc"]) * float(_trade_list[0][3].replace(",",".")),
-                     float(_trade_list[0][12].replace(",",".")) -
+                     _trade_list[0][12] -
                      (all_balance["trteur"] + all_balance["bnbeur"] +
                       all_balance["bnbbtc"] + all_balance["trtbtc"]) * float(_trade_list[0][3].replace(",","."))])
             last_bid = 0
