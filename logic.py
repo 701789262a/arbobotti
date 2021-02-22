@@ -114,7 +114,7 @@ def arbo():
                     ["", "", "", "", "", "", "", "", all_balance["bnbbtc"], all_balance["trtbtc"],
                      all_balance["bnbeur"],
                      all_balance["trteur"], all_balance["trteur"] + all_balance["bnbeur"] + (
-                             all_balance["bnbbtc"] + all_balance["trtbtc"]) * _trade_list[0][3],
+                             all_balance["bnbbtc"] + all_balance["trtbtc"]) * float(_trade_list[0][3]),
                      float(_trade_list[0][12]) -
                      (all_balance["trteur"] + all_balance["bnbeur"] +
                       all_balance["bnbbtc"] + all_balance["trtbtc"]) * float(_trade_list[0][3])])
@@ -344,6 +344,7 @@ def save_data(_list, sep):
 
 
 def save_trade(_list, sep):
+    print(_list)
     df = pandas.DataFrame(_list)
     try:
         # with open('file_trade.xlsx', 'a') as f:
