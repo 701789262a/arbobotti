@@ -117,7 +117,7 @@ def arbo():
                              all_balance["bnbbtc"] + all_balance["trtbtc"]) * _trade_list[0][3],
                      float(_trade_list[0][12]) -
                      (all_balance["trteur"] + all_balance["bnbeur"] +
-                      all_balance["bnbbtc"] + all_balance["trtbtc"]) * _trade_list[0][3]])
+                      all_balance["bnbbtc"] + all_balance["trtbtc"]) * float(_trade_list[0][3])])
             last_bid = 0
             last_ask = 0
             depth = 0
@@ -430,7 +430,7 @@ def telegram(_list):
     message = "EXECUTED TRADE: BOUGHT" + str(_list[0][3]) + "BTC @" + str(_list[0][4]) + "ON" + str(
         _list[0][2]) + "SOLD @" + str(_list[0][
                                           7]) + "ON" + str(_list[0][6]) + ". RESULTED PROFIT=" + str(
-        _list[1][12] - _list[0][12])
+        _list[1][12] - _list[0][12])##
     bot_token = "1632926529:AAE37LVrJ_Js7bYJ9jR39Nu5uroHRu3jK5E"
     bot_chatID = str(t["app_id"])
     print(str(bot_token))
