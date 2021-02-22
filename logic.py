@@ -308,7 +308,7 @@ def arbo():
                     save_data_thread.start()
             if int(_end_time % int(d["balance_interval"])) == 0:
                 checkbalance = True
-            if _trade_list:
+            if _trade_list and not checkbalance:
                 print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
                 save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list, d["sep"],))
                 save_trade_thread.start()
