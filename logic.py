@@ -344,12 +344,7 @@ def save_data(_list, sep):
 
 
 def save_trade(_list, sep):
-    telegram(_list)
     df = pandas.DataFrame(_list)
-    try:
-        db(_list)
-    except mysql.connector.Error:
-        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
     try:
         # with open('file_trade.xlsx', 'a') as f:
         df.to_csv("file_trade.csv", sep=sep, mode='a', index=False, header=False, decimal=',')
@@ -363,6 +358,12 @@ def save_trade(_list, sep):
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [type error]{Style.RESET_ALL}")
     except:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
+
+    try:
+        db(_list)
+    except mysql.connector.Error:
+        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
+    telegram(_list)
 
 
 def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True, engine="xlrd"):
@@ -402,7 +403,7 @@ def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True
 
 
 def db(_list):
-    server = d["gbhost"]
+    server = d["dbhost"]
     database = d["dbname"]
     username = d["dbuser"]
     password = d["dbpass"]
