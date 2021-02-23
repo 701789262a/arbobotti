@@ -80,6 +80,8 @@ def arbo():
         exchange_list[0].upper(), taker_fee_trt, exchange_list[1].upper(), taker_fee_bnb))
     checkbalance = True
     bal_list = False
+    tg=0
+    _tglist=[]
     if d["graph"].lower() == "true":
         g = Process(target=data_visual.ru)
         g.start()
@@ -305,10 +307,14 @@ def arbo():
                     save_data_thread.start()
             if int(_end_time % int(d["balance_interval"])) == 0:
                 checkbalance = True
-            if _trade_list and not checkbalance:
+            if _trade_list:
                 print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
                 save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list, d["sep"],))
                 save_trade_thread.start()
+                if tg==0:
+                    _tglist.append(_trade_list)
+                tg=tg+1
+
             if int(_end_time % int(d["fee_interval"])) == 0:
                 print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
                 fee = op.feethreading()
