@@ -351,7 +351,7 @@ def save_trade(_list, sep):
     df = pandas.DataFrame(_list)
     try:
         # with open('file_trade.xlsx', 'a') as f:
-        df.to_csv("file_trade.csv", sep=sep, mode='a', index=False, header=False, decimal=',')
+        df.to_csv("file_trade.csv", sep=',', mode='a', index=False, header=False, decimal=',')
         # append(df, filename='file_trade.xlsx', startrow=None, sheet_name='Sheet1', truncate_sheet=True,engine="openpyxl")
         _list.clear()
     except FileNotFoundError:
