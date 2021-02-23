@@ -80,8 +80,8 @@ def arbo():
         exchange_list[0].upper(), taker_fee_trt, exchange_list[1].upper(), taker_fee_bnb))
     checkbalance = True
     bal_list = False
-    tg=0
-    _tglist=[]
+    tg = 0
+    _tglist = []
     if d["graph"].lower() == "true":
         g = Process(target=data_visual.ru)
         g.start()
@@ -311,9 +311,9 @@ def arbo():
                 print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
                 save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list, d["sep"],))
                 save_trade_thread.start()
-                if tg==0:
+                if tg == 0:
                     _tglist.append(_trade_list)
-                tg=tg+1
+                tg = tg + 1
 
             if int(_end_time % int(d["fee_interval"])) == 0:
                 print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
@@ -432,10 +432,9 @@ def db(_list):
 
 
 def telegram(_list):
-    message = "EXECUTED TRADE: BOUGHT" + str(_list[0][3]) + "BTC @" + str(_list[0][4]) + "ON" + str(
-        _list[0][2]) + "SOLD @" + str(_list[0][
-                                          7]) + "ON" + str(_list[0][6]) + ". RESULTED PROFIT=0"
-    bot_token = "1632926529:AAE37LVrJ_Js7bYJ9jR39Nu5uroHRu3jK5E"
+    message = "EXECUTED TRADE: BOUGHT " + str(_list[0][3]) + " BTC @" + str(_list[0][4]) + " ON " + str(
+        _list[0][2]) + " SOLD @ " + str(_list[0][7]) + " ON " + str(_list[0][6]).replace(" ", "%20")
+    bot_token = "1673298427:AAHsEtcRBMzkaWbtbSQexRhgJtOiHzJuXqw"
     bot_chatID = str(t["app_id"])
     print(str(bot_token))
     print(str(bot_chatID))
