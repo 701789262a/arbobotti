@@ -358,16 +358,20 @@ def save_trade(_list, sep):
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [file not found]{Style.RESET_ALL}")
     except PermissionError:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [resource busy]{Style.RESET_ALL}")
-    except TypeError:
+    except TypeError as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [type error]{Style.RESET_ALL}")
+        print(err)
+        exit(9)
     except:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
 
+    telegram(_list)
     try:
         db(_list)
-    except mysql.connector.Error:
+    except mysql.connector.Error as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
-    telegram(_list)
+        print(err)
+        exit(9)
 
 
 def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True, engine="xlrd"):
