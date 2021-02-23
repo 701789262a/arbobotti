@@ -113,11 +113,7 @@ def arbo():
                 _trade_list.append(
                     ["", "", "", "", "", "", "", "", all_balance["bnbbtc"], all_balance["trtbtc"],
                      all_balance["bnbeur"],
-                     all_balance["trteur"], all_balance["trteur"] + all_balance["bnbeur"] + (
-                             all_balance["bnbbtc"] + all_balance["trtbtc"]) * float(_trade_list[0][3]),
-                     _trade_list[0][12] -
-                     (all_balance["trteur"] + all_balance["bnbeur"] +
-                      all_balance["bnbbtc"] + all_balance["trtbtc"]) * float(_trade_list[0][3])])
+                     all_balance["trteur"]])
 
             last_bid = 0
             last_ask = 0
@@ -218,8 +214,8 @@ def arbo():
                                  last_ask,
                                  "SELL", "TRT", last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
                                  all_balance["bnbeur"], all_balance["trteur"],
-                                 all_balance["trteur"] + all_balance["bnbeur"] + (
-                                         all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask])
+                                 float(all_balance["trteur"] + all_balance["bnbeur"] + (
+                                         all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask)])
                             op.cancelthreading()
                             pass
                             # EXECUTED OR SUCCESS
@@ -287,8 +283,8 @@ def arbo():
                                  all_balance["bnbbtc"],
                                  all_balance["trtbtc"],
                                  all_balance["bnbeur"], all_balance["trteur"],
-                                 all_balance["trteur"] + all_balance["bnbeur"] + (
-                                         all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_bid])
+                                 float(all_balance["trteur"] + all_balance["bnbeur"] + (
+                                         all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask)])
                             op.cancelthreading()
                 else:
                     print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
@@ -415,12 +411,12 @@ def db(_list):
     cursor = conn.cursor()
     add_trade = (
         'INSERT INTO `tradelist` '
-        '(`side1`,`exch1`,`ask`,`side2`,`exch2`,`bid`,`depth`,`bnbbtc_in`,`trtbtc_in`,`bnbeur_in`,`trteur_in`,`bal_in`,`bnbbtc_en`,`trtbtc_en`,`bnbeur_en`,`trteur_en`,`bal_en`,`gain`,`date`,`order_id_1`,`order_id_2`,`success`) '
-        'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);')
+        '(`side1`,`exch1`,`ask`,`side2`,`exch2`,`bid`,`depth`,`bnbbtc_in`,`trtbtc_in`,`bnbeur_in`,`trteur_in`,`bnbbtc_en`,`trtbtc_en`,`bnbeur_en`,`trteur_en`,`date`,`order_id_1`,`order_id_2`,`success`) '
+        'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);')
     data_trade = (
         _list[0][1], _list[0][2], _list[0][4], _list[0][5], _list[0][6], _list[0][7], _list[0][3], _list[0][8],
         _list[0][9], _list[0][10], _list[0][11],
-        _list[0][12], _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12], _list[1][13], _list[0][0],
+        _list[0][12], _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[0][0],
         "1337",
         "1337", "1")
     cursor.execute(add_trade, data_trade)
@@ -432,8 +428,7 @@ def db(_list):
 def telegram(_list):
     message = "EXECUTED TRADE: BOUGHT" + str(_list[0][3]) + "BTC @" + str(_list[0][4]) + "ON" + str(
         _list[0][2]) + "SOLD @" + str(_list[0][
-                                          7]) + "ON" + str(_list[0][6]) + ". RESULTED PROFIT=" + str(
-        _list[1][12] - _list[0][12])##
+                                          7]) + "ON" + str(_list[0][6]) + ". RESULTED PROFIT=0"
     bot_token = "1632926529:AAE37LVrJ_Js7bYJ9jR39Nu5uroHRu3jK5E"
     bot_chatID = str(t["app_id"])
     print(str(bot_token))
