@@ -118,6 +118,7 @@ def arbo():
                      _trade_list[0][12] -
                      (all_balance["trteur"] + all_balance["bnbeur"] +
                       all_balance["bnbbtc"] + all_balance["trtbtc"]) * float(_trade_list[0][3])])
+
             last_bid = 0
             last_ask = 0
             depth = 0
