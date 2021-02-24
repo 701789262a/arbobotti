@@ -204,6 +204,7 @@ def arbo():
                         if status[0] == "ERROR" or status[1] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
+                            time.sleep(20)
                             op.cancelthreading()
                         else:
                             print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER STATUS:[%s, %s]{Style.RESET_ALL}" % (
@@ -271,6 +272,7 @@ def arbo():
                         if status[0] == "ERROR" or status[1] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
+                            time.sleep(20)
                             op.cancelthreading()
                             pass
                         else:
