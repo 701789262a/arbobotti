@@ -361,54 +361,34 @@ def save_trade(_list, sep):
     except TypeError as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [type error]{Style.RESET_ALL}")
         print(err)
-        exit(9)
+        pass
     except:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
-
     telegram(_list)
     try:
         db(_list)
     except mysql.connector.Error as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
         print(err)
-        exit(9)
-
+        pass
 
 def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True, engine="xlrd"):
     writer = pandas.ExcelWriter(filename, engine=engine)
     try:
-        # try to open an existing workbook
         writer.book = load_workbook(filename)
-
-        # get the last row in the existing Excel sheet
-        # if it was not specified explicitly
         if startrow is None and sheet_name in writer.book.sheetnames:
             startrow = writer.book[sheet_name].max_row
-
-        # truncate sheet
         if truncate_sheet and sheet_name in writer.book.sheetnames:
-            # index of [sheet_name] sheet
             idx = writer.book.sheetnames.index(sheet_name)
-            # remove [sheet_name]
             writer.book.remove(writer.book.worksheets[idx])
-            # create an empty sheet [sheet_name] using old index
             writer.book.create_sheet(sheet_name, idx)
-
-        # copy existing sheets
         writer.sheets = {ws.title: ws for ws in writer.book.worksheets}
     except FileNotFoundError:
-        # file does not exist yet, we will create it
         pass
-
     if startrow is None:
         startrow = 0
-
-        # write out the new sheet
     df.to_excel(writer, sheet_name, startrow=startrow)
-
-    # save the workbook
     writer.save()
-
 
 def db(_list):
     server = d["dbhost"]
@@ -434,12 +414,11 @@ def db(_list):
     cursor.close()
     conn.close()
 
-
 def telegram(_list):
     message = "EXECUTED TRADE: BOUGHT " + str(_list[0][3]) + " BTC @" + str(_list[0][4]) + " ON " + str(
         _list[0][2]) + " SOLD @ " + str(_list[0][7]) + " ON " + str(_list[0][6]).replace(" ", "%20")
     bot_token = "1673298427:AAHsEtcRBMzkaWbtbSQexRhgJtOiHzJuXqw"
-    bot_chatID = str(t["app_id"])
+    bot_chatID = "-1001175272795"
     print(str(bot_token))
     print(str(bot_chatID))
     send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=Markdown&text=' + message
