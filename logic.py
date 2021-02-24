@@ -363,7 +363,6 @@ def save_trade(_list, sep):
     except TypeError as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [type error]{Style.RESET_ALL}")
         print(err)
-        pass
     except:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
     telegram(_list)
@@ -386,7 +385,7 @@ def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True
             writer.book.create_sheet(sheet_name, idx)
         writer.sheets = {ws.title: ws for ws in writer.book.worksheets}
     except FileNotFoundError:
-        pass
+        print("e diocan pero")
     if startrow is None:
         startrow = 0
     df.to_excel(writer, sheet_name, startrow=startrow)
