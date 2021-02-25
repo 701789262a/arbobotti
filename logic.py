@@ -416,8 +416,9 @@ def db(_list):
     conn.close()
 
 def telegram(_list):
-    message = "EXECUTED TRADE: BOUGHT " + str(_list[0][3]) + " BTC @" + str(_list[0][4]) + " ON " + str(
-        _list[0][2]) + " SOLD @ " + str(_list[0][7]) + " ON " + str(_list[0][6]).replace(" ", "%20")
+    #message = "EXECUTED TRADE: BOUGHT " + str(_list[0][3]) + " BTC @" + str(_list[0][4]) + " ON " + str(
+    #    _list[0][2]) + " SOLD @ " + str(_list[0][7]) + " ON " + str(_list[0][6]).replace(" ", "%20")
+    message="EXECUTED_TRADE"
     bot_token = "1673298427:AAHsEtcRBMzkaWbtbSQexRhgJtOiHzJuXqw"
     bot_chatID = "-1001175272795"
     print(str(bot_token))
