@@ -423,7 +423,7 @@ def telegram(_list):
     bot_chatID = "-1001175272795"
     print(str(bot_token))
     print(str(bot_chatID))
-    send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=Markdown&text=' + message
+    send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&text=' + message
 
     response = requests.get(send_text)
     print(response.json())
