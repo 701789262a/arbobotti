@@ -445,4 +445,10 @@ def num(num):
         s = s + "0"
     if s[6] == ".":
         s = s + "0"
+        s=kill_char(s,1)
     return s
+
+def kill_char(string, n):
+    begin = string[:n]
+    end = string[n+1:]
+    return begin + end
