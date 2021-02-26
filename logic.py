@@ -137,20 +137,20 @@ def arbo():
                 exchange_list[1].upper(), asks_krk, exchange_list[1].upper(), all_balance["bnbeur"]))
             print(f"[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
                 exchange_list[0].upper(), bids_trt, exchange_list[0].upper(), all_balance["trtbtc"]))
-            print("[i]                           DIFFERENCE:", round(bids_trt - asks_krk, 2))
-            print(f"[i]                           DIFF + FEE: {Fore.RED}%.2f{Style.RESET_ALL}"
-                  % (round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2)))
+            print("[i]                           DIFFERENCE:", num(round(bids_trt - asks_krk, 2)))
+            print(f"[i]                           DIFF + FEE: {Fore.RED}%s{Style.RESET_ALL}"
+                  % (num(round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2))))
             print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f" % (
                 exchange_list[0].upper(), asks_trt, exchange_list[0].upper(), all_balance["trteur"]))
             print(
                 f"{Style.RESET_ALL}[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
                     exchange_list[1].upper(), bids_krk, exchange_list[1].upper(), all_balance["bnbbtc"]))
             print(
-                f"[i]                           DIFFERENCE: %.2f                             TOT EUR: {Fore.GREEN}%.8f{Style.RESET_ALL}" % (
-                    round(bids_krk - asks_trt, 2), all_balance["bnbeur"] + all_balance["trteur"]))
+                f"[i]                           DIFFERENCE: %s                             TOT EUR: {Fore.GREEN}%.8f{Style.RESET_ALL}" % (
+                    num(round(bids_krk - asks_trt, 2)), all_balance["bnbeur"] + all_balance["trteur"]))
             print(
-                f"[i]                           DIFF + FEE: {Fore.RED}%.2f{Style.RESET_ALL}                            TOT BTC: {Fore.GREEN}%.8f{Style.RESET_ALL}                       PF VALUE: {Fore.GREEN}%.4f{Style.RESET_ALL}"
-                % (round((bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), 2),
+                f"[i]                           DIFF + FEE: {Fore.RED}%s{Style.RESET_ALL}                            TOT BTC: {Fore.GREEN}%.8f{Style.RESET_ALL}                       PF VALUE: {Fore.GREEN}%.4f{Style.RESET_ALL}"
+                % (num(round((bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), 2)),
                    all_balance["bnbbtc"] + all_balance["trtbtc"], all_balance["bnbeur"] + all_balance["trteur"] + (
                            (all_balance["bnbbtc"] + all_balance["trtbtc"]) * bids_trt)))
             print("[i] FETCHED TAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
@@ -373,6 +373,7 @@ def save_trade(_list, sep):
         print(err)
         pass
 
+
 def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True, engine="xlrd"):
     writer = pandas.ExcelWriter(filename, engine=engine)
     try:
@@ -390,6 +391,7 @@ def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True
         startrow = 0
     df.to_excel(writer, sheet_name, startrow=startrow)
     writer.save()
+
 
 def db(_list):
     server = d["dbhost"]
@@ -415,9 +417,11 @@ def db(_list):
     cursor.close()
     conn.close()
 
+
 def telegram(_list):
     message = "EXECUTED TRADE: BOUGHT " + str(_list[0][3]) + " BTC @" + str(_list[0][4]) + " ON " + str(
-        _list[0][2]) + " SOLD @" + str(_list[0][7]) + " ON " + str(_list[0][6]+". EFFECTIVE GAIN:"+str((_list[1][8]+_list[1][8])*_list[0][4]+_list[1][8]+_list[1][8])).replace(" ", "%20")
+        _list[0][2]) + " SOLD @" + str(_list[0][7]) + " ON " + str(_list[0][6] + ". EFFECTIVE GAIN:" + str(
+        (_list[1][8] + _list[1][8]) * _list[0][4] + _list[1][8] + _list[1][8])).replace(" ", "%20")
     bot_token = "1673298427:AAHsEtcRBMzkaWbtbSQexRhgJtOiHzJuXqw"
     bot_chatID = "-1001175272795"
     print(str(bot_token))
@@ -427,3 +431,16 @@ def telegram(_list):
     response = requests.get(send_text)
     print(response.json())
     return response.json()
+
+
+def num(num):
+    s = str(abs(num))
+    if num >= 0:
+        sign = "+"
+    else:
+        sign = "-"
+    spc = 7 - len(s)
+    s = sign + (" " * spc) + s
+    if (int(num) - num) == 0:
+        s = s + "0"
+    return s
