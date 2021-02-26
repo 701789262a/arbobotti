@@ -440,7 +440,9 @@ def num(num):
     else:
         sign = "-"
     spc = 7 - len(s)
-    s = sign + (" " * spc) + s
+    s = (" " * spc) + s
     if (int(num) - num) == 0:
         s = s + "0"
+        s = s[1:]
+    s = sign + s
     return s
