@@ -355,7 +355,6 @@ def save_trade(_list, sep):
         # with open('file_trade.xlsx', 'a') as f:
         df.to_csv("file_trade.csv", sep=',', mode='a', index=False, header=False, decimal=',')
         # append(df, filename='file_trade.xlsx', startrow=None, sheet_name='Sheet1', truncate_sheet=True,engine="openpyxl")
-        _list.clear()
     except FileNotFoundError:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [file not found]{Style.RESET_ALL}")
     except PermissionError:
@@ -372,6 +371,9 @@ def save_trade(_list, sep):
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
         print(err)
         pass
+        _list.clear()
+
+    _list.clear()
 
 
 def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True, engine="xlrd"):
