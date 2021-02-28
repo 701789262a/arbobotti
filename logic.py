@@ -421,17 +421,17 @@ def db(_list):
 def telegram(_list):
     if _tg_list:
         print("marioporco",str(_tg_list[0][0]))
-        print(str(_tg_list[0][3]))
-        print(str(_tg_list[0][4]))
-        print(str(_tg_list[0][2]))
-        print(str(_tg_list[0][7]))
-        print(str(_tg_list[0][6]))
-        print(str(_tg_list[1][12] - _tg_list[0][12]))
+        print(str(_tg_list[0][0][3]))
+        print(str(_tg_list[0][0][4]))
+        print(str(_tg_list[0][0][2]))
+        print(str(_tg_list[0][0][7]))
+        print(str(_tg_list[0][0][6]))
+        print(str(_tg_list[1][0][12] - _tg_list[0][0][12]))
         _tg_list.append(_list)
-        message = ("EXECUTED TRADE AT " + str(_tg_list[0][0]) + ": BOUGHT " + str(_tg_list[0][3]) + " BTC @" + str(
-            _tg_list[0][4]) + " ON " + str(
-            _tg_list[0][2]) + " SOLD @" + str(_tg_list[0][7]) + " ON " + str(_tg_list[0][6]) + ". CALCULATED GAIN = " + str(
-            _tg_list[1][12] - _tg_list[0][12])).replace(" ", "%20")
+        message = ("EXECUTED TRADE AT " + str(_tg_list[0][0][0]) + ": BOUGHT " + str(_tg_list[0][0][3]) + " BTC @" + str(
+            _tg_list[0][0][4]) + " ON " + str(
+            _tg_list[0][0][2]) + " SOLD @" + str(_tg_list[0][0][7]) + " ON " + str(_tg_list[0][0][6]) + ". CALCULATED GAIN = " + str(
+            _tg_list[1][0][12] - _tg_list[0][0][12])).replace(" ", "%20")
         bot_token = "1673298427:AAHsEtcRBMzkaWbtbSQexRhgJtOiHzJuXqw"
         bot_chatID = "-1001175272795"
         print(str(bot_token))
