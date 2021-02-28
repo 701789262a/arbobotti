@@ -20,6 +20,7 @@ from trade import Operation
 _list = []
 _trade_list = []
 exchange_list = []
+_tg_list = []
 d = {}
 t = {}
 login_data = json.loads(open("keydict.txt", "r").readline().strip().replace("\n", ""))
@@ -85,7 +86,6 @@ def arbo():
     if d["graph"].lower() == "true":
         g = Process(target=data_visual.ru)
         g.start()
-
     while 1:
         try:
             eff = 0
@@ -113,9 +113,9 @@ def arbo():
             bids_trt = round(float(price_dict["trt"]['bids'][0]['price']), 2)
             if bal_list:
                 _trade_list.append(
-                    ["", "", "", "", "", "", "", "", all_balance["bnbbtc"], all_balance["trtbtc"],
-                     all_balance["bnbeur"],
-                     all_balance["trteur"]])
+                    ["", "", "", "", "", "", "", "", float(all_balance["bnbbtc"]), float(all_balance["trtbtc"]),
+                     float(all_balance["bnbeur"]),
+                     float(all_balance["trteur"])])
 
             last_bid = 0
             last_ask = 0
@@ -215,8 +215,8 @@ def arbo():
                                 [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", exchange_list[1].upper(),
                                  depth,
                                  last_ask,
-                                 "SELL", "TRT", last_bid, all_balance["bnbbtc"], all_balance["trtbtc"],
-                                 all_balance["bnbeur"], all_balance["trteur"],
+                                 "SELL", "TRT", last_bid, float(all_balance["bnbbtc"]), float(all_balance["trtbtc"]),
+                                 float(all_balance["bnbeur"]), float(all_balance["trteur"]),
                                  float(all_balance["trteur"] + all_balance["bnbeur"] + (
                                          all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask)])
                             op.cancelthreading()
@@ -284,9 +284,9 @@ def arbo():
                                 [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", "TRT",
                                  str(depth).replace(".", ","), str(last_ask).replace(".", ","),
                                  "SELL", exchange_list[1].upper(), str(last_bid).replace(".", ","),
-                                 all_balance["bnbbtc"],
-                                 all_balance["trtbtc"],
-                                 all_balance["bnbeur"], all_balance["trteur"],
+                                 float(all_balance["bnbbtc"]),
+                                 float(all_balance["trtbtc"]),
+                                 float(all_balance["bnbeur"]), float(all_balance["trteur"]),
                                  float(all_balance["trteur"] + all_balance["bnbeur"] + (
                                          all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask)])
                             op.cancelthreading()
@@ -421,17 +421,23 @@ def db(_list):
 
 
 def telegram(_list):
-    message = ("EXECUTED TRADE: BOUGHT " + str(_list[0][3]) + " BTC @" + str(_list[0][4]) + " ON " + str(
-        _list[0][2]) + " SOLD @" + str(_list[0][7]) + " ON").replace(" ", "%20")
-    bot_token = "1673298427:AAHsEtcRBMzkaWbtbSQexRhgJtOiHzJuXqw"
-    bot_chatID = "-1001175272795"
-    print(str(bot_token))
-    print(str(bot_chatID))
-    send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&text=' + message
-
-    response = requests.get(send_text)
-    print(response.json())
-    return response.json()
+    if _tg_list:
+        _tg_list.append(_list)
+        message = ("EXECUTED TRADE AT " + str(_tg_list[0][0]) + ": BOUGHT " + str(_list[0][3]) + " BTC @" + str(
+            _list[0][4]) + " ON " + str(
+            _list[0][2]) + " SOLD @" + str(_list[0][7]) + " ON " + str(_tg_list[0][6]) + ". CALCULATED GAIN = " + str(
+            _tg_list[1][13]-_tg_list[0][13])).replace(" ", "%20")
+        bot_token = "1673298427:AAHsEtcRBMzkaWbtbSQexRhgJtOiHzJuXqw"
+        bot_chatID = "-1001175272795"
+        print(str(bot_token))
+        print(str(bot_chatID))
+        send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&text=' + message
+        response = requests.get(send_text)
+        print(response.json())
+        _tg_list.clear()
+        return response.json()
+    else:
+        _tg_list.append(_list)
 
 
 def num(num):
@@ -446,10 +452,11 @@ def num(num):
         s = s + "0"
     if s[6] == ".":
         s = s + "0"
-        s=kill_char(s,1)
+        s = kill_char(s, 1)
     return s
+
 
 def kill_char(string, n):
     begin = string[:n]
-    end = string[n+1:]
+    end = string[n + 1:]
     return begin + end
