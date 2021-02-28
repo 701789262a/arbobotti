@@ -315,9 +315,6 @@ def arbo():
                 print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
                 save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list, d["sep"],))
                 save_trade_thread.start()
-                if tg == 0:
-                    _tglist.append(_trade_list)
-                tg = tg + 1
 
             if int(_end_time % int(d["fee_interval"])) == 0:
                 print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
@@ -367,13 +364,13 @@ def save_trade(_list, sep):
     except:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
     telegram(_list)
-    try:
-        db(_list)
-    except mysql.connector.Error as err:
-        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
-        print(err)
-        pass
-        _list.clear()
+    #try:
+    #    db(_list)
+    #except mysql.connector.Error as err:
+    #    print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
+    #    print(err)
+    #    pass
+    #    _list.clear()
 
     _list.clear()
 
@@ -424,6 +421,13 @@ def db(_list):
 
 def telegram(_list):
     if _tg_list:
+        print(str(_tg_list[0][0]))
+        print(str(_tg_list[0][3]))
+        print(str(_tg_list[0][4]))
+        print(str(_tg_list[0][2]))
+        print(str(_tg_list[0][7]))
+        print(str(_tg_list[0][6]))
+        print(str(_tg_list[1][12] - _tg_list[0][12]))
         _tg_list.append(_list)
         message = ("EXECUTED TRADE AT " + str(_tg_list[0][0]) + ": BOUGHT " + str(_tg_list[0][3]) + " BTC @" + str(
             _tg_list[0][4]) + " ON " + str(
