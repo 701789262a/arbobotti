@@ -20,7 +20,6 @@ from trade import Operation
 _list = []
 _trade_list = []
 exchange_list = []
-_tg_list = []
 d = {}
 t = {}
 login_data = json.loads(open("keydict.txt", "r").readline().strip().replace("\n", ""))
@@ -115,7 +114,8 @@ def arbo():
                 _trade_list.append(
                     ["", "", "", "", "", "", "", "", float(all_balance["bnbbtc"]), float(all_balance["trtbtc"]),
                      float(all_balance["bnbeur"]),
-                     float(all_balance["trteur"]), (float(all_balance["bnbbtc"]) + float(all_balance["trtbtc"]))*_list[0][4] +
+                     float(all_balance["trteur"]),
+                     (float(all_balance["bnbbtc"]) + float(all_balance["trtbtc"])) * _list[0][4] +
                      float(all_balance["bnbeur"]) +
                      float(all_balance["trteur"])])
 
@@ -311,6 +311,14 @@ def arbo():
             if int(_end_time % int(d["balance_interval"])) == 0:
                 checkbalance = True
             if _trade_list:
+                all_balance = op.balancethreading()
+                _trade_list.append(
+                    ["", "", "", "", "", "", "", "", float(all_balance["bnbbtc"]), float(all_balance["trtbtc"]),
+                     float(all_balance["bnbeur"]),
+                     float(all_balance["trteur"]),
+                     (float(all_balance["bnbbtc"]) + float(all_balance["trtbtc"])) * _list[0][4] +
+                     float(all_balance["bnbeur"]) +
+                     float(all_balance["trteur"])])
                 print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
                 save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list, d["sep"],))
                 save_trade_thread.start()
@@ -363,9 +371,9 @@ def save_trade(_list, sep):
     except:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
     telegram(_list)
-    #try:
+    # try:
     #    db(_list)
-    #except mysql.connector.Error as err:
+    # except mysql.connector.Error as err:
     #    print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
     #    print(err)
     #    pass
@@ -419,30 +427,25 @@ def db(_list):
 
 
 def telegram(_list):
-    if _tg_list:
-        print("marioporco",str(_tg_list))
-        print(str(_tg_list[0][0][3]))
-        print(str(_tg_list[0][0][4]))
-        print(str(_tg_list[0][0][2]))
-        print(str(_tg_list[0][0][7]))
-        print(str(_tg_list[0][0][6]))
-        print(str(_tg_list[1][0][12] - _tg_list[0][0][12]))
-        _tg_list.append(_list)
-        message = ("EXECUTED TRADE AT " + str(_tg_list[0][0][0]) + ": BOUGHT " + str(_tg_list[0][0][3]) + " BTC @" + str(
-            _tg_list[0][0][4]) + " ON " + str(
-            _tg_list[0][0][2]) + " SOLD @" + str(_tg_list[0][0][7]) + " ON " + str(_tg_list[0][0][6]) + ". CALCULATED GAIN = " + str(
-            _tg_list[1][0][12] - _tg_list[0][0][12])).replace(" ", "%20")
-        bot_token = "1673298427:AAHsEtcRBMzkaWbtbSQexRhgJtOiHzJuXqw"
-        bot_chatID = "-1001175272795"
-        print(str(bot_token))
-        print(str(bot_chatID))
-        send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&text=' + message
-        response = requests.get(send_text)
-        print(response.json())
-        _tg_list.clear()
-        return response.json()
-    else:
-        _tg_list.append(_list)
+    print("madioporco", str(_list[0][0]))
+    print(str(_list[0][3]))
+    print(str(_list[0][4]))
+    print(str(_list[0][2]))
+    print(str(_list[0][7]))
+    print(str(_list[0][6]))
+    print(str(_list[1][12] - _list[0][12]))
+    message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ": BOUGHT " + str(_list[0][3]) + " BTC @" + str(
+        _list[0][4]) + " ON " + str(
+        _list[0][2]) + " SOLD @" + str(_list[0][7]) + " ON " + str(_list[0][6]) + ". CALCULATED GAIN = " + str(
+        _list[1][12] - _list[0][12])).replace(" ", "%20")
+    bot_token = "1673298427:AAHsEtcRBMzkaWbtbSQexRhgJtOiHzJuXqw"
+    bot_chatID = "-1001175272795"
+    print(str(bot_token))
+    print(str(bot_chatID))
+    send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&text=' + message
+    response = requests.get(send_text)
+    print(response.json())
+    return response.json()
 
 
 def num(num):
