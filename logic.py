@@ -312,16 +312,18 @@ def arbo():
                 checkbalance = True
             if _trade_list:
                 all_balance = op.balancethreading()
+                time.sleep(1)
                 _trade_list.append(
                     ["", "", "", "", "", "", "", "", float(all_balance["bnbbtc"]), float(all_balance["trtbtc"]),
                      float(all_balance["bnbeur"]),
                      float(all_balance["trteur"]),
-                     (float(all_balance["bnbbtc"]) + float(all_balance["trtbtc"])) * _list[0][4] +
+                     ((all_balance["bnbbtc"] + all_balance["trtbtc"]) * _list[0][4])+
                      float(all_balance["bnbeur"]) +
                      float(all_balance["trteur"])])
                 print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
                 save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list, d["sep"],))
                 save_trade_thread.start()
+                _list.clear()
 
             if int(_end_time % int(d["fee_interval"])) == 0:
                 print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
@@ -378,7 +380,6 @@ def save_trade(_list, sep):
     #    print(err)
     #    pass
     #    _list.clear()
-
     _list.clear()
 
 
@@ -427,17 +428,11 @@ def db(_list):
 
 
 def telegram(_list):
-    print("madioporco", str(_list[0][0]))
-    print(str(_list[0][3]))
-    print(str(_list[0][4]))
-    print(str(_list[0][2]))
-    print(str(_list[0][7]))
-    print(str(_list[0][6]))
-    print(str(_list[1][12] - _list[0][12]))
-    message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ": BOUGHT " + str(_list[0][3]) + " BTC @" + str(
-        _list[0][4]) + " ON " + str(
-        _list[0][2]) + " SOLD @" + str(_list[0][7]) + " ON " + str(_list[0][6]) + ". CALCULATED GAIN = " + str(
-        _list[1][12] - _list[0][12])).replace(" ", "%20")
+    message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ":\nBOUGHT **" + str(
+        round(_list[0][3], 8)) + "** $BTC **" + str(
+        _list[0][4]) + "** ON `" + str(
+        _list[0][2]) + "` SOLD **" + str(_list[0][7]) + "* ON `" + str(_list[0][6]) + "`. CALCULATED GAIN = **" + str(
+        round(_list[1][12], 5) - round(_list[0][12], 5)) + "€**").replace(" ", "%20")
     bot_token = "1673298427:AAHsEtcRBMzkaWbtbSQexRhgJtOiHzJuXqw"
     bot_chatID = "-1001175272795"
     print(str(bot_token))
