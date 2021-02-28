@@ -237,7 +237,6 @@ def arbo():
                     f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f | DEPTH: %.8f | MINBAL: %.8f{Style.RESET_ALL}" % (
                         asks_trt, bids_krk, exchange_list[1].upper(), bids_krk - asks_trt,
                         (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), depth, balance))
-
                 if balance < depth:
                     depth = balance * float(d["max_each_trade"])
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
