@@ -115,6 +115,8 @@ def arbo():
                 _trade_list.append(
                     ["", "", "", "", "", "", "", "", float(all_balance["bnbbtc"]), float(all_balance["trtbtc"]),
                      float(all_balance["bnbeur"]),
+                     float(all_balance["trteur"]), (float(all_balance["bnbbtc"]) + float(all_balance["trtbtc"]))*_list[0][4] +
+                     float(all_balance["bnbeur"]) +
                      float(all_balance["trteur"])])
 
             last_bid = 0
@@ -426,7 +428,7 @@ def telegram(_list):
         message = ("EXECUTED TRADE AT " + str(_tg_list[0][0]) + ": BOUGHT " + str(_list[0][3]) + " BTC @" + str(
             _list[0][4]) + " ON " + str(
             _list[0][2]) + " SOLD @" + str(_list[0][7]) + " ON " + str(_tg_list[0][6]) + ". CALCULATED GAIN = " + str(
-            _tg_list[1][13]-_tg_list[0][13])).replace(" ", "%20")
+            _tg_list[1][13] - _tg_list[0][13])).replace(" ", "%20")
         bot_token = "1673298427:AAHsEtcRBMzkaWbtbSQexRhgJtOiHzJuXqw"
         bot_chatID = "-1001175272795"
         print(str(bot_token))
