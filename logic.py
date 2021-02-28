@@ -420,7 +420,7 @@ def db(_list):
 
 def telegram(_list):
     if _tg_list:
-        print("marioporco",str(_tg_list[0][0]))
+        print("marioporco",str(_tg_list))
         print(str(_tg_list[0][0][3]))
         print(str(_tg_list[0][0][4]))
         print(str(_tg_list[0][0][2]))
