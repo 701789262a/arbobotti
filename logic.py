@@ -169,7 +169,7 @@ def arbo():
                             float(asks_data_bnb[1]))
                 balance = min(all_balance["trtbtc"], all_balance["bnbeur"] / asks_krk)
                 if balance < depth:
-                    depth = balance / float(d["max_each_trade"])
+                    depth = balance * float(d["max_each_trade"])
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
                     print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
@@ -178,7 +178,7 @@ def arbo():
                         low_balance = True
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
-                    depth = depth / float(d["max_each_trade"])
+                    depth = depth * float(d["max_each_trade"])
                     print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
                 if not low_balance and depth > float(d["min_balance"]):
@@ -239,7 +239,7 @@ def arbo():
                         (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), depth, balance))
 
                 if balance < depth:
-                    depth = balance / float(d["max_each_trade"])
+                    depth = balance * float(d["max_each_trade"])
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
                     print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
                     if depth == 0:
@@ -247,7 +247,7 @@ def arbo():
                         low_balance = True
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
-                    depth = depth / float(d["max_each_trade"])
+                    depth = depth * float(d["max_each_trade"])
                     print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
                 if not low_balance and (depth > float(d["min_balance"])):
