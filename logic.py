@@ -324,6 +324,7 @@ def arbo():
                 save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list, d["sep"],))
                 save_trade_thread.start()
                 _list.clear()
+                bal_list=False
 
             if int(_end_time % int(d["fee_interval"])) == 0:
                 print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
@@ -428,16 +429,16 @@ def db(_list):
 
 
 def telegram(_list):
-    message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ":\nBOUGHT **" + str(
-        round(_list[0][3], 8)) + "** $BTC **" + str(
-        _list[0][4]) + "** ON `" + str(
-        _list[0][2]) + "` SOLD **" + str(_list[0][7]) + "* ON `" + str(_list[0][6]) + "`. CALCULATED GAIN = **" + str(
-        round(_list[1][12], 5) - round(_list[0][12], 5)) + "€**").replace(" ", "%20")
+    message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ":\nBOUGHT <b>" + str(
+        round(_list[0][3], 8)) + "<b> $BTC <b>" + str(
+        _list[0][4]) + "<b> ON <code>" + str(
+        _list[0][2]) + "<code> SOLD <b>" + str(_list[0][7]) + "<b> ON <code>" + str(_list[0][6]) + "<code>. CALCULATED GAIN = <b>" + str(
+        round(_list[1][12]-_list[0][12], 5)) + "€<b>").replace(" ", "%20")
     bot_token = "1673298427:AAHsEtcRBMzkaWbtbSQexRhgJtOiHzJuXqw"
     bot_chatID = "-1001175272795"
     print(str(bot_token))
     print(str(bot_chatID))
-    send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&text=' + message
+    send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=HTML&text=' + message
     response = requests.get(send_text)
     print(response.json())
     return response.json()
