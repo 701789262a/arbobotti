@@ -115,7 +115,7 @@ def arbo():
                     ["", "", "", "", "", "", "", "", float(all_balance["bnbbtc"]), float(all_balance["trtbtc"]),
                      float(all_balance["bnbeur"]),
                      float(all_balance["trteur"]),
-                     (float(all_balance["bnbbtc"]) + float(all_balance["trtbtc"])) * _list[0][4] +
+                     (float(all_balance["bnbbtc"]) + float(all_balance["trtbtc"])) * last_ask +
                      float(all_balance["bnbeur"]) +
                      float(all_balance["trteur"])])
 
@@ -151,7 +151,7 @@ def arbo():
                 f"[i]                           DIFFERENCE: %s                             TOT EUR: {Fore.GREEN}%.8f{Style.RESET_ALL}" % (
                     num(round(bids_krk - asks_trt, 2)), all_balance["bnbeur"] + all_balance["trteur"]))
             print(
-                f"[i]                           DIFF + FEE: {Fore.RED}%s{Style.RESET_ALL}                            TOT BTC: {Fore.GREEN}%.8f{Style.RESET_ALL}                       PF VALUE: {Fore.GREEN}%.4f{Style.RESET_ALL}"
+                f"[i]                           DIFF + FEE: {Fore.RED}%s{Style.RESET_ALL}                             TOT BTC: {Fore.GREEN}%.8f{Style.RESET_ALL}                       PF VALUE: {Fore.GREEN}%.4f{Style.RESET_ALL}"
                 % (num(round((bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), 2)),
                    all_balance["bnbbtc"] + all_balance["trtbtc"], all_balance["bnbeur"] + all_balance["trteur"] + (
                            (all_balance["bnbbtc"] + all_balance["trtbtc"]) * bids_trt)))
