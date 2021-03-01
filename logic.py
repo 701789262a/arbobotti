@@ -110,14 +110,6 @@ def arbo():
             bids_krk = round(float(price_dict["bnb"]['bids'][0][0]), 2)
             asks_trt = round(float(price_dict["trt"]['asks'][0]['price']), 2)
             bids_trt = round(float(price_dict["trt"]['bids'][0]['price']), 2)
-            if bal_list:
-                _trade_list.append(
-                    ["", "", "", "", "", "", "", "", float(all_balance["bnbbtc"]), float(all_balance["trtbtc"]),
-                     float(all_balance["bnbeur"]),
-                     float(all_balance["trteur"]),
-                     (float(all_balance["bnbbtc"]) + float(all_balance["trtbtc"])) * last_ask +
-                     float(all_balance["bnbeur"]) +
-                     float(all_balance["trteur"])])
 
             last_bid = 0
             last_ask = 0
@@ -317,15 +309,12 @@ def arbo():
                     ["", "", "", "", "", "", "", "", float(all_balance["bnbbtc"]), float(all_balance["trtbtc"]),
                      float(all_balance["bnbeur"]),
                      float(all_balance["trteur"]),
-                     ((all_balance["bnbbtc"] + all_balance["trtbtc"]) * _list[0][4])+
+                     ((all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask)+
                      float(all_balance["bnbeur"]) +
                      float(all_balance["trteur"])])
                 print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
                 save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list, d["sep"],))
                 save_trade_thread.start()
-                _list.clear()
-                bal_list=False
-
             if int(_end_time % int(d["fee_interval"])) == 0:
                 print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
                 fee = op.feethreading()
@@ -381,7 +370,7 @@ def save_trade(_list, sep):
     #    print(err)
     #    pass
     #    _list.clear()
-    _list.clear()
+    _trade_list.clear()
 
 
 def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True, engine="xlrd"):
