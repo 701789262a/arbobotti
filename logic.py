@@ -30,7 +30,7 @@ gpg = gnupg.GPG(d["gpg"][:-1])
 _list = []
 _trade_list = []
 exchange_list = []
-print("""                                                                                          
+print(f"""{Fore.RED}                                                                                          
                                                                                           
                                                                .%%%#                      
                                                            *#%%%%%%%%,                    
@@ -60,7 +60,7 @@ print("""
                      %.    #%.                                                            
                        %%                                                                 
                                                                                           
-  """)
+  {Style.RESET_ALL}""")
 passphrase = getpass.getpass("Please provide master password to continue:")
 with open("telegram.gpg", "rb") as tg_f:
     status_tg = gpg.decrypt_file(file=tg_f, passphrase=passphrase)
@@ -68,7 +68,6 @@ with open("keydict.gpg", "rb") as kd_f:
     status_kd = gpg.decrypt_file(file=kd_f, passphrase=passphrase)
 with open("dbinfo.gpg", "rb") as db_f:
     status_db = gpg.decrypt_file(file=db_f, passphrase=passphrase)
-    status_db.ok
 login_data = json.loads(str(status_kd).strip().replace("\n", ""))
 tg_data = json.loads(str(status_tg).strip().replace("\n", ""))
 db_data = json.loads(str(status_db).strip().replace("\n", ""))
