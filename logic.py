@@ -26,7 +26,7 @@ with open("config.txt") as f:
         (key, val) = line.replace(" ", "").split("=")
         val = val.split("#")[0]
         d[key] = val
-gpg = gnupg.GPG(d["gpg"][:-1])
+gpg = gnupg.GPG(d["gpg"])
 _list = []
 _trade_list = []
 exchange_list = []
@@ -400,12 +400,12 @@ def save_trade(_list, sep):
     except:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
     telegram(_list)
-    try:
-       db(_list)
-    except mysql.connector.Error as err:
-       print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
-       print(err)
-    pass
+    #try:
+    #   db(_list)
+    #except mysql.connector.Error as err:
+     #  print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
+    #   print(err)
+    #pass
     _trade_list.clear()
 
 
