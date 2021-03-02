@@ -1,4 +1,5 @@
 import datetime
+import getpass
 import json
 import os
 import queue
@@ -7,6 +8,7 @@ import threading
 import time
 from multiprocessing import Process
 
+import gnupg
 import mysql.connector
 import pandas
 import requests
@@ -17,12 +19,23 @@ from openpyxl import load_workbook
 import data_visual
 from trade import Operation
 
+gpg = gnupg.GPG(r"C:\Program Files (x86)\GnuPG\bin\gpg.exe")
 _list = []
 _trade_list = []
 exchange_list = []
 d = {}
 t = {}
-login_data = json.loads(open("keydict.txt", "r").readline().strip().replace("\n", ""))
+passphrase = getpass.getpass("Please provide master password to continue:")
+print(passphrase)
+with open("telegram.gpg", "rb") as tg_f:
+    status_tg = gpg.decrypt_file(file=tg_f, passphrase=passphrase)
+with open("keydict.gpg", "rb") as kd_f:
+    status_kd = gpg.decrypt_file(file=kd_f, passphrase=passphrase)
+with open("dbinfo.gpg", "rb") as db_f:
+    status_db = gpg.decrypt_file(file=db_f, passphrase=passphrase)
+login_data = json.loads(status_kd.strip().replace("\n", ""))
+tg_data = json.loads(status_tg.strip().replace("\n", ""))
+db_data = json.loads(status_db.strip().replace("\n", ""))
 try:
     trt_apikey = str(login_data["trt_apikey"])
     trt_secret = str(login_data["trt_secret"])
@@ -53,11 +66,6 @@ with open("config.txt") as f:
         (key, val) = line.replace(" ", "").split("=")
         val = val.split("#")[0]
         d[key] = val
-with open("telegram.txt") as f:
-    for line in f:
-        (key, val) = line.replace(" ", "").split("=")
-        val = val.split("#")[0]
-        t[key] = val
 
 bnb_que = queue.Queue()
 trt_que = queue.Queue()
@@ -66,8 +74,6 @@ time_list = []
 
 
 def arbo():
-    f = open("version", "r")
-    ver = f.read()
     op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret, bnb_apikey, bnb_secret, exchange_list)
     op.threadCreation()
     time.sleep(2)
@@ -85,6 +91,8 @@ def arbo():
     if d["graph"].lower() == "true":
         g = Process(target=data_visual.ru)
         g.start()
+    f = open("version", "r")
+    ver = f.read()
     while 1:
         try:
             eff = 0
@@ -309,7 +317,7 @@ def arbo():
                     ["", "", "", "", "", "", "", "", float(all_balance["bnbbtc"]), float(all_balance["trtbtc"]),
                      float(all_balance["bnbeur"]),
                      float(all_balance["trteur"]),
-                     ((all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask)+
+                     ((all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask) +
                      float(all_balance["bnbeur"]) +
                      float(all_balance["trteur"])])
                 print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
@@ -393,11 +401,11 @@ def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True
 
 
 def db(_list):
-    server = d["dbhost"]
-    database = d["dbname"]
-    username = d["dbuser"]
-    password = d["dbpass"]
-    port = d["dbport"]
+    server = db_data["dbhost"]
+    database = db_data["dbname"]
+    username = db_data["dbuser"]
+    password = db_data["dbpass"]
+    port = int(db_data["dbport"])
     print(d["dbpass"])
     conn = mysql.connector.connect(host=server, user=username, password=password, port=port, database=database)
     cursor = conn.cursor()
@@ -421,16 +429,13 @@ def telegram(_list):
     message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ":\nBOUGHT <b>" + str(
         round(_list[0][3], 8)) + "<b> $BTC <b>" + str(
         _list[0][4]) + "<b> ON <code>" + str(
-        _list[0][2]) + "<code> SOLD <b>" + str(_list[0][7]) + "<b> ON <code>" + str(_list[0][6]) + "<code>. CALCULATED GAIN = <b>" + str(
-        round(_list[1][12]-_list[0][12], 5)) + "€<b>").replace(" ", "%20")
-    bot_token = "1673298427:AAHsEtcRBMzkaWbtbSQexRhgJtOiHzJuXqw"
-    bot_chatID = "-1001175272795"
-    print(str(bot_token))
-    print(str(bot_chatID))
+        _list[0][2]) + "<code> SOLD <b>" + str(_list[0][7]) + "<b> ON <code>" + str(
+        _list[0][6]) + "<code>. CALCULATED GAIN = <b>" + str(
+        round(_list[1][12] - _list[0][12], 5)) + "€<b>").replace(" ", "%20")
+    bot_token = tg_data["token"]
+    bot_chatID = tg_data["app_id"]
     send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=HTML&text=' + message
-    response = requests.get(send_text)
-    print(response.json())
-    return response.json()
+    requests.get(send_text)
 
 
 def num(num):
