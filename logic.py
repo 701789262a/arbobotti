@@ -159,6 +159,7 @@ def arbo():
                 small_index = 0
             else:
                 small_index = str(a.microsecond)[:-5]
+            _trade_list.clear()
             print(f"{Fore.MAGENTA}[!] ARBOBOTTI VERSION %s, MURINEDDU CAPITAL 2021{Style.RESET_ALL}\n" % (ver))
             print(
                 f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}        THREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}         ONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}" % (
@@ -352,6 +353,8 @@ def arbo():
                 print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
                 save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list, d["sep"],))
                 save_trade_thread.start()
+                save_trade_thread.join()
+                _trade_list.clear()
             if int(_end_time % int(d["fee_interval"])) == 0:
                 print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
                 fee = op.feethreading()
@@ -464,6 +467,7 @@ def telegram(_list):
     bot_chatID = tg_data["app_id"]
     send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=HTML&text=' + message
     requests.get(send_text)
+    _trade_list.clear()
 
 
 def num(num):
