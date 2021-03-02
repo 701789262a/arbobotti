@@ -26,7 +26,7 @@ with open("config.txt") as f:
         (key, val) = line.replace(" ", "").split("=")
         val = val.split("#")[0]
         d[key] = val
-gpg = gnupg.GPG(d["gpg"])
+gpg = gnupg.GPG(d["gpg"][:-1])
 _list = []
 _trade_list = []
 exchange_list = []
