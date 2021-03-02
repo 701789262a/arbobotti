@@ -31,16 +31,15 @@ _list = []
 _trade_list = []
 exchange_list = []
 passphrase = getpass.getpass("Please provide master password to continue:")
-print(passphrase)
 with open("telegram.gpg", "rb") as tg_f:
     status_tg = gpg.decrypt_file(file=tg_f, passphrase=passphrase)
 with open("keydict.gpg", "rb") as kd_f:
     status_kd = gpg.decrypt_file(file=kd_f, passphrase=passphrase)
 with open("dbinfo.gpg", "rb") as db_f:
     status_db = gpg.decrypt_file(file=db_f, passphrase=passphrase)
-login_data = json.loads(status_kd.strip().replace("\n", ""))
-tg_data = json.loads(status_tg.strip().replace("\n", ""))
-db_data = json.loads(status_db.strip().replace("\n", ""))
+login_data = json.loads(str(status_kd).strip().replace("\n", ""))
+tg_data = json.loads(str(status_tg).strip().replace("\n", ""))
+db_data = json.loads(str(status_db).strip().replace("\n", ""))
 try:
     trt_apikey = str(login_data["trt_apikey"])
     trt_secret = str(login_data["trt_secret"])
