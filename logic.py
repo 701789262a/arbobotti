@@ -37,6 +37,7 @@ with open("keydict.gpg", "rb") as kd_f:
     status_kd = gpg.decrypt_file(file=kd_f, passphrase=passphrase)
 with open("dbinfo.gpg", "rb") as db_f:
     status_db = gpg.decrypt_file(file=db_f, passphrase=passphrase)
+    status_db.ok
 login_data = json.loads(str(status_kd).strip().replace("\n", ""))
 tg_data = json.loads(str(status_tg).strip().replace("\n", ""))
 db_data = json.loads(str(status_db).strip().replace("\n", ""))
@@ -369,13 +370,12 @@ def save_trade(_list, sep):
     except:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
     telegram(_list)
-    # try:
-    #    db(_list)
-    # except mysql.connector.Error as err:
-    #    print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
-    #    print(err)
-    #    pass
-    #    _list.clear()
+    try:
+       db(_list)
+    except mysql.connector.Error as err:
+       print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
+       print(err)
+    pass
     _trade_list.clear()
 
 
@@ -409,12 +409,12 @@ def db(_list):
     cursor = conn.cursor()
     add_trade = (
         'INSERT INTO `tradelist` '
-        '(`side1`,`exch1`,`ask`,`side2`,`exch2`,`bid`,`depth`,`bnbbtc_in`,`trtbtc_in`,`bnbeur_in`,`trteur_in`,`bnbbtc_en`,`trtbtc_en`,`bnbeur_en`,`trteur_en`,`date`,`order_id_1`,`order_id_2`,`success`) '
+        '(`side1`,`exch1`,`ask`,`side2`,`exch2`,`bid`,`depth`,`bnbbtc_in`,`trtbtc_in`,`bnbeur_in`,`trteur_in`,`bnbbtc_en`,`trtbtc_en`,`bnbeur_en`,`trteur_en`,`gain`,`date`,`order_id_1`,`order_id_2`,`success`) '
         'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);')
     data_trade = (
-        _list[0][1], _list[0][2], _list[0][4], _list[0][5], _list[0][6], _list[0][7], _list[0][3], _list[0][8],
-        _list[0][9], _list[0][10], _list[0][11],
-        _list[0][12], _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[0][0],
+        _list[0][1], _list[0][2], _list[0][4], _list[0][5], _list[0][6], _list[0][7], _list[0][3],
+        _list[0][8],_list[0][9], _list[0][10], _list[0][11],
+        _list[1][8], _list[1][9], _list[1][10], _list[1][11], round(_list[1][12] - _list[0][12], 5), _list[0][0],
         "1337",
         "1337", "1")
     cursor.execute(add_trade, data_trade)
@@ -425,11 +425,11 @@ def db(_list):
 
 def telegram(_list):
     message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ":\nBOUGHT <b>" + str(
-        round(_list[0][3], 8)) + "<b> $BTC <b>" + str(
-        _list[0][4]) + "<b> ON <code>" + str(
-        _list[0][2]) + "<code> SOLD <b>" + str(_list[0][7]) + "<b> ON <code>" + str(
-        _list[0][6]) + "<code>. CALCULATED GAIN = <b>" + str(
-        round(_list[1][12] - _list[0][12], 5)) + "€<b>").replace(" ", "%20")
+        round(_list[0][3], 8)) + "</b> $BTC <b>" + str(
+        _list[0][4]) + "</b> ON <code>" + str(
+        _list[0][2]) + "</code> SOLD <b>" + str(_list[0][7]) + "</b> ON <code>" + str(
+        _list[0][6]) + "</code>. CALCULATED GAIN = <b>" + str(
+        round(_list[1][12] - _list[0][12], 5)) + "€</b>").replace(" ", "%20")
     bot_token = tg_data["token"]
     bot_chatID = tg_data["app_id"]
     send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=HTML&text=' + message
