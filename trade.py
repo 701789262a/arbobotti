@@ -68,7 +68,7 @@ class Operation:
         amount = round(amount,8)
         if exchange == "trt":
             url = "https://api.therocktrading.com/v1/funds/" + fund_id + "/orders"
-            payload_trt = {"fund_id": "BTCEUR", "side": side, "amount": amount, "price": price}
+            payload_trt = {"fund_id": "BTCEUR", "side": side, "amount": amount, "price": 0}
             signature = hmac.new(self.secret_trt.encode(), msg=(str(nonce) + url).encode(),
                                  digestmod=hashlib.sha512).hexdigest()
 
@@ -88,12 +88,11 @@ class Operation:
         elif exchange == "bnb":
 
             if side == "buy":
-                order = self.client.order_limit_buy(
+                order = self.client.order_market_buy(
                     symbol=fund_id,
-                    quantity=round(amount, 5),
-                    price=price)
+                    quantity=round(amount, 5),)
             elif side == "sell":
-                order = self.client.order_limit_sell(
+                order = self.client.order_market_sell(
                     symbol=fund_id,
                     quantity=round(amount, 5),
                     price=price)
