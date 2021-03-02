@@ -19,12 +19,17 @@ from openpyxl import load_workbook
 import data_visual
 from trade import Operation
 
-gpg = gnupg.GPG(r"C:\Program Files (x86)\GnuPG\bin\gpg.exe")
+d = {}
+t = {}
+with open("config.txt") as f:
+    for line in f:
+        (key, val) = line.replace(" ", "").split("=")
+        val = val.split("#")[0]
+        d[key] = val
+gpg = gnupg.GPG(d["gpg"])
 _list = []
 _trade_list = []
 exchange_list = []
-d = {}
-t = {}
 passphrase = getpass.getpass("Please provide master password to continue:")
 print(passphrase)
 with open("telegram.gpg", "rb") as tg_f:
@@ -60,12 +65,6 @@ except:
     bnb_apikey = ""
     bnb_secret = ""
     pass
-
-with open("config.txt") as f:
-    for line in f:
-        (key, val) = line.replace(" ", "").split("=")
-        val = val.split("#")[0]
-        d[key] = val
 
 bnb_que = queue.Queue()
 trt_que = queue.Queue()
