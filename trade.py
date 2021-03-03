@@ -94,8 +94,7 @@ class Operation:
             elif side == "sell":
                 order = self.client.order_market_sell(
                     symbol=fund_id,
-                    quantity=round(amount, 5),
-                    price=price)
+                    quantity=round(amount, 5),)
             return dict(order)
 
     def balance(self, exchange):
