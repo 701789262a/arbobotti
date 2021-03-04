@@ -457,7 +457,7 @@ def db(_list):
 
 
 def telegram(_list):
-    message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ":\nBOUGHT <b>" + str(float(_list[0][3])) + "</b> $BTC <b>" + str(
+    message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ":\nBOUGHT <b>" + str(_list[0][3]) + "</b> $BTC <b>" + str(
         _list[0][4]) + "</b> ON <code>" + str(
         _list[0][2]) + "</code> SOLD <b>" + str(_list[0][7]) + "</b> ON <code>" + str(
         _list[0][6]) + "</code>. CALCULATED GAIN = <b>" + str(
