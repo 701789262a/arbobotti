@@ -195,11 +195,11 @@ def arbo():
                 print(f"{Fore.CYAN}[#] %.2f < %.2f BUY %s | SELL TRT DIFF: %.2f (MENO FEE): %.3f" % (
                     asks_krk, bids_trt, exchange_list[1].upper(), bids_trt - asks_krk,
                     (bids_trt * (1 + taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb))))
-                depth = min(bids_data_trt['amount'],
-                            float(asks_data_bnb[1]))
+                depth = float(min(bids_data_trt['amount'],
+                            float(asks_data_bnb[1])))
                 balance = min(all_balance["trtbtc"], all_balance["bnbeur"] / asks_krk)
                 if balance < depth:
-                    depth = balance * float(d["max_each_trade"])
+                    depth = float(balance * float(d["max_each_trade"]))
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
                     print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
@@ -208,7 +208,7 @@ def arbo():
                         low_balance = True
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
-                    depth = depth * float(d["max_each_trade"])
+                    depth = float(depth * float(d["max_each_trade"]))
                     print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
                 if not low_balance and depth > float(d["min_balance"]):
@@ -245,7 +245,7 @@ def arbo():
                             time.sleep(int(d["sleep_check_order"]))
                             _trade_list.append(
                                 [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", exchange_list[1].upper(),
-                                 depth,
+                                 str(depth),
                                  last_ask,
                                  "SELL", "TRT", last_bid, float(all_balance["bnbbtc"]), float(all_balance["trtbtc"]),
                                  float(all_balance["bnbeur"]), float(all_balance["trteur"]),
@@ -260,15 +260,15 @@ def arbo():
                     checkbalance = True
             elif (bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)) > 0:
                 low_balance = False
-                depth = min(asks_data_trt['amount'],
-                            float(bids_data_bnb[1]))
+                depth = float(min(asks_data_trt['amount'],
+                            float(bids_data_bnb[1])))
                 balance = min(all_balance["bnbbtc"], all_balance["trteur"] / asks_trt)
                 print(
                     f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f | DEPTH: %.8f | MINBAL: %.8f{Style.RESET_ALL}" % (
                         asks_trt, bids_krk, exchange_list[1].upper(), bids_krk - asks_trt,
                         (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), depth, balance))
                 if balance < depth:
-                    depth = balance * float(d["max_each_trade"])
+                    depth = float(balance * float(d["max_each_trade"]))
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
                     print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
                     if depth == 0:
@@ -276,7 +276,7 @@ def arbo():
                         low_balance = True
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
-                    depth = depth * float(d["max_each_trade"])
+                    depth = float(depth * float(d["max_each_trade"]))
                     print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
                 if not low_balance and (depth > float(d["min_balance"])):
@@ -457,8 +457,7 @@ def db(_list):
 
 
 def telegram(_list):
-    message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ":\nBOUGHT <b>" + str(
-        round(float(_list[0][3].replace(",",".")), 8)) + "</b> $BTC <b>" + str(
+    message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ":\nBOUGHT <b>" + str(float(_list[0][3])) + "</b> $BTC <b>" + str(
         _list[0][4]) + "</b> ON <code>" + str(
         _list[0][2]) + "</code> SOLD <b>" + str(_list[0][7]) + "</b> ON <code>" + str(
         _list[0][6]) + "</code>. CALCULATED GAIN = <b>" + str(
