@@ -103,6 +103,7 @@ time_list = []
 
 
 def arbo():
+    check_api_connection()
     op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret, bnb_apikey, bnb_secret, exchange_list)
     op.threadCreation()
     time.sleep(2)
@@ -490,3 +491,20 @@ def kill_char(string, n):
     begin = string[:n]
     end = string[n + 1:]
     return begin + end
+
+
+def check_api_connection():
+    trt_conn=requests.get("https://www.therocktrading.com/it/")
+    if not trt_conn.ok:
+        exit(10)
+    else:
+        trt_conn=requests.get("https://api.therocktrading.com/")
+        if not trt_conn.ok:
+            exit(12)
+    bnb_conn=requests.get("https://api1.binance.com/")
+    if not bnb_conn.ok:
+        exit(11)
+    else:
+        bnb_conn = requests.get("https://api.therocktrading.com/")
+        if not bnb_conn.ok:
+            exit(13)
