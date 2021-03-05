@@ -496,15 +496,19 @@ def kill_char(string, n):
 def check_api_connection():
     trt_conn=requests.get("https://www.therocktrading.com/it/")
     if not trt_conn.ok:
+        print("HTTP> "+str(trt_conn.status_code)+", error 10")
         exit(10)
     else:
         trt_conn=requests.get("https://api.therocktrading.com/")
         if not trt_conn.ok:
+            print("HTTP> " + str(trt_conn.status_code) + ", error 12")
             exit(12)
     bnb_conn=requests.get("https://api1.binance.com/")
     if not bnb_conn.ok:
+        print("HTTP> " + str(bnb_conn.status_code) + ", error 11")
         exit(11)
     else:
         bnb_conn = requests.get("https://api.therocktrading.com/")
         if not bnb_conn.ok:
+            print("HTTP> " + str(trt_conn.status_code) + ", error 13")
             exit(13)
