@@ -103,7 +103,8 @@ time_list = []
 
 
 def arbo():
-    check_api_connection()
+    while not check_api_connection():
+        time.sleep(1)
     op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret, bnb_apikey, bnb_secret, exchange_list)
     op.threadCreation()
     time.sleep(2)
@@ -497,18 +498,19 @@ def check_api_connection():
     trt_conn=requests.get("https://www.therocktrading.com/it/")
     if not trt_conn.ok:
         print("HTTP> "+str(trt_conn.status_code)+", error 10")
-        exit(10)
+        return False
     else:
         trt_conn=requests.get("https://api.therocktrading.com/")
         if not trt_conn.ok:
             print("HTTP> " + str(trt_conn.status_code) + ", error 12")
-            exit(12)
+            return False
     bnb_conn=requests.get("https://api1.binance.com/")
     if not bnb_conn.ok:
         print("HTTP> " + str(bnb_conn.status_code) + ", error 11")
-        exit(11)
+        return False
     else:
         bnb_conn = requests.get("https://api.therocktrading.com/")
         if not bnb_conn.ok:
             print("HTTP> " + str(trt_conn.status_code) + ", error 13")
-            exit(13)
+            return False
+    return True
