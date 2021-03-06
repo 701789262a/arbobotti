@@ -2,7 +2,6 @@ import datetime
 import getpass
 import json
 import os
-import queue
 import sys
 import threading
 import time
@@ -20,7 +19,6 @@ import data_visual
 from trade import Operation
 
 d = {}
-t = {}
 with open("config.txt") as f:
     for line in f:
         (key, val) = line.replace(" ", "").split("=")
@@ -95,9 +93,6 @@ except:
     bnb_apikey = ""
     bnb_secret = ""
     pass
-
-bnb_que = queue.Queue()
-trt_que = queue.Queue()
 all_balance = dict()
 time_list = []
 
@@ -116,14 +111,13 @@ def arbo():
     print("GOT FEE FROM EXCHANGE; %s: %f;    %s: %f" % (
         exchange_list[0].upper(), taker_fee_trt, exchange_list[1].upper(), taker_fee_bnb))
     checkbalance = True
-    bal_list = False
-    tg = 0
     _tglist = []
     if d["graph"].lower() == "true":
         g = Process(target=data_visual.ru)
         g.start()
     f = open("version", "r")
     ver = f.read()
+    all_balance = op.balancethreading()
     while 1:
         try:
             eff = 0
@@ -149,7 +143,6 @@ def arbo():
             bids_krk = round(float(price_dict["bnb"]['bids'][0][0]), 2)
             asks_trt = round(float(price_dict["trt"]['asks'][0]['price']), 2)
             bids_trt = round(float(price_dict["trt"]['bids'][0]['price']), 2)
-
             last_bid = 0
             last_ask = 0
             depth = 0
@@ -495,22 +488,26 @@ def kill_char(string, n):
 
 
 def check_api_connection():
-    trt_conn=requests.get("https://www.therocktrading.com/it/")
+    trt_conn = requests.get("https://www.therocktrading.com/it/")
     if not trt_conn.ok:
-        print("HTTP "+str(trt_conn.status_code)+", error 10")
+        print("HTTP " + str(trt_conn.status_code) + ", error 10")
         return False
     else:
-        trt_conn=requests.get("https://api.therocktrading.com/")
+        trt_conn = requests.get("https://api.therocktrading.com/")
         if not trt_conn.ok:
             print("HTTP " + str(trt_conn.status_code) + ", error 12")
             return False
-    bnb_conn=requests.get("https://api1.binance.com/")
+    bnb_conn = requests.get("https://api1.binance.com/")
     if not bnb_conn.ok:
         print("HTTP " + str(bnb_conn.status_code) + ", error 11")
         return False
     else:
         bnb_conn = requests.get("https://api.therocktrading.com/")
         if not bnb_conn.ok:
-            print("HTTP " + str(trt_conn.status_code) + ", error 13")
+            print("HTTP " + str(bnb_conn.status_code) + ", error 13")
             return False
+        else:
+            bnb_conn = requests.get("https://api1.binance.com/wapi/v3/systemStatus.html")
+            if bnb_conn.json()["status"] != 1:
+                print("HTTP"+str(bnb_conn.status_code)+", error 14")
     return True
