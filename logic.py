@@ -398,12 +398,12 @@ def save_trade(_list, sep):
     except:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
     telegram(_list)
-    # try:
-    #   db(_list)
-    # except mysql.connector.Error as err:
-    #  print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
-    #   print(err)
-    # pass
+    try:
+       db(_list)
+    except mysql.connector.Error as err:
+        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
+        print(err)
+    pass
     _trade_list.clear()
 
 
@@ -509,6 +509,6 @@ def check_api_connection():
         else:
             bnb_conn = requests.get("https://api1.binance.com/wapi/v3/systemStatus.html")
             if bnb_conn.json()["status"] != 0:
-                print("HTTP"+str(bnb_conn.status_code)+", error 14")
+                print("HTTP "+str(bnb_conn.status_code)+", error 14")
                 return False
     return True
