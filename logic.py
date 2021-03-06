@@ -508,7 +508,7 @@ def check_api_connection():
             return False
         else:
             bnb_conn = requests.get("https://api1.binance.com/wapi/v3/systemStatus.html")
-            if bnb_conn.json()["status"] != 1:
+            if bnb_conn.json()["status"] != 0:
                 print("HTTP"+str(bnb_conn.status_code)+", error 14")
                 return False
     return True
