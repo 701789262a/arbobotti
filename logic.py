@@ -80,7 +80,8 @@ try:
     krk_secret = str(login_data["krk_secret"])
     exchange_list.append("krk")
 except:
-    print("krk")
+    krk_apikey = ""
+    krk_secret = ""
 try:
     bnb_apikey = str(login_data["bnb_apikey"])
     bnb_secret = str(login_data["bnb_secret"])
