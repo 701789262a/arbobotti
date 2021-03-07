@@ -396,9 +396,10 @@ def save_trade(_list, sep):
     telegram(_list)
     try:
         db(_list)
-    except mysql.connector.Error as err:
+    except Exception as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
         print(err)
+        exit(100)
     pass
     _trade_list.clear()
 
