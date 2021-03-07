@@ -74,27 +74,22 @@ try:
     trt_secret = str(login_data["trt_secret"])
     exchange_list.append("trt")
 except:
-    trt_apikey = ""
-    trt_secret = ""
-    pass
+    exit(1)
 try:
     krk_apikey = str(login_data["krk_apikey"])
     krk_secret = str(login_data["krk_secret"])
     exchange_list.append("krk")
 except:
-    krk_apikey = ""
-    krk_secret = ""
-    pass
+    exit(2)
 try:
     bnb_apikey = str(login_data["bnb_apikey"])
     bnb_secret = str(login_data["bnb_secret"])
     exchange_list.append("bnb")
 except:
-    bnb_apikey = ""
-    bnb_secret = ""
-    pass
+    exit(3)
 all_balance = dict()
 time_list = []
+print(f"{Fore.GREEN}\nThank you{Style.RESET_ALL}")
 
 
 def arbo():
@@ -399,7 +394,7 @@ def save_trade(_list, sep):
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
     telegram(_list)
     try:
-       db(_list)
+        db(_list)
     except mysql.connector.Error as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
         print(err)
@@ -435,16 +430,21 @@ def db(_list):
     print(d["dbpass"])
     conn = mysql.connector.connect(host=server, user=username, password=password, port=port, database=database)
     cursor = conn.cursor()
+    date = datetime.datetime.strptime(_list[0][0], "%d/%m/%Y %H:%M:%S").strftime('%Y-%m-%d %H:%M:%S')
     add_trade = (
-        'INSERT INTO `tradelist` '
-        '(`side1`,`exch1`,`ask`,`side2`,`exch2`,`bid`,`depth`,`bnbbtc_in`,`trtbtc_in`,`bnbeur_in`,`trteur_in`,`bnbbtc_en`,`trtbtc_en`,`bnbeur_en`,`trteur_en`,`gain`,`date`,`order_id_1`,`order_id_2`,`success`) '
-        'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);')
+        "INSERT INTO `tradelist` "
+        "(`side1`,`exch1`,`ask`,`side2`,`exch2`,"
+        "`bid`,`depth`,"
+        "`bnbbtc_in`,`trtbtc_in`,`bnbeur_in`,`trteur_in`,`bal_in`,"
+        "`bnbbtc_en`,`trtbtc_en`,`bnbeur_en`,`trteur_en`,`bal_en`,`gain`,`date`,"
+        "`order_id_1`,`order_id_2`,`success`) "
+        "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);")
     data_trade = (
-        _list[0][1], _list[0][2], _list[0][4], _list[0][5], _list[0][6], _list[0][7], _list[0][3],
-        _list[0][8], _list[0][9], _list[0][10], _list[0][11],
-        _list[1][8], _list[1][9], _list[1][10], _list[1][11], round(_list[1][12] - _list[0][12], 5), _list[0][0],
-        "1337",
-        "1337", "1")
+        _list[0][1], _list[0][2], _list[0][4].replace(",", "."), _list[0][5], _list[0][6],
+        _list[0][7].replace(",", "."), _list[0][3].replace(",", "."),
+        _list[0][8], _list[0][9], _list[0][10], _list[0][11], _list[0][12],
+        _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12], round(_list[1][12] - _list[0][12], 5), date,
+        "1337", "1337", "1")
     cursor.execute(add_trade, data_trade)
     conn.commit()
     cursor.close()
@@ -509,6 +509,6 @@ def check_api_connection():
         else:
             bnb_conn = requests.get("https://api1.binance.com/wapi/v3/systemStatus.html")
             if bnb_conn.json()["status"] != 0:
-                print("HTTP "+str(bnb_conn.status_code)+", error 14")
+                print("HTTP " + str(bnb_conn.status_code) + ", error 14")
                 return False
     return True
