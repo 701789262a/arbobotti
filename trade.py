@@ -230,42 +230,6 @@ class Operation:
                 for i in range(len(resp)):
                     self.client.cancel_order(symbol="BTCEUR", orderId=resp[i]["orderId"])
 
-    def cancelthreading(self):
-        d = dict()
-        if "trt" in self.exchange_list:
-            trt_cancel = Thread(target=lambda q, arg1: q.put(
-                self.cancel(arg1)),
-                                args=(q1, "trt"))
-            trt_cancel.start()
-        if "krk" in self.exchange_list:
-            krk_cancel = Thread(target=lambda q, arg1: q.put(
-                self.cancel(arg1)),
-                                args=(q2, "krk"))
-            krk_cancel.start()
-        if "bnb" in self.exchange_list:
-            bnb_cancel = Thread(target=lambda q, arg1: q.put(
-                self.cancel(arg1)),
-                                args=(q2, "bnb"))
-            bnb_cancel.start()
-        try:
-            trt_cancel.join()
-
-            d.update(q1.get())
-        except:
-            pass
-        try:
-            krk_cancel.join()
-
-            d.update(q2.get())
-        except:
-            pass
-        try:
-            bnb_cancel.join()
-
-            d.update(q2.get())
-        except Exception:
-            pass
-        return d
 
     def order(self, exchange, order):
         nonce = str(int(time.time() * 1e6))

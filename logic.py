@@ -228,7 +228,6 @@ def arbo():
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                             time.sleep(20)
-                            op.cancelthreading()
                         else:
                             print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER STATUS:[%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"]["status"].upper(), resp_dict["bnb"]["status"]))
@@ -242,7 +241,6 @@ def arbo():
                                  float(all_balance["bnbeur"]), float(all_balance["trteur"]),
                                  float(all_balance["trteur"] + all_balance["bnbeur"] + (
                                          all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask)])
-                            op.cancelthreading()
                             pass
                             # EXECUTED OR SUCCESS
                             # IF BOTH ORDER ARE NOT COMPLETED, DELETE ORDER
@@ -295,7 +293,6 @@ def arbo():
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                             time.sleep(20)
-                            op.cancelthreading()
                             pass
                         else:
                             print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
@@ -311,7 +308,6 @@ def arbo():
                                  float(all_balance["bnbeur"]), float(all_balance["trteur"]),
                                  float(all_balance["trteur"] + all_balance["bnbeur"] + (
                                          all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask)])
-                            op.cancelthreading()
                 else:
                     print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
                     checkbalance = True
