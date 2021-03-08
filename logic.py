@@ -26,6 +26,7 @@ with open("config.txt") as f:
         d[key] = val
 gpg = gnupg.GPG(d["gpg"][:-1])
 _list = []
+_log_list = []
 _trade_list = []
 exchange_list = []
 print(f"""{Fore.RED}                                                                                          
@@ -510,3 +511,5 @@ def check_api_connection():
                 print("HTTP " + str(bnb_conn.status_code) + ", error 14")
                 return False
     return True
+
+
