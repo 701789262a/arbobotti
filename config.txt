@@ -14,4 +14,4 @@ trade_tp = Taker
 max_each_trade = 1
 only_see = 1
 sep = ,
-gpg = C:\Program Files (x86)\GnuPG\bin\gpg.exe
+gpg = gpg.exe-

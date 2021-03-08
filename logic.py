@@ -17,84 +17,84 @@ from openpyxl import load_workbook
 
 import data_visual
 from trade import Operation
-
-d = {}
-with open("config.txt") as f:
-    for line in f:
-        (key, val) = line.replace(" ", "").split("=")
-        val = val.split("#")[0]
-        d[key] = val
-gpg = gnupg.GPG(d["gpg"][:-1])
-_list = []
 _log_list = []
-_trade_list = []
-exchange_list = []
-print(f"""{Fore.RED}                                                                                          
-                                                                                          
-                                                               .%%%#                      
-                                                           *#%%%%%%%%,                    
-                                                       /#%%%%%%%%%%%%%%                   
-                                                   %%%%%%%%%%%%%%%%%%%%%                  
-                                               #%%%%%%%%%%%%%%%%%%%%%%%%%%                
-                                              %%%%%%%%%%%%%%%%%%%%%%%%%%%%%               
-                                              %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#             
-                                  /%/        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#            
-                              %#%%%%%%      (%%%%%%%%%%%%(     *#%%%%%%%%%%%%%%           
-                          %%%%%%%%%%%%%%    %%%%%%%#%.           #%%%%%%%%%%%%            
-                     ,#%%%%%%%%%%%%%%%%%%  %%%%%%                 (%%%%%%%%%%             
-                 (%%%%%%%%%%%%%%%%%%%%%%%%%#/                       %%%%%%%%*             
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%                         #%%%%%#              
-               #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                         %%%#               
-               %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                         %%                
-              %%%%%%%%%%%%%#    .%%%%%%%%%%%%%%%*                     .%#                 
-             .%%%%%%%%#,          %%%%%%%%%%%%%  #                /%*                     
-             %%%%%%                *%%%%%%%%%%(   %.          %%                          
-            (%#                      #%%%%%%%%     .%    .##                              
-            ,%                        (#%%%%#        ##/                                  
-              #                         %%%%                                              
-               ((                        #%                                               
-                 #                      #%                                                
-                  #*                #%                                                    
-                    %          *%(                                                        
-                     %.    #%.                                                            
-                       %%                                                                 
-                                                                                          
-  {Style.RESET_ALL}""")
-passphrase = getpass.getpass("Please provide master password to continue:")
-with open("telegram.gpg", "rb") as tg_f:
-    status_tg = gpg.decrypt_file(file=tg_f, passphrase=passphrase)
-with open("keydict.gpg", "rb") as kd_f:
-    status_kd = gpg.decrypt_file(file=kd_f, passphrase=passphrase)
-with open("dbinfo.gpg", "rb") as db_f:
-    status_db = gpg.decrypt_file(file=db_f, passphrase=passphrase)
-login_data = json.loads(str(status_kd).strip().replace("\n", ""))
-tg_data = json.loads(str(status_tg).strip().replace("\n", ""))
-db_data = json.loads(str(status_db).strip().replace("\n", ""))
-try:
-    trt_apikey = str(login_data["trt_apikey"])
-    trt_secret = str(login_data["trt_secret"])
-    exchange_list.append("trt")
-except:
-    exit(1)
-try:
-    krk_apikey = str(login_data["krk_apikey"])
-    krk_secret = str(login_data["krk_secret"])
-    exchange_list.append("krk")
-except:
-    krk_apikey = ""
-    krk_secret = ""
-try:
-    bnb_apikey = str(login_data["bnb_apikey"])
-    bnb_secret = str(login_data["bnb_secret"])
-    exchange_list.append("bnb")
-except:
-    exit(3)
-all_balance = dict()
-time_list = []
-print(f"{Fore.GREEN}\nThank you{Style.RESET_ALL}")
 
 
 def arbo():
+    d = {}
+    with open("config.txt") as f:
+        for line in f:
+            (key, val) = line.replace(" ", "").split("=")
+            val = val.split("#")[0]
+            d[key] = val
+    gpg = gnupg.GPG(d["gpg"][:-1])
+    _list = []
+    _trade_list = []
+    exchange_list = []
+    log(f"""{Fore.RED}                                                                                          
+                                                                                              
+                                                                   .%%%#                      
+                                                               *#%%%%%%%%,                    
+                                                           /#%%%%%%%%%%%%%%                   
+                                                       %%%%%%%%%%%%%%%%%%%%%                  
+                                                   #%%%%%%%%%%%%%%%%%%%%%%%%%%                
+                                                  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%               
+                                                  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#             
+                                      /%/        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#            
+                                  %#%%%%%%      (%%%%%%%%%%%%(     *#%%%%%%%%%%%%%%           
+                              %%%%%%%%%%%%%%    %%%%%%%#%.           #%%%%%%%%%%%%            
+                         ,#%%%%%%%%%%%%%%%%%%  %%%%%%                 (%%%%%%%%%%             
+                     (%%%%%%%%%%%%%%%%%%%%%%%%%#/                       %%%%%%%%*             
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%                         #%%%%%#              
+                   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                         %%%#               
+                   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                         %%                
+                  %%%%%%%%%%%%%#    .%%%%%%%%%%%%%%%*                     .%#                 
+                 .%%%%%%%%#,          %%%%%%%%%%%%%  #                /%*                     
+                 %%%%%%                *%%%%%%%%%%(   %.          %%                          
+                (%#                      #%%%%%%%%     .%    .##                              
+                ,%                        (#%%%%#        ##/                                  
+                  #                         %%%%                                              
+                   ((                        #%                                               
+                     #                      #%                                                
+                      #*                #%                                                    
+                        %          *%(                                                        
+                         %.    #%.                                                            
+                           %%                                                                 
+                                                                                              
+      {Style.RESET_ALL}""")
+    passphrase = getpass.getpass("Please provide master password to continue:")
+    with open("telegram.gpg", "rb") as tg_f:
+        status_tg = gpg.decrypt_file(file=tg_f, passphrase=passphrase)
+    with open("keydict.gpg", "rb") as kd_f:
+        status_kd = gpg.decrypt_file(file=kd_f, passphrase=passphrase)
+    with open("dbinfo.gpg", "rb") as db_f:
+        status_db = gpg.decrypt_file(file=db_f, passphrase=passphrase)
+    login_data = json.loads(str(status_kd).strip().replace("\n", ""))
+    tg_data = json.loads(str(status_tg).strip().replace("\n", ""))
+    db_data = json.loads(str(status_db).strip().replace("\n", ""))
+    try:
+        trt_apikey = str(login_data["trt_apikey"])
+        trt_secret = str(login_data["trt_secret"])
+        exchange_list.append("trt")
+    except:
+        exit(1)
+    try:
+        krk_apikey = str(login_data["krk_apikey"])
+        krk_secret = str(login_data["krk_secret"])
+        exchange_list.append("krk")
+    except:
+        krk_apikey = ""
+        krk_secret = ""
+    try:
+        bnb_apikey = str(login_data["bnb_apikey"])
+        bnb_secret = str(login_data["bnb_secret"])
+        exchange_list.append("bnb")
+    except:
+        exit(3)
+    all_balance = dict()
+    time_list = []
+    log(f"{Fore.GREEN}\nThank you{Style.RESET_ALL}")
+
     while not check_api_connection():
         time.sleep(1)
     op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret, bnb_apikey, bnb_secret, exchange_list)
@@ -105,7 +105,7 @@ def arbo():
     taker_fee_bnb = 75 * float(fee["fee" + exchange_list[1] + "taker"]) / 100
     maker_fee_trt = float(fee["fee" + exchange_list[0] + "maker"]) / 100
     maker_fee_bnb = 75 * float(fee["fee" + exchange_list[1] + "maker"]) / 100
-    print("GOT FEE FROM EXCHANGE; %s: %f;    %s: %f" % (
+    log("GOT FEE FROM EXCHANGE; %s: %f;    %s: %f" % (
         exchange_list[0].upper(), taker_fee_trt, exchange_list[1].upper(), taker_fee_bnb))
     checkbalance = True
     _tglist = []
@@ -120,7 +120,7 @@ def arbo():
             eff = 0
             prod = 0
             if checkbalance:
-                print(f"{Fore.YELLOW}[#] RETRIEVING BALANCE{Style.RESET_ALL}")
+                log(f"{Fore.YELLOW}[#] RETRIEVING BALANCE{Style.RESET_ALL}")
                 all_balance = op.balancethreading()
                 checkbalance = False
             time.sleep(1 / int(d["rate"]))
@@ -134,7 +134,7 @@ def arbo():
                 asks_data_trt = price_dict["trt"]['asks'][0]
                 bids_data_trt = price_dict["trt"]['bids'][0]
             except TypeError:
-                print(f"{Fore.RED}[#] ERROR WHILE FETCHING DATA [typeError - nonetype]{Style.RESET_ALL}")
+                log(f"{Fore.RED}[#] ERROR WHILE FETCHING DATA [typeError - nonetype]{Style.RESET_ALL}")
                 continue
             asks_krk = round(float(price_dict["bnb"]['asks'][0][0]), 2)
             bids_krk = round(float(price_dict["bnb"]['bids'][0][0]), 2)
@@ -152,39 +152,39 @@ def arbo():
             else:
                 small_index = str(a.microsecond)[:-5]
             _trade_list.clear()
-            print(f"{Fore.MAGENTA}[!] ARBOBOTTI VERSION %s, MURINEDDU CAPITAL 2021{Style.RESET_ALL}\n" % (ver))
-            print(
+            log(f"{Fore.MAGENTA}[!] ARBOBOTTI VERSION %s, MURINEDDU CAPITAL 2021{Style.RESET_ALL}\n" % (ver))
+            log(
                 f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}        THREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}         ONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}" % (
                     a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), only_see))
 
-            print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
+            log(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
                 exchange_list[1].upper(), asks_krk, exchange_list[1].upper(), all_balance["bnbeur"]))
-            print(f"[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
+            log(f"[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
                 exchange_list[0].upper(), bids_trt, exchange_list[0].upper(), all_balance["trtbtc"]))
-            print("[i]                           DIFFERENCE:", num(round(bids_trt - asks_krk, 2)))
-            print(f"[i]                           DIFF + FEE: {Fore.RED}%s{Style.RESET_ALL}"
-                  % (num(round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2))))
-            print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f" % (
+            log("[i]                           DIFFERENCE:", num(round(bids_trt - asks_krk, 2)))
+            log(f"[i]                           DIFF + FEE: {Fore.RED}%s{Style.RESET_ALL}"
+                % (num(round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2))))
+            log(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f" % (
                 exchange_list[0].upper(), asks_trt, exchange_list[0].upper(), all_balance["trteur"]))
-            print(
+            log(
                 f"{Style.RESET_ALL}[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
                     exchange_list[1].upper(), bids_krk, exchange_list[1].upper(), all_balance["bnbbtc"]))
-            print(
+            log(
                 f"[i]                           DIFFERENCE: %s                             TOT EUR: {Fore.GREEN}%.8f{Style.RESET_ALL}" % (
                     num(round(bids_krk - asks_trt, 2)), all_balance["bnbeur"] + all_balance["trteur"]))
-            print(
+            log(
                 f"[i]                           DIFF + FEE: {Fore.RED}%s{Style.RESET_ALL}                             TOT BTC: {Fore.GREEN}%.8f{Style.RESET_ALL}                       PF VALUE: {Fore.GREEN}%.4f{Style.RESET_ALL}"
                 % (num(round((bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), 2)),
                    all_balance["bnbbtc"] + all_balance["trtbtc"], all_balance["bnbeur"] + all_balance["trteur"] + (
                            (all_balance["bnbbtc"] + all_balance["trtbtc"]) * bids_trt)))
-            print("[i] FETCHED TAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
+            log("[i] FETCHED TAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
                 exchange_list[0].upper(), taker_fee_trt * 100, exchange_list[1].upper(), taker_fee_bnb * 100))
-            print("[i] FETCHED MAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
+            log("[i] FETCHED MAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
                 exchange_list[0].upper(), maker_fee_trt * 100, exchange_list[1].upper(), maker_fee_bnb * 100))
 
             if (bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)) > 0:
                 low_balance = False
-                print(f"{Fore.CYAN}[#] %.2f < %.2f BUY %s | SELL TRT DIFF: %.2f (MENO FEE): %.3f" % (
+                log(f"{Fore.CYAN}[#] %.2f < %.2f BUY %s | SELL TRT DIFF: %.2f (MENO FEE): %.3f" % (
                     asks_krk, bids_trt, exchange_list[1].upper(), bids_trt - asks_krk,
                     (bids_trt * (1 + taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb))))
                 depth = float(min(bids_data_trt['amount'],
@@ -192,45 +192,45 @@ def arbo():
                 balance = min(all_balance["trtbtc"], all_balance["bnbeur"] / asks_krk)
                 if balance < depth:
                     depth = float(balance * float(d["max_each_trade"]))
-                    print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
-                    print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
+                    log(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
+                    log(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
                     if depth == 0:
-                        print(f"{Fore.RED}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
+                        log(f"{Fore.RED}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                         low_balance = True
                 else:
-                    print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
+                    log(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
                     depth = float(depth * float(d["max_each_trade"]))
-                    print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
+                    log(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
                 if not low_balance and depth > float(d["min_balance"]):
-                    print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
+                    log(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
                     eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
                     prod = eff / (depth * bids_trt)
-                    print("[#] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
-                    print(f"[#] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_krk * depth, depth))
+                    log("[#] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
+                    log(f"[#] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_krk * depth, depth))
                     last_ask = asks_krk
                     last_bid = bids_trt
                     if prod * 100 > float(d["prod_threshold"]) and not only_see:
                         checkbalance = True
-                        print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
-                        print(f"{Fore.YELLOW}[H] SELL %f BTC ON TRT, BUYING %f (%f) BTC ON BNB{Style.RESET_ALL}" % (
+                        log(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
+                        log(f"{Fore.YELLOW}[H] SELL %f BTC ON TRT, BUYING %f (%f) BTC ON BNB{Style.RESET_ALL}" % (
                             depth, depth, depth * last_ask))
                         resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, last_bid, "buy", "bnb", "BTCEUR",
                                                       depth,
                                                       last_ask)
-                        print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
+                        log("BNB" + resp_dict["bnb"] + "\nTRT" + resp_dict["trt"])
                         try:
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
                         except KeyError:
-                            print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
+                            log(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["errors"][0]["message"])
                         if status[0] == "ERROR" or status[1] == "ERROR":
-                            print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
+                            log(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                             time.sleep(20)
                         else:
-                            print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER STATUS:[%s, %s]{Style.RESET_ALL}" % (
+                            log(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER STATUS:[%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"]["status"].upper(), resp_dict["bnb"]["status"]))
                             bal_list = True
                             time.sleep(int(d["sleep_check_order"]))
@@ -246,57 +246,57 @@ def arbo():
                             # EXECUTED OR SUCCESS
                             # IF BOTH ORDER ARE NOT COMPLETED, DELETE ORDER
                 else:
-                    print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
+                    log(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
                     checkbalance = True
             elif (bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)) > 0:
                 low_balance = False
                 depth = float(min(asks_data_trt['amount'],
                                   float(bids_data_bnb[1])))
                 balance = min(all_balance["bnbbtc"], all_balance["trteur"] / asks_trt)
-                print(
+                log(
                     f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f | DEPTH: %.8f | MINBAL: %.8f{Style.RESET_ALL}" % (
                         asks_trt, bids_krk, exchange_list[1].upper(), bids_krk - asks_trt,
                         (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), depth, balance))
                 if balance < depth:
                     depth = float(balance * float(d["max_each_trade"]))
-                    print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
-                    print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
+                    log(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
+                    log(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
                     if depth == 0:
-                        print(f"{Fore.MAGENTA}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
+                        log(f"{Fore.MAGENTA}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
                         low_balance = True
                 else:
-                    print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
+                    log(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
                     depth = float(depth * float(d["max_each_trade"]))
-                    print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
+                    log(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
                 if not low_balance and (depth > float(d["min_balance"])):
-                    print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
+                    log(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
                     eff = (depth * bids_krk * (1 - taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
                     prod = eff / (depth * bids_krk)
-                    print("[i] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
-                    print(f"[i] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_trt * depth, depth))
+                    log("[i] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
+                    log(f"[i] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_trt * depth, depth))
                     last_ask = asks_trt
                     last_bid = bids_krk
                     if prod * 100 > float(d["prod_threshold"]) and not only_see:
                         checkbalance = True
-                        print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
-                        print(f"{Fore.YELLOW}[H] SELL %f BTC ON BNB, BUYING %f (%f) BTC ON TRT{Style.RESET_ALL}" % (
+                        log(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
+                        log(f"{Fore.YELLOW}[H] SELL %f BTC ON BNB, BUYING %f (%f) BTC ON TRT{Style.RESET_ALL}" % (
                             depth, depth, depth * last_ask))
                         resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
                                                       "sell", exchange_list[1], "BTCEUR", depth, last_bid)
-                        print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
+                        log("BNB" + resp_dict["bnb"] + "\nTRT" + resp_dict["trt"])
                         try:
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
                         except KeyError:
-                            print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
+                            log(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["errors"][0]["message"])
                         if status[0] == "ERROR" or status[1] == "ERROR":
-                            print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
+                            log(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                             time.sleep(20)
                             pass
                         else:
-                            print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
+                            log(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"]["status"].upper(), resp_dict["bnb"]["status"]))
                             bal_list = True
                             time.sleep(int(d["sleep_check_order"]))
@@ -310,7 +310,7 @@ def arbo():
                                  float(all_balance["trteur"] + all_balance["bnbeur"] + (
                                          all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask)])
                 else:
-                    print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
+                    log(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
                     checkbalance = True
             _end_time = time.time()
             totaltime = _end_time - _start_time
@@ -322,7 +322,7 @@ def arbo():
                           round(bids_krk - asks_trt, 2),
                           round((bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), 2)])
             if int(_end_time % int(d["save_interval"])) == 0:
-                print(f"{Fore.YELLOW}[!] SAVING...{Style.RESET_ALL}")
+                log(f"{Fore.YELLOW}[!] SAVING...{Style.RESET_ALL}")
                 if _list:
                     save_data_thread = threading.Thread(target=save_data, args=(_list, d["sep"],))
                     save_data_thread.start()
@@ -338,24 +338,25 @@ def arbo():
                      ((all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask) +
                      float(all_balance["bnbeur"]) +
                      float(all_balance["trteur"])])
-                print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
-                save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list, d["sep"],))
+                log(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
+                save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list, d["sep"], db_data, tg_data,))
                 save_trade_thread.start()
                 save_trade_thread.join()
                 _trade_list.clear()
             if int(_end_time % int(d["fee_interval"])) == 0:
-                print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
+                log(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
                 fee = op.feethreading()
                 taker_fee_trt = float(fee["fee" + exchange_list[0] + "taker"]) / 100
                 taker_fee_bnb = 75 * float(fee["fee" + exchange_list[1] + "taker"]) / 100
                 maker_fee_trt = float(fee["fee" + exchange_list[0] + "maker"]) / 100
                 maker_fee_bnb = 75 * float(fee["fee" + exchange_list[1] + "maker"]) / 100
 
-            print(
+            log(
                 f"[-] ------------------------------------------------- {Fore.YELLOW}%d ms{Style.RESET_ALL} (%d ms(q) + %d ms(p)) - avg last %d ({Fore.YELLOW}%d ms{Style.RESET_ALL}) - global avg ({Fore.YELLOW}%d ms{Style.RESET_ALL})" % (
                     int(totaltime * 1000), int(_query_time * 1000),
                     (int(totaltime * 1000) - int(_query_time * 1000)), min(100, len(time_list)),
                     sum(time_list[-100:]) / min(100, len(time_list)), sum(time_list) / len(time_list)))
+            log("", True)
         except KeyboardInterrupt:
             sys.exit()
 
@@ -367,38 +368,37 @@ def save_data(_list, sep):
         # append(df, filename='filev2.xlsx', startrow=None, sheet_name='Sheet1', truncate_sheet=True,engine="openpyxl")
         _list.clear()
     except FileNotFoundError:
-        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [file not found]{Style.RESET_ALL}")
+        log(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [file not found]{Style.RESET_ALL}")
     except PermissionError:
-        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [resource busy]{Style.RESET_ALL}")
+        log(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [resource busy]{Style.RESET_ALL}")
     except:
-        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
+        log(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
 
 
-def save_trade(_list, sep):
-    print(_list)
+def save_trade(_list, sep, db_data, tg_data):
+    log(_list)
     df = pandas.DataFrame(_list)
     try:
         # with open('file_trade.xlsx', 'a') as f:
         df.to_csv("file_trade.csv", sep=',', mode='a', index=False, header=False, decimal=',')
         # append(df, filename='file_trade.xlsx', startrow=None, sheet_name='Sheet1', truncate_sheet=True,engine="openpyxl")
     except FileNotFoundError:
-        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [file not found]{Style.RESET_ALL}")
+        log(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [file not found]{Style.RESET_ALL}")
     except PermissionError:
-        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [resource busy]{Style.RESET_ALL}")
+        log(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [resource busy]{Style.RESET_ALL}")
     except TypeError as err:
-        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [type error]{Style.RESET_ALL}")
-        print(err)
+        log(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [type error]{Style.RESET_ALL}")
+        log(err)
     except:
-        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
-    telegram(_list)
+        log(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATALOG [generic error]{Style.RESET_ALL}")
+    telegram(_list, tg_data)
     try:
-        db(_list)
+        db(_list, db_data)
     except Exception as err:
-        print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
-        print(err)
+        log(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
+        log(err)
         exit(100)
     pass
-    _trade_list.clear()
 
 
 def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True, engine="xlrd"):
@@ -413,20 +413,19 @@ def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True
             writer.book.create_sheet(sheet_name, idx)
         writer.sheets = {ws.title: ws for ws in writer.book.worksheets}
     except FileNotFoundError:
-        print("e diocan pero")
+        log("e diocan pero")
     if startrow is None:
         startrow = 0
     df.to_excel(writer, sheet_name, startrow=startrow)
     writer.save()
 
 
-def db(_list):
+def db(_list, db_data):
     server = db_data["dbhost"]
     database = db_data["dbname"]
     username = db_data["dbuser"]
     password = db_data["dbpass"]
     port = int(db_data["dbport"])
-    print(d["dbpass"])
     conn = mysql.connector.connect(host=server, user=username, password=password, port=port, database=database)
     cursor = conn.cursor()
     date = datetime.datetime.strptime(_list[0][0], "%d/%m/%Y %H:%M:%S").strftime('%Y-%m-%d %H:%M:%S')
@@ -450,7 +449,7 @@ def db(_list):
     conn.close()
 
 
-def telegram(_list):
+def telegram(_list, tg_data):
     message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ":\nBOUGHT <b>" + str(
         round(float(_list[0][3].replace(",", ".")), 8)) + "</b> $BTC <b>" + str(
         _list[0][4]) + "</b> ON <code>" + str(
@@ -461,7 +460,6 @@ def telegram(_list):
     bot_chatID = tg_data["app_id"]
     send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=HTML&text=' + message
     requests.get(send_text)
-    _trade_list.clear()
 
 
 def num(num):
@@ -489,27 +487,41 @@ def kill_char(string, n):
 def check_api_connection():
     trt_conn = requests.get("https://www.therocktrading.com/it/")
     if not trt_conn.ok:
-        print("HTTP " + str(trt_conn.status_code) + ", error 10")
+        log("HTTP " + str(trt_conn.status_code) + ", error 10")
         return False
     else:
         trt_conn = requests.get("https://api.therocktrading.com/")
         if not trt_conn.ok:
-            print("HTTP " + str(trt_conn.status_code) + ", error 12")
+            log("HTTP " + str(trt_conn.status_code) + ", error 12")
             return False
     bnb_conn = requests.get("https://api1.binance.com/")
     if not bnb_conn.ok:
-        print("HTTP " + str(bnb_conn.status_code) + ", error 11")
+        log("HTTP " + str(bnb_conn.status_code) + ", error 11")
         return False
     else:
         bnb_conn = requests.get("https://api.therocktrading.com/")
         if not bnb_conn.ok:
-            print("HTTP " + str(bnb_conn.status_code) + ", error 13")
+            log("HTTP " + str(bnb_conn.status_code) + ", error 13")
             return False
         else:
             bnb_conn = requests.get("https://api1.binance.com/wapi/v3/systemStatus.html")
             if bnb_conn.json()["status"] != 0:
-                print("HTTP " + str(bnb_conn.status_code) + ", error 14")
+                log("HTTP " + str(bnb_conn.status_code) + ", error 14")
                 return False
     return True
 
 
+def log(s, eop=False):
+    log = threading.Thread(target=log_thread, args=(s,eop))
+    log.start()
+
+
+def log_thread(s,eop=False):
+    print(s)
+    _log_list.append(s)
+    if eop:
+        with open('log.txt', 'a+') as f:
+            for _line in _log_list:
+                f.write(_line + "\n")
+            f.write("[[[EOL}\n")
+            _log_list.clear()
