@@ -512,12 +512,12 @@ def check_api_connection():
 
 
 def log(s, eop=False):
+    print(s)
     log = threading.Thread(target=log_thread, args=(s,eop))
     log.start()
 
 
 def log_thread(s,eop=False):
-    print(s)
     _log_list.append(s)
     if eop:
         with open('log.txt', 'a+') as f:
