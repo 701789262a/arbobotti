@@ -219,7 +219,7 @@ def arbo():
                         resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, last_bid, "buy", "bnb", "BTCEUR",
                                                       depth,
                                                       last_ask)
-                        print("BNB" + resp_dict["bnb"] + "\nTRT" + resp_dict["trt"])
+                        print("BNB" , resp_dict["bnb"] , "\nTRT" , resp_dict["trt"])
                         try:
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
                         except KeyError:
@@ -284,7 +284,7 @@ def arbo():
                             depth, depth, depth * last_ask))
                         resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
                                                       "sell", exchange_list[1], "BTCEUR", depth, last_bid)
-                        print("BNB" + resp_dict["bnb"] + "\nTRT" + resp_dict["trt"])
+                        print("BNB" , resp_dict["bnb"] , "\nTRT" , resp_dict["trt"])
                         try:
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
                         except KeyError:
