@@ -6,7 +6,6 @@ import sys
 import threading
 import time
 from multiprocessing import Process
-
 import gnupg
 import mysql.connector
 import pandas
@@ -102,9 +101,9 @@ def arbo():
     time.sleep(2)
     fee = op.feethreading()
     taker_fee_trt = float(fee["fee" + exchange_list[0] + "taker"]) / 100
-    taker_fee_bnb = 75 * float(fee["fee" + exchange_list[1] + "taker"]) / 100
+    taker_fee_bnb = float(fee["fee" + exchange_list[1] + "taker"])
     maker_fee_trt = float(fee["fee" + exchange_list[0] + "maker"]) / 100
-    maker_fee_bnb = 75 * float(fee["fee" + exchange_list[1] + "maker"]) / 100
+    maker_fee_bnb = float(fee["fee" + exchange_list[1] + "maker"])
     print("GOT FEE FROM EXCHANGE; %s: %f;    %s: %f" % (
         exchange_list[0].upper(), taker_fee_trt, exchange_list[1].upper(), taker_fee_bnb))
     checkbalance = True
@@ -182,6 +181,7 @@ def arbo():
             print("[i] FETCHED MAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
                 exchange_list[0].upper(), maker_fee_trt * 100, exchange_list[1].upper(), maker_fee_bnb * 100))
 
+
             if (bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)) > 0:
                 low_balance = False
                 print(f"{Fore.CYAN}[#] %.2f < %.2f BUY %s | SELL TRT DIFF: %.2f (MENO FEE): %.3f" % (
@@ -236,9 +236,9 @@ def arbo():
                             time.sleep(int(d["sleep_check_order"]))
                             _trade_list.append(
                                 [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", exchange_list[1].upper(),
-                                 str(depth),
-                                 last_ask,
-                                 "SELL", "TRT", last_bid, float(all_balance["bnbbtc"]), float(all_balance["trtbtc"]),
+                                 str(depth).replace(",","."),
+                                 str(last_ask).replace(".", ","),
+                                 "SELL", "TRT", str(last_bid).replace(".", ","), float(all_balance["bnbbtc"]), float(all_balance["trtbtc"]),
                                  float(all_balance["bnbeur"]), float(all_balance["trteur"]),
                                  float(all_balance["trteur"] + all_balance["bnbeur"] + (
                                          all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask)])
@@ -356,7 +356,6 @@ def arbo():
                     int(totaltime * 1000), int(_query_time * 1000),
                     (int(totaltime * 1000) - int(_query_time * 1000)), min(100, len(time_list)),
                     sum(time_list[-100:]) / min(100, len(time_list)), sum(time_list) / len(time_list)))
-            print("", True)
         except KeyboardInterrupt:
             sys.exit()
 
@@ -509,5 +508,3 @@ def check_api_connection():
                 print("HTTP " + str(bnb_conn.status_code) + ", error 14")
                 return False
     return True
-
-
