@@ -202,7 +202,7 @@ def arbo():
                                   float(asks_data_bnb[1])))
                 balance = min(all_balance["trtbtc"], all_balance["bnbeur"] / asks_krk)
                 if balance < depth:
-                    depth = float(balance * float(d["max_each_trade"]))
+                    depth =  round(float(balance * float(d["max_each_trade"])),4)
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
                     print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
@@ -211,7 +211,7 @@ def arbo():
                         low_balance = True
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
-                    depth = float(depth * float(d["max_each_trade"]))
+                    depth = round(float(depth * float(d["max_each_trade"])),4)
                     print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
                 if not low_balance and depth > float(d["min_balance"]):
@@ -270,7 +270,7 @@ def arbo():
                         asks_trt, bids_krk, exchange_list[1].upper(), bids_krk - asks_trt,
                         (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), depth, balance))
                 if balance < depth:
-                    depth = float(balance * float(d["max_each_trade"]))
+                    depth =  round(float(balance * float(d["max_each_trade"])),4)
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
                     print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
                     if depth == 0:
@@ -278,7 +278,7 @@ def arbo():
                         low_balance = True
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
-                    depth = float(depth * float(d["max_each_trade"]))
+                    depth =  round(float(depth * float(d["max_each_trade"])),4)
                     print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
                 if not low_balance and (depth > float(d["min_balance"])):
