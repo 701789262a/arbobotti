@@ -2,10 +2,14 @@ import datetime
 import getpass
 import json
 import os
+import socket
 import sys
 import threading
 import time
 from multiprocessing import Process
+from multiprocessing.pool import ThreadPool
+from threading import Thread
+
 import gnupg
 import mysql.connector
 import pandas
@@ -16,6 +20,7 @@ from openpyxl import load_workbook
 
 import data_visual
 from trade import Operation
+
 _print_list = []
 
 
@@ -114,6 +119,13 @@ def arbo():
     f = open("version", "r")
     ver = f.read()
     all_balance = op.balancethreading()
+    s = socket.socket()
+    print(str(d["dip"]))
+    try:
+        s.connect((str(d["dip"]), 30630))
+    except ConnectionRefusedError:
+        pass
+    pool = ThreadPool()
     while 1:
         try:
             eff = 0
@@ -160,9 +172,9 @@ def arbo():
                 exchange_list[1].upper(), asks_krk, exchange_list[1].upper(), all_balance["bnbeur"]))
             print(f"[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
                 exchange_list[0].upper(), bids_trt, exchange_list[0].upper(), all_balance["trtbtc"]))
-            print("[i]                           DIFFERENCE: %s"%(num(round(bids_trt - asks_krk, 2))))
+            print("[i]                           DIFFERENCE: %s" % (num(round(bids_trt - asks_krk, 2))))
             print(f"[i]                           DIFF + FEE: {Fore.RED}%s{Style.RESET_ALL}"
-                % (num(round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2))))
+                  % (num(round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2))))
             print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f" % (
                 exchange_list[0].upper(), asks_trt, exchange_list[0].upper(), all_balance["trteur"]))
             print(
@@ -180,7 +192,6 @@ def arbo():
                 exchange_list[0].upper(), taker_fee_trt * 100, exchange_list[1].upper(), taker_fee_bnb * 100))
             print("[i] FETCHED MAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
                 exchange_list[0].upper(), maker_fee_trt * 100, exchange_list[1].upper(), maker_fee_bnb * 100))
-
 
             if (bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)) > 0:
                 low_balance = False
@@ -219,7 +230,7 @@ def arbo():
                         resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, last_bid, "buy", "bnb", "BTCEUR",
                                                       depth,
                                                       last_ask)
-                        print("BNB" , resp_dict["bnb"] , "\nTRT" , resp_dict["trt"])
+                        print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
                         try:
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
                         except KeyError:
@@ -236,9 +247,10 @@ def arbo():
                             time.sleep(int(d["sleep_check_order"]))
                             _trade_list.append(
                                 [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", exchange_list[1].upper(),
-                                 str(depth).replace(",","."),
+                                 str(depth).replace(",", "."),
                                  str(last_ask).replace(".", ","),
-                                 "SELL", "TRT", str(last_bid).replace(".", ","), float(all_balance["bnbbtc"]), float(all_balance["trtbtc"]),
+                                 "SELL", "TRT", str(last_bid).replace(".", ","), float(all_balance["bnbbtc"]),
+                                 float(all_balance["trtbtc"]),
                                  float(all_balance["bnbeur"]), float(all_balance["trteur"]),
                                  float(all_balance["trteur"] + all_balance["bnbeur"] + (
                                          all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask)])
@@ -284,7 +296,7 @@ def arbo():
                             depth, depth, depth * last_ask))
                         resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
                                                       "sell", exchange_list[1], "BTCEUR", depth, last_bid)
-                        print("BNB" , resp_dict["bnb"] , "\nTRT" , resp_dict["trt"])
+                        print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
                         try:
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
                         except KeyError:
@@ -326,6 +338,14 @@ def arbo():
                 if _list:
                     save_data_thread = threading.Thread(target=save_data, args=(_list, d["sep"],))
                     save_data_thread.start()
+                    try:
+                        arbomonitor(s)
+                    except Exception:
+                        try:
+                            s.close()
+                            s.connect((str(d["dip"]), 30630))
+                        except ConnectionRefusedError:
+                            pass
             if int(_end_time % int(d["balance_interval"])) == 0:
                 checkbalance = True
             if _trade_list:
@@ -347,9 +367,9 @@ def arbo():
                 print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
                 fee = op.feethreading()
                 taker_fee_trt = float(fee["fee" + exchange_list[0] + "taker"]) / 100
-                taker_fee_bnb = 75 * float(fee["fee" + exchange_list[1] + "taker"]) / 100
+                taker_fee_bnb =  float(fee["fee" + exchange_list[1] + "taker"])
                 maker_fee_trt = float(fee["fee" + exchange_list[0] + "maker"]) / 100
-                maker_fee_bnb = 75 * float(fee["fee" + exchange_list[1] + "maker"]) / 100
+                maker_fee_bnb =  float(fee["fee" + exchange_list[1] + "maker"])
 
             print(
                 f"[-] ------------------------------------------------- {Fore.YELLOW}%d ms{Style.RESET_ALL} (%d ms(q) + %d ms(p)) - avg last %d ({Fore.YELLOW}%d ms{Style.RESET_ALL}) - global avg ({Fore.YELLOW}%d ms{Style.RESET_ALL})" % (
@@ -481,6 +501,14 @@ def kill_char(string, n):
     begin = string[:n]
     end = string[n + 1:]
     return begin + end
+
+
+def arbomonitor(s):
+    data = s.recv(1024)
+    print(data)
+    byt = str(int(datetime.datetime.now(datetime.timezone.utc).timestamp())).encode()
+    s.send(byt)
+    return data
 
 
 def check_api_connection():
