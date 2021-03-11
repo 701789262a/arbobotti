@@ -122,7 +122,7 @@ def arbo():
     s = socket.socket()
     print(str(d["dip"]))
     try:
-        s.connect((str(d["dip"]), 30630))
+        s.connect((str(d["dip"]).rstrip("\n"), 30630))
     except ConnectionRefusedError:
         pass
     pool = ThreadPool()
