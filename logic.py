@@ -346,6 +346,8 @@ def arbo():
                             s.connect((str(d["dip"]), 30630))
                         except ConnectionRefusedError:
                             pass
+                        except socket.gaierror:
+                            pass
             if int(_end_time % int(d["balance_interval"])) == 0:
                 checkbalance = True
             if _trade_list:
