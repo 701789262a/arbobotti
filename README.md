@@ -10,6 +10,7 @@
     pip install mysql.connector
     pip install telebot
     pip install telethon
+    pip install gnupg
 
 
 ### File generated or needed
