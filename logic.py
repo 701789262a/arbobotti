@@ -8,7 +8,6 @@ import threading
 import time
 from multiprocessing import Process
 from multiprocessing.pool import ThreadPool
-from threading import Thread
 
 import gnupg
 import mysql.connector
@@ -121,6 +120,7 @@ def arbo():
     all_balance = op.balancethreading()
     s = socket.socket()
     print(str(d["dip"]))
+    last_h=0
     try:
         s.connect((str(d["dip"]).rstrip("\n"), 30630))
     except ConnectionRefusedError:
@@ -202,7 +202,7 @@ def arbo():
                                   float(asks_data_bnb[1])))
                 balance = min(all_balance["trtbtc"], all_balance["bnbeur"] / asks_krk)
                 if balance < depth:
-                    depth =  round(float(balance * float(d["max_each_trade"])),4)
+                    depth = round(float(balance * float(d["max_each_trade"])), 4)
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
                     print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
@@ -211,7 +211,7 @@ def arbo():
                         low_balance = True
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
-                    depth = round(float(depth * float(d["max_each_trade"])),4)
+                    depth = round(float(depth * float(d["max_each_trade"])), 4)
                     print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
                 if not low_balance and depth > float(d["min_balance"]):
@@ -270,7 +270,7 @@ def arbo():
                         asks_trt, bids_krk, exchange_list[1].upper(), bids_krk - asks_trt,
                         (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), depth, balance))
                 if balance < depth:
-                    depth =  round(float(balance * float(d["max_each_trade"])),4)
+                    depth = round(float(balance * float(d["max_each_trade"])), 4)
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
                     print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
                     if depth == 0:
@@ -278,7 +278,7 @@ def arbo():
                         low_balance = True
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
-                    depth =  round(float(depth * float(d["max_each_trade"])),4)
+                    depth = round(float(depth * float(d["max_each_trade"])), 4)
                     print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
 
                 if not low_balance and (depth > float(d["min_balance"])):
@@ -339,7 +339,9 @@ def arbo():
                     save_data_thread = threading.Thread(target=save_data, args=(_list, d["sep"],))
                     save_data_thread.start()
                     try:
-                        arbomonitor(s)
+                        data = arbomonitor(s, only_see,last_h)
+                        if data == "go":
+                            only_see = True
                     except Exception:
                         try:
                             s.close()
@@ -369,10 +371,10 @@ def arbo():
                 print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
                 fee = op.feethreading()
                 taker_fee_trt = float(fee["fee" + exchange_list[0] + "taker"]) / 100
-                taker_fee_bnb =  float(fee["fee" + exchange_list[1] + "taker"])
+                taker_fee_bnb = float(fee["fee" + exchange_list[1] + "taker"])
                 maker_fee_trt = float(fee["fee" + exchange_list[0] + "maker"]) / 100
-                maker_fee_bnb =  float(fee["fee" + exchange_list[1] + "maker"])
-
+                maker_fee_bnb = float(fee["fee" + exchange_list[1] + "maker"])
+            last_h=sum(time_list[-100:]) / min(100, len(time_list))
             print(
                 f"[-] ------------------------------------------------- {Fore.YELLOW}%d ms{Style.RESET_ALL} (%d ms(q) + %d ms(p)) - avg last %d ({Fore.YELLOW}%d ms{Style.RESET_ALL}) - global avg ({Fore.YELLOW}%d ms{Style.RESET_ALL})" % (
                     int(totaltime * 1000), int(_query_time * 1000),
@@ -505,12 +507,13 @@ def kill_char(string, n):
     return begin + end
 
 
-def arbomonitor(s):
+def arbomonitor(s, only_see,last_h):
     data = s.recv(1024)
-    print(data)
-    byt = str(int(datetime.datetime.now(datetime.timezone.utc).timestamp())).encode()
+    send_json = json.dumps(
+        {"timestamp": str(int(datetime.datetime.now(datetime.timezone.utc).timestamp())), "status": only_see,"latency":last_h})
+    byt = send_json.encode()
     s.send(byt)
-    return data
+    return data.decode()
 
 
 def check_api_connection():
