@@ -1,15 +1,7 @@
 # Arbobotti
 ### Usage
 
-    pip install pandas
-    pip install python-binance
-    pip install krakenex
-    pip install pykrakenapi
-    pip install openpyxl
-    pip install matplotlib
-    pip install mysql.connector
-    pip install telebot
-    pip install telethon
+    pip install pandas python-binance krakenex pykrakenapi openpyxl matplotlib mysql.connector telebot telethon python-gnupg
 
 
 ### File generated or needed
