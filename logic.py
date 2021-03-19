@@ -120,12 +120,13 @@ def arbo():
     all_balance = op.balancethreading()
     s = socket.socket()
     print(str(d["dip"]))
-    last_h=0
+    last_h = 0
     try:
         s.connect((str(d["dip"]).rstrip("\n"), 30630))
     except ConnectionRefusedError:
         pass
     pool = ThreadPool()
+    already_saved = False
     while 1:
         try:
             eff = 0
@@ -333,13 +334,14 @@ def arbo():
                           round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2),
                           round(bids_krk - asks_trt, 2),
                           round((bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), 2)])
-            if int(_end_time % int(d["save_interval"])) == 0:
+            if int(_end_time % int(d["save_interval"])) == 0 and not already_saved:
                 print(f"{Fore.YELLOW}[!] SAVING...{Style.RESET_ALL}")
                 if _list:
                     save_data_thread = threading.Thread(target=save_data, args=(_list, d["sep"],))
                     save_data_thread.start()
+                    already_saved = True
                     try:
-                        data = arbomonitor(s, only_see,last_h)
+                        data = arbomonitor(s, only_see, last_h)
                         if data == "go":
                             only_see = True
                     except Exception:
@@ -350,6 +352,8 @@ def arbo():
                             pass
                         except socket.gaierror:
                             pass
+            if int(str(int(_end_time))[-1]) > 1:
+                already_saved = False
             if int(_end_time % int(d["balance_interval"])) == 0:
                 checkbalance = True
             if _trade_list:
@@ -374,7 +378,7 @@ def arbo():
                 taker_fee_bnb = float(fee["fee" + exchange_list[1] + "taker"])
                 maker_fee_trt = float(fee["fee" + exchange_list[0] + "maker"]) / 100
                 maker_fee_bnb = float(fee["fee" + exchange_list[1] + "maker"])
-            last_h=sum(time_list[-100:]) / min(100, len(time_list))
+            last_h = sum(time_list[-100:]) / min(100, len(time_list))
             print(
                 f"[-] ------------------------------------------------- {Fore.YELLOW}%d ms{Style.RESET_ALL} (%d ms(q) + %d ms(p)) - avg last %d ({Fore.YELLOW}%d ms{Style.RESET_ALL}) - global avg ({Fore.YELLOW}%d ms{Style.RESET_ALL})" % (
                     int(totaltime * 1000), int(_query_time * 1000),
@@ -507,10 +511,11 @@ def kill_char(string, n):
     return begin + end
 
 
-def arbomonitor(s, only_see,last_h):
+def arbomonitor(s, only_see, last_h):
     data = s.recv(1024)
     send_json = json.dumps(
-        {"timestamp": str(int(datetime.datetime.now(datetime.timezone.utc).timestamp())), "status": only_see,"latency":last_h})
+        {"timestamp": str(int(datetime.datetime.now(datetime.timezone.utc).timestamp())), "status": only_see,
+         "latency": int(last_h)})
     byt = send_json.encode()
     s.send(byt)
     return data.decode()
