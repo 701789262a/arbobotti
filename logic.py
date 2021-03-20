@@ -514,7 +514,7 @@ def kill_char(string, n):
 def arbomonitor(s, only_see, last_h):
     data = s.recv(1024)
     send_json = json.dumps(
-        {"timestamp": str(int(datetime.datetime.now(datetime.timezone.utc).timestamp())), "status": not (only_see),
+        {"timestamp": str(int(datetime.datetime.now(datetime.timezone.utc).timestamp())), "status": not only_see,
          "latency": int(last_h)})
     byt = send_json.encode()
     s.send(byt)
