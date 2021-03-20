@@ -5,7 +5,7 @@ import json
 import queue
 import time
 from threading import Thread
-
+import binance
 import krakenex
 import pandas as pd
 import requests
@@ -13,6 +13,7 @@ from binance.client import Client
 from colorama import Fore
 from colorama import Style
 from pykrakenapi import KrakenAPI
+from binance import exceptions
 
 q1 = queue.Queue()
 q2 = queue.Queue()
@@ -384,7 +385,6 @@ class Operation:
                 print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
             except json.decoder.JSONDecodeError:
                 print(f"{Fore.RED}[ERR] ERROR WHILE CONVERTING TO JSON [expecting value]{Style.RESET_ALL}")
-
         elif exchange == "krk":
             resp_krk = requests.get('https://api.kraken.com/0/public/Depth')  # , params=params)
             return resp_krk.text
@@ -394,6 +394,10 @@ class Operation:
                 resp_bnb = self.client.get_order_book(symbol="BTCEUR", limit=5)
                 return resp_bnb
             except requests.exceptions.ConnectionError:
+                print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
+            except requests.exceptions.ReadTimeout:
+                print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
+            except binance.exceptions.BinanceAPIException:
                 print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
 
     def querythread(self):

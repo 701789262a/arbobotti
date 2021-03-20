@@ -166,7 +166,7 @@ def arbo():
             _trade_list.clear()
             print(f"{Fore.MAGENTA}[!] ARBOBOTTI VERSION %s, MURINEDDU CAPITAL 2021{Style.RESET_ALL}\n" % (ver))
             print(
-                f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}        THREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}         ONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}" % (
+                f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}\t\tTHREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}         ONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}" % (
                     a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), only_see))
 
             print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
@@ -514,7 +514,7 @@ def kill_char(string, n):
 def arbomonitor(s, only_see, last_h):
     data = s.recv(1024)
     send_json = json.dumps(
-        {"timestamp": str(int(datetime.datetime.now(datetime.timezone.utc).timestamp())), "status": only_see,
+        {"timestamp": str(int(datetime.datetime.now(datetime.timezone.utc).timestamp())), "status": not (only_see),
          "latency": int(last_h)})
     byt = send_json.encode()
     s.send(byt)
