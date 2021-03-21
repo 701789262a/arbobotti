@@ -562,7 +562,10 @@ def getaction(q):
     s_act = socket.socket()
     s_act.bind(("0.0.0.0", 31000))
     s_act.listen(5)
+    s_act.settimeout(0.5)
+    print("socket inizializzato")
     while True:
+        print("attendo connessione")
         conn, address = s_act.accept()
         data = conn.recv(1024)
         print(data.decode())
