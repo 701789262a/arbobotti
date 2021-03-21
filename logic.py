@@ -2,6 +2,7 @@ import datetime
 import getpass
 import json
 import os
+import queue
 import socket
 import sys
 import threading
@@ -125,8 +126,12 @@ def arbo():
         s.connect((str(d["dip"]).rstrip("\n"), 30630))
     except ConnectionRefusedError:
         pass
+    q_act = queue.Queue()
+    t_action = threading.Thread(target=getaction, args=(q_act,))
+    t_action.start()
     pool = ThreadPool()
     already_saved = False
+    only_see = bool(int(d["only_see"]))
     while 1:
         try:
             eff = 0
@@ -156,9 +161,14 @@ def arbo():
             last_ask = 0
             depth = 0
             bal_list = False
+            if not q_act.empty():
+                action = last(q_act)
+                if action == "STOP" and not only_see:
+                    only_see = True
+                elif action == "GO" and only_see:
+                    only_see = False
             os.system('cls' if os.name == 'nt' else 'clear')
             a = datetime.datetime.now()
-            only_see = bool(int(d["only_see"]))
             if not str(a.microsecond)[:-5]:
                 small_index = 0
             else:
@@ -546,3 +556,21 @@ def check_api_connection():
                 print("HTTP " + str(bnb_conn.status_code) + ", error 14")
                 return False
     return True
+
+
+def getaction(q):
+    s_act = socket.socket()
+    s_act.bind(("0.0.0.0", 31000))
+    s_act.listen(5)
+    while True:
+        conn, address = s_act.accept()
+        data = conn.recv(1024)
+        q.put(data)
+        conn.close()
+
+
+def last(q):
+    while not q.empty():
+        a = q.get()
+        if q.empty():
+            return a
