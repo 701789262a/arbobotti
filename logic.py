@@ -351,7 +351,7 @@ def arbo():
                     save_data_thread.start()
                     already_saved = True
                     try:
-                        data = arbomonitor(s, only_see, last_h)
+                        data = arbomonitor(s, only_see, last_h,d["name"])
                         if data == "go":
                             only_see = True
                     except Exception as errr:
@@ -525,11 +525,11 @@ def kill_char(string, n):
     return begin + end
 
 
-def arbomonitor(s, only_see, last_h):
+def arbomonitor(s, only_see, last_h, name):
     data = s.recv(1024)
     send_json = json.dumps(
         {"timestamp": str(int(datetime.datetime.now(datetime.timezone.utc).timestamp())), "status": not only_see,
-         "latency": int(last_h)})
+         "latency": int(last_h), "name": name})
     byt = send_json.encode()
     s.send(byt)
     return data.decode()
@@ -575,7 +575,6 @@ def getaction(q):
             q.put(data.decode())
             conn.close()
         except socket.timeout:
-            print("timeout")
             pass
 
 
