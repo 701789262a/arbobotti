@@ -565,7 +565,8 @@ def getaction(q):
     while True:
         conn, address = s_act.accept()
         data = conn.recv(1024)
-        q.put(data)
+        print(data.decode())
+        q.put(data.decode())
         conn.close()
 
 
