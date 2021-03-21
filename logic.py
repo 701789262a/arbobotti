@@ -354,13 +354,17 @@ def arbo():
                         data = arbomonitor(s, only_see, last_h)
                         if data == "go":
                             only_see = True
-                    except Exception:
+                    except Exception as errr:
+                        print(errr)
+                        pass
                         try:
                             s.close()
-                            s.connect((str(d["dip"]), 30630))
-                        except ConnectionRefusedError:
+                            s.connect((str(d["dip"]).rstrip("\n"), 30630))
+                        except ConnectionRefusedError as err:
+                            print(err)
                             pass
-                        except socket.gaierror:
+                        except socket.gaierror as err:
+                            print(err)
                             pass
             if int(str(int(_end_time))[-1]) > 1:
                 already_saved = False
@@ -563,10 +567,8 @@ def getaction(q):
     s_act.bind(("0.0.0.0", 31000))
     s_act.listen(5)
     s_act.settimeout(0.5)
-    print("socket inizializzato")
     while True:
         try:
-            print("attendo connessione")
             conn, address = s_act.accept()
             data = conn.recv(1024)
             print(data.decode())
