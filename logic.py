@@ -31,6 +31,7 @@ def arbo():
             (key, val) = line.replace(" ", "").split("=")
             val = val.split("#")[0]
             d[key] = val
+    ip_mon=d["dip"]
     gpg = gnupg.GPG(d["gpg"][:-1])
     _list = []
     _trade_list = []
@@ -359,7 +360,7 @@ def arbo():
                         pass
                         try:
                             s.close()
-                            s.connect((str(d["dip"]).rstrip("\n"), 30630))
+                            s.connect((ip_mon, 30630))
                         except ConnectionRefusedError as err:
                             print(err)
                             pass
