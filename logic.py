@@ -31,7 +31,7 @@ def arbo():
             (key, val) = line.replace(" ", "").split("=")
             val = val.split("#")[0]
             d[key] = val
-    ip_mon=d["dip"]
+    ip_mon = d["dip"]
     gpg = gnupg.GPG(d["gpg"][:-1])
     _list = []
     _trade_list = []
@@ -141,7 +141,6 @@ def arbo():
                 print(f"{Fore.YELLOW}[#] RETRIEVING BALANCE{Style.RESET_ALL}")
                 all_balance = op.balancethreading()
                 checkbalance = False
-            time.sleep(1 / int(d["rate"]))
             _start_time = time.time()
             _query_time = time.time()
             price_dict = op.querythread()
@@ -352,7 +351,7 @@ def arbo():
                     save_data_thread.start()
                     already_saved = True
                     try:
-                        data = arbomonitor(s, only_see, last_h,d["name"])
+                        data = arbomonitor(s, only_see, last_h, d["name"])
                         if data == "go":
                             only_see = True
                     except Exception as errr:
