@@ -53,12 +53,12 @@ class Operation:
                 self.prbnb.append(bn)
             else:
                 time.sleep(1)
-                if len(self.trt) < 20:
+                if len(self.trt) < 25:
                     self.bnb = self.bnb + self.prbnb
                     self.trt = self.trt + self.prtrt
                     self.prtrt.clear()
                     self.prbnb.clear()
-                    time.sleep(50)
+                    time.sleep(30)
 
     def threadCreation(self):
         x = Thread(target=self.thread_func)

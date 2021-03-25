@@ -472,7 +472,7 @@ def db(_list, db_data):
         _list[0][1], _list[0][2], _list[0][4].replace(",", "."), _list[0][5], _list[0][6],
         _list[0][7].replace(",", "."), _list[0][3].replace(",", "."),
         _list[0][8], _list[0][9], _list[0][10], _list[0][11], _list[0][12],
-        _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12], round(_list[1][12] - _list[0][12], 5), date,
+        _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12], round(_list[1][11]+_list[1][10] - _list[0][11]-_list[0][10], 5), date,
         "1337", "1337", "1")
     cursor.execute(add_trade, data_trade)
     conn.commit()
@@ -486,7 +486,7 @@ def telegram(_list, tg_data):
         _list[0][4]) + "</b> ON <code>" + str(
         _list[0][2]) + "</code> SOLD <b>" + str(_list[0][7]) + "</b> ON <code>" + str(
         _list[0][6]) + "</code>. CALCULATED GAIN = <b>" + str(
-        round(_list[1][12] - _list[0][12], 5)) + "€</b>").replace(" ", "%20")
+        round(_list[1][11]+_list[1][10] - _list[0][11]-_list[0][10], 5)) + "€</b>").replace(" ", "%20")
     bot_token = tg_data["token"]
     bot_chatID = tg_data["app_id"]
     send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=HTML&text=' + message
