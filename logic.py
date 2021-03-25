@@ -105,13 +105,10 @@ def arbo():
     op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret, bnb_apikey, bnb_secret, exchange_list)
     op.threadCreation()
     time.sleep(2)
-    fee = op.feethreading()
-    taker_fee_trt = float(fee["fee" + exchange_list[0] + "taker"]) / 100
-    taker_fee_bnb = float(fee["fee" + exchange_list[1] + "taker"])
-    maker_fee_trt = float(fee["fee" + exchange_list[0] + "maker"]) / 100
-    maker_fee_bnb = float(fee["fee" + exchange_list[1] + "maker"])
-    print("GOT FEE FROM EXCHANGE; %s: %f;    %s: %f" % (
-        exchange_list[0].upper(), taker_fee_trt, exchange_list[1].upper(), taker_fee_bnb))
+    taker_fee_trt = float(d["taker_fee_trt"])
+    taker_fee_bnb = float(d["taker_fee_bnb"])
+    maker_fee_trt = float(d["taker_fee_trt"])
+    maker_fee_bnb = float(d["taker_fee_bnb"])
     checkbalance = True
     _tglist = []
     if d["graph"].lower() == "true":
@@ -385,13 +382,6 @@ def arbo():
                 save_trade_thread.start()
                 save_trade_thread.join()
                 _trade_list.clear()
-            if int(_end_time % int(d["fee_interval"])) == 0:
-                print(f"{Fore.YELLOW}[!] FETCHING FEE DATA...{Style.RESET_ALL}")
-                fee = op.feethreading()
-                taker_fee_trt = float(fee["fee" + exchange_list[0] + "taker"]) / 100
-                taker_fee_bnb = float(fee["fee" + exchange_list[1] + "taker"])
-                maker_fee_trt = float(fee["fee" + exchange_list[0] + "maker"]) / 100
-                maker_fee_bnb = float(fee["fee" + exchange_list[1] + "maker"])
             last_h = sum(time_list[-100:]) / min(100, len(time_list))
             print(
                 f"[-] ------------------------------------------------- {Fore.YELLOW}%d ms{Style.RESET_ALL} (%d ms(q) + %d ms(p)) - avg last %d ({Fore.YELLOW}%d ms{Style.RESET_ALL}) - global avg ({Fore.YELLOW}%d ms{Style.RESET_ALL})" % (
