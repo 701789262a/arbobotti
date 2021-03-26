@@ -9,7 +9,6 @@ import threading
 import time
 from multiprocessing import Process
 from multiprocessing.pool import ThreadPool
-
 import gnupg
 import mysql.connector
 import pandas
