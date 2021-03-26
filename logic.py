@@ -9,6 +9,7 @@ import threading
 import time
 from multiprocessing import Process
 from multiprocessing.pool import ThreadPool
+
 import gnupg
 import mysql.connector
 import pandas
@@ -16,6 +17,7 @@ import requests
 from colorama import Fore
 from colorama import Style
 from openpyxl import load_workbook
+
 import data_visual
 from trade import Operation
 
@@ -242,9 +244,11 @@ def arbo():
                         except KeyError:
                             print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["errors"][0]["message"])
+                            log("ERROR", resp_dict["bnb"]["status"] + resp_dict["trt"]["errors"][0]["message"])
                         if status[0] == "ERROR" or status[1] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
+                            log("ERROR",resp_dict["trt"][0].upper()+ resp_dict["bnb"])
                             time.sleep(20)
                         else:
                             print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER STATUS:[%s, %s]{Style.RESET_ALL}" % (
@@ -308,9 +312,11 @@ def arbo():
                         except KeyError:
                             print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["errors"][0]["message"])
+                            log("ERROR",resp_dict["bnb"]["status"]+ resp_dict["trt"]["errors"][0]["message"] )
                         if status[0] == "ERROR" or status[1] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
+                            log("ERROR",resp_dict["trt"][0].upper()+ resp_dict["bnb"])
                             time.sleep(20)
                             pass
                         else:
@@ -434,6 +440,11 @@ def save_trade(_list, sep, db_data, tg_data):
     pass
 
 
+def log(log_type, message):
+    with open("log.txt", "a") as f:
+        f.write("[" + log_type + "] " + str(message))
+
+
 def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True, engine="xlrd"):
     writer = pandas.ExcelWriter(filename, engine=engine)
     try:
@@ -474,7 +485,8 @@ def db(_list, db_data):
         _list[0][1], _list[0][2], _list[0][4].replace(",", "."), _list[0][5], _list[0][6],
         _list[0][7].replace(",", "."), _list[0][3].replace(",", "."),
         _list[0][8], _list[0][9], _list[0][10], _list[0][11], _list[0][12],
-        _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12], round(_list[1][11]+_list[1][10] - _list[0][11]-_list[0][10], 5), date,
+        _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12],
+        round(_list[1][11] + _list[1][10] - _list[0][11] - _list[0][10], 5), date,
         "1337", "1337", "1")
     cursor.execute(add_trade, data_trade)
     conn.commit()
@@ -488,7 +500,7 @@ def telegram(_list, tg_data):
         _list[0][4]) + "</b> ON <code>" + str(
         _list[0][2]) + "</code> SOLD <b>" + str(_list[0][7]) + "</b> ON <code>" + str(
         _list[0][6]) + "</code>. CALCULATED GAIN = <b>" + str(
-        round(_list[1][11]+_list[1][10] - _list[0][11]-_list[0][10], 5)) + "€</b>").replace(" ", "%20")
+        round(_list[1][11] + _list[1][10] - _list[0][11] - _list[0][10], 5)) + "€</b>").replace(" ", "%20")
     bot_token = tg_data["token"]
     bot_chatID = tg_data["app_id"]
     send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=HTML&text=' + message
