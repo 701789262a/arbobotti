@@ -1,6 +1,6 @@
 taker_fee_krk = 0.0024
 taker_fee_trt = 0.02
-taker_fee_bnb = 0.00075
+taker_fee_bnb = 0.0075
 save_interval = 20
 save_trade_interval = 50
 fee_interval = 100
