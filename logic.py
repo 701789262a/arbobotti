@@ -9,7 +9,7 @@ import threading
 import time
 from multiprocessing import Process
 from multiprocessing.pool import ThreadPool
-
+import subprocess
 import gnupg
 import mysql.connector
 import pandas
@@ -363,6 +363,8 @@ def arbo():
                         except socket.gaierror as err:
                             print(err)
                             pass
+                        except Exception as err:
+                            print(err)
             if int(str(int(_end_time))[-1]) > 1:
                 already_saved = False
             if int(_end_time % int(d["balance_interval"])) == 0:

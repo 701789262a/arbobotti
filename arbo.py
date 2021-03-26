@@ -1,10 +1,14 @@
 import os
+import queue
 import sys
 import time
+from threading import Thread
+
 import requests
 from colorama import Fore, Style
 
 import logic
+import updater
 
 f = open("version", "r")
 ver = f.read()
@@ -26,6 +30,16 @@ else:
         str(requests.get("https://api.github.com/repos/701789262a/arbobotti/tags").json()[0]["name"]), ver))
 
 try:
-    logic.arbo()
+    q = queue.Queue()
+    thread_updater = Thread(target=updater.updater, args=(q,))
+    thread_arbo = Thread(target=logic.arbo)
+    thread_updater.start()
+    thread_arbo.start()
+    while True:
+        if not q.empty():
+            q.get()
+            thread_arbo.join()
+            time.sleep(5)
+            thread_arbo = Thread(target=logic.arbo)
 except KeyboardInterrupt:
     sys.exit(0)
