@@ -10,6 +10,7 @@ from colorama import Fore, Style
 import logic
 import updater
 
+
 f = open("version", "r")
 ver = f.read()
 if ver != str(requests.get("https://api.github.com/repos/701789262a/arbobotti/tags").json()[0]["name"]):
