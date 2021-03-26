@@ -33,13 +33,8 @@ def main():
     try:
         thread_arbo = Thread(target=logic.arbo)
         thread_arbo.start()
-        while True:
-            if not q.empty():
-                q.get()
-                thread_arbo.join()
-                time.sleep(5)
-                thread_arbo = Thread(target=logic.arbo)
     except KeyboardInterrupt:
+        thread_arbo.join()
         sys.exit(0)
 
 
