@@ -16,7 +16,6 @@ import requests
 from colorama import Fore
 from colorama import Style
 from openpyxl import load_workbook
-
 import data_visual
 from trade import Operation
 
