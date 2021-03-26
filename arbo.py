@@ -25,6 +25,7 @@ if ver != str(requests.get("https://api.github.com/repos/701789262a/arbobotti/ta
     except:
         print(f"{Fore.RED}[!] FAILED TO UPDATE, CLOSING...")
         sys.exit(1)
+
 else:
     print(f"{Fore.MAGENTA}[!] UPDATED VERSION %s, CURRENT: %s {Style.RESET_ALL}" % (
         str(requests.get("https://api.github.com/repos/701789262a/arbobotti/tags").json()[0]["name"]), ver))
