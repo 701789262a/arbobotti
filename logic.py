@@ -498,8 +498,8 @@ def telegram(_list, tg_data):
         round(float(_list[0][3].replace(",", ".")), 8)) + "</b> $BTC <b>" + str(
         _list[0][4]) + "</b> ON <code>" + str(
         _list[0][2]) + "</code> SOLD <b>" + str(_list[0][7]) + "</b> ON <code>" + str(
-        _list[0][6]) + "</code>. CALCULATED GAIN = <b>" + str(
-        round(_list[1][11] + _list[1][10] - _list[0][11] - _list[0][10], 5)) + "€</b>").replace(" ", "%20")
+        _list[0][6]) + "</code>. CALCULATED GAIN: <b>" + str(
+        round(_list[1][11] + _list[1][10] - _list[0][11] - _list[0][10], 5)) + "€</b>"+"\nSPREAD: <b>"+str(_list[0][7]-str(_list[0][4]))+ "€</b>").replace(" ", "%20")
     bot_token = tg_data["token"]
     bot_chatID = tg_data["app_id"]
     send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=HTML&text=' + message
