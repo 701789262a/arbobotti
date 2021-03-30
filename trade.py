@@ -45,10 +45,10 @@ class Operation:
     def thread_func(self):
         while (1):
             if len(self.prtrt) < 200:
-                tr = Thread(target=lambda q, arg1, arg2, arg3: q.put(self.query(arg1, arg2, arg3)),
+                tr = Thread(target=lambda q, arg1, arg2, arg3: q.put(self.__query(arg1, arg2, arg3)),
                             args=(q1, "trt", self.apikey_trt, self.secret_trt))
                 self.prtrt.append(tr)
-                bn = Thread(target=lambda q, arg1, arg2, arg3: q.put(self.query(arg1, arg2, arg3)),
+                bn = Thread(target=lambda q, arg1, arg2, arg3: q.put(self.__query(arg1, arg2, arg3)),
                             args=(q2, "bnb", self.apikey_bnb, self.secret_bnb))
                 self.prbnb.append(bn)
             else:
@@ -64,7 +64,7 @@ class Operation:
         x = Thread(target=self.thread_func)
         x.start()
 
-    def trade(self, exchange, fund_id, side, amount, price):
+    def __trade(self, exchange, fund_id, side, amount, price):
         nonce = str(int(time.time() * 1e6))
         amount = round(amount,8)
         if exchange == "trt":
@@ -100,7 +100,7 @@ class Operation:
                 )
             return dict(order)
 
-    def balance(self, exchange):
+    def __balance(self, exchange):
         nonce = str(int(time.time() * 1e6))
         d = dict()
         if exchange == "trt":
@@ -140,17 +140,17 @@ class Operation:
         d = dict()
         if "krk" in self.exchange_list:
             krk_balance = Thread(target=lambda q, arg1: q.put(
-                self.balance(arg1)),
+                self.__balance(arg1)),
                                  args=(q2, "krk"))
             krk_balance.start()
         if "trt" in self.exchange_list:
             trt_balance = Thread(target=lambda q, arg1: q.put(
-                self.balance(arg1)),
+                self.__balance(arg1)),
                                  args=(q1, "trt"))
             trt_balance.start()
         if "bnb" in self.exchange_list:
             bnb_balance = Thread(target=lambda q, arg1: q.put(
-                self.balance(arg1)),
+                self.__balance(arg1)),
                                  args=(q2, "bnb"))
             bnb_balance.start()
         try:
@@ -174,17 +174,17 @@ class Operation:
         d = dict()
         if "trt" in self.exchange_list:
             trt_order = Thread(target=lambda q, arg1, arg2: q.put(
-                self.order(arg1, arg2)),
+                self.__order(arg1, arg2)),
                                args=(q2, "trt", order1))
             trt_order.start()
         if "krk" in self.exchange_list:
             krk_order = Thread(target=lambda q, arg1, arg2: q.put(
-                self.order(arg1, arg2)),
+                self.__order(arg1, arg2)),
                                args=(q2, "krk", order2))
             krk_order.start()
         if "bnb" in self.exchange_list:
             bnb_order = Thread(target=lambda q, arg1, arg2: q.put(
-                self.order(arg1, arg2)),
+                self.__order(arg1, arg2)),
                                args=(q3, "bnb", order2))
             bnb_order.start()
         try:
@@ -207,7 +207,7 @@ class Operation:
             pass
         return d
 
-    def cancel(self, exchange):
+    def __cancel(self, exchange):
         nonce = str(int(time.time() * 1e6))
         d = dict()
         if exchange == "trt":
@@ -232,7 +232,7 @@ class Operation:
                     self.client.cancel_order(symbol="BTCEUR", orderId=resp[i]["orderId"])
 
 
-    def order(self, exchange, order):
+    def __order(self, exchange, order):
         nonce = str(int(time.time() * 1e6))
         d = dict()
         if exchange == "trt":
@@ -259,7 +259,7 @@ class Operation:
             d["status_bnb"] = resp["status"]
             return d
 
-    def fee(self, exchange):
+    def __fee(self, exchange):
         nonce = str(int(time.time() * 1e6))
         d = dict()
         if exchange == "trt":
@@ -290,17 +290,17 @@ class Operation:
         d = dict()
         if "krk" in self.exchange_list:
             krk_fee = Thread(target=lambda q, arg1: q.put(
-                self.fee(arg1)),
+                self.__fee(arg1)),
                              args=(q1, "krk"))
             krk_fee.start()
         if "trt" in self.exchange_list:
             trt_fee = Thread(target=lambda q, arg1: q.put(
-                self.fee(arg1)),
+                self.__fee(arg1)),
                              args=(q2, "trt"))
             trt_fee.start()
         if "bnb" in self.exchange_list:
             bnb_fee = Thread(target=lambda q, arg1: q.put(
-                self.fee(arg1)),
+                self.__fee(arg1)),
                              args=(q3, "bnb"))
             bnb_fee.start()
         try:
@@ -327,17 +327,17 @@ class Operation:
         d = dict()
         if "trt" in self.exchange_list:
             trt_trade = Thread(target=lambda q, arg1, arg2, arg3, arg4, arg5: q.put(
-                self.trade(arg1, arg2, arg3, arg4, arg5)),
+                self.__trade(arg1, arg2, arg3, arg4, arg5)),
                                args=(q1, exchange, fund_id, side, amount, price))
             trt_trade.start()
         if "krk" in self.exchange_list:
             krk_trade = Thread(target=lambda q, arg1, arg2, arg3, arg4, arg5: q.put(
-                self.trade(arg1, arg2, arg3, arg4, arg5)),
+                self.__trade(arg1, arg2, arg3, arg4, arg5)),
                                args=(q2, exchange2, fund_id2, side2, amount2, price2))
             krk_trade.start()
         if "bnb" in self.exchange_list:
             bnb_trade = Thread(target=lambda q, arg1, arg2, arg3, arg4, arg5: q.put(
-                self.trade(arg1, arg2, arg3, arg4, arg5)),
+                self.__trade(arg1, arg2, arg3, arg4, arg5)),
                                args=(q2, exchange2, fund_id2, side2, amount2, price2))
             bnb_trade.start()
 
@@ -375,7 +375,7 @@ class Operation:
         except json.decoder.JSONDecodeError:
             print(f"{Fore.RED}[ERR] ERROR WHILE CONVERTING TO JSON [expecting value]{Style.RESET_ALL}")
 
-    def query(self, exchange, apikey, secret):
+    def __query(self, exchange, apikey, secret):
         if exchange == "trt":
             self.trt.pop(1)
             try:

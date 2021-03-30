@@ -9,6 +9,7 @@ import threading
 import time
 from multiprocessing import Process
 from multiprocessing.pool import ThreadPool
+
 import gnupg
 import mysql.connector
 import pandas
@@ -66,16 +67,23 @@ def arbo():
                            %%                                                                 
                                                                                               
       {Style.RESET_ALL}""")
-    passphrase = getpass.getpass("Please provide master password to continue:")
-    with open("telegram.gpg", "rb") as tg_f:
-        status_tg = gpg.decrypt_file(file=tg_f, passphrase=passphrase)
-    with open("keydict.gpg", "rb") as kd_f:
-        status_kd = gpg.decrypt_file(file=kd_f, passphrase=passphrase)
-    with open("dbinfo.gpg", "rb") as db_f:
-        status_db = gpg.decrypt_file(file=db_f, passphrase=passphrase)
-    printin_data = json.loads(str(status_kd).strip().replace("\n", ""))
-    tg_data = json.loads(str(status_tg).strip().replace("\n", ""))
-    db_data = json.loads(str(status_db).strip().replace("\n", ""))
+    ok_pass = False
+    while not ok_pass:
+        try:
+            passphrase = getpass.getpass("[?] Please provide master password to continue:")
+            with open("telegram.gpg", "rb") as tg_f:
+                status_tg = gpg.decrypt_file(file=tg_f, passphrase=passphrase)
+            with open("keydict.gpg", "rb") as kd_f:
+                status_kd = gpg.decrypt_file(file=kd_f, passphrase=passphrase)
+            with open("dbinfo.gpg", "rb") as db_f:
+                status_db = gpg.decrypt_file(file=db_f, passphrase=passphrase)
+            printin_data = json.loads(str(status_kd).strip().replace("\n", ""))
+            tg_data = json.loads(str(status_tg).strip().replace("\n", ""))
+            db_data = json.loads(str(status_db).strip().replace("\n", ""))
+            ok_pass = True
+        except json.decoder.JSONDecodeError:
+            print(f"{Fore.RED}[!] Wrong password!{Style.RESET_ALL}")
+            pass
     try:
         trt_apikey = str(printin_data["trt_apikey"])
         trt_secret = str(printin_data["trt_secret"])
@@ -118,6 +126,7 @@ def arbo():
     all_balance = op.balancethreading()
     s = socket.socket()
     print(str(d["dip"]))
+    dir_path = os.path.dirname(os.path.realpath(__file__))
     last_h = 0
     try:
         s.connect((str(d["dip"]).rstrip("\n"), 30630))
@@ -247,7 +256,7 @@ def arbo():
                         if status[0] == "ERROR" or status[1] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
-                            log("ERROR",resp_dict["trt"][0].upper()+ resp_dict["bnb"])
+                            log("ERROR", resp_dict["trt"][0].upper() + resp_dict["bnb"])
                             time.sleep(20)
                         else:
                             print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER STATUS:[%s, %s]{Style.RESET_ALL}" % (
@@ -311,11 +320,11 @@ def arbo():
                         except KeyError:
                             print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["errors"][0]["message"])
-                            log("ERROR",resp_dict["bnb"]["status"]+ resp_dict["trt"]["errors"][0]["message"] )
+                            log("ERROR", resp_dict["bnb"]["status"] + resp_dict["trt"]["errors"][0]["message"])
                         if status[0] == "ERROR" or status[1] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
-                            log("ERROR",resp_dict["trt"][0].upper()+ resp_dict["bnb"])
+                            log("ERROR", resp_dict["trt"][0].upper() + resp_dict["bnb"])
                             time.sleep(20)
                             pass
                         else:
@@ -355,7 +364,8 @@ def arbo():
                         if data == "go":
                             only_see = True
                         if "command" in data:
-                            os.system(data.split(":")[1])
+                            os.system("cd " + dir_path)
+                            os.system("cd " + dir_path + " && " + data.split(":")[1])
                     except Exception as errr:
                         print(errr)
                         pass
@@ -429,18 +439,29 @@ def save_trade(_list, sep, db_data, tg_data):
         print(err)
     except:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATAprint [generic error]{Style.RESET_ALL}")
-    telegram(_list, tg_data)
+    try:
+        telegram(_list, tg_data)
+    except Exception as err:
+        print(f"{Fore.RED}[ERR] ERRORE INVIO TELEGRAM [generic error]{Style.RESET_ALL}")
+        with open("errorlog", "a")as f:
+            f.write(str(err))
+            f.close()
+        print(err)
+        exit(100)
     try:
         db(_list, db_data)
     except Exception as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
+        with open("errorlog", "a")as f:
+            f.write(str(err))
+            f.close()
         print(err)
         exit(100)
     pass
 
 
 def log(log_type, message):
-    with open("log.txt", "a") as f:
+    with open("errorlog", "a") as f:
         f.write("[" + log_type + "] " + str(message))
 
 
@@ -499,7 +520,8 @@ def telegram(_list, tg_data):
         _list[0][4]) + "</b> ON <code>" + str(
         _list[0][2]) + "</code> SOLD <b>" + str(_list[0][7]) + "</b> ON <code>" + str(
         _list[0][6]) + "</code>. CALCULATED GAIN: <b>" + str(
-        round(_list[1][11] + _list[1][10] - _list[0][11] - _list[0][10], 5)) + "€</b>"+"\nSPREAD: <b>"+str(round(_list[0][7]-_list[0][4]))+ "€</b>").replace(" ", "%20")
+        round(_list[1][11] + _list[1][10] - _list[0][11] - _list[0][10], 5)) + "€</b>" + "\nSPREAD: <b>" + str(
+        round(_list[0][7] - _list[0][4])) + "€</b>").replace(" ", "%20")
     bot_token = tg_data["token"]
     bot_chatID = tg_data["app_id"]
     send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=HTML&text=' + message
