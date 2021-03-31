@@ -8,7 +8,6 @@ import sys
 import threading
 import time
 from multiprocessing import Process
-from multiprocessing.pool import ThreadPool
 
 import gnupg
 import mysql.connector
@@ -135,21 +134,23 @@ def arbo():
     q_act = queue.Queue()
     t_action = threading.Thread(target=getaction, args=(q_act,))
     t_action.start()
-    pool = ThreadPool()
     already_saved = False
     only_see = bool(int(d["only_see"]))
-    while 1:
+    this_sec = str(int(time.time()))[-4:]
+    count = 0
+    actual=0
+    while True:
+        _start_time = time.time()
+        _query_time = time.time()
+        _query_time = time.time() - _query_time
+        eff = 0
+        prod = 0
         try:
-            eff = 0
-            prod = 0
             if checkbalance:
                 print(f"{Fore.YELLOW}[#] RETRIEVING BALANCE{Style.RESET_ALL}")
                 all_balance = op.balancethreading()
                 checkbalance = False
-            _start_time = time.time()
-            _query_time = time.time()
             price_dict = op.querythread()
-            _query_time = time.time() - _query_time
             try:
                 asks_data_bnb = price_dict["bnb"]['asks'][0]
                 bids_data_bnb = price_dict["bnb"]['bids'][0]
@@ -179,10 +180,15 @@ def arbo():
             else:
                 small_index = str(a.microsecond)[:-5]
             _trade_list.clear()
+            balance_score = dict()
+            balance_score["eur"] = (all_balance["trteur"] - all_balance["bnbeur"]) / (
+                    all_balance["trteur"] + all_balance["bnbeur"])
+            balance_score["btc"] = (all_balance["trtbtc"] - all_balance["bnbbtc"]) / (
+                    all_balance["trtbtc"] + all_balance["bnbbtc"])
             print(f"{Fore.MAGENTA}[!] ARBOBOTTI VERSION %s, MURINEDDU CAPITAL 2021{Style.RESET_ALL}\n" % (ver))
             print(
-                f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}\t\tTHREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}         ONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}" % (
-                    a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), only_see))
+                f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}\t\tTHREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}         ONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}           PERF: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL} cycles/s" % (
+                    a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), only_see,actual))
 
             print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
                 exchange_list[1].upper(), asks_krk, exchange_list[1].upper(), all_balance["bnbeur"]))
@@ -208,7 +214,8 @@ def arbo():
                 exchange_list[0].upper(), taker_fee_trt * 100, exchange_list[1].upper(), taker_fee_bnb * 100))
             print("[i] FETCHED MAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
                 exchange_list[0].upper(), maker_fee_trt * 100, exchange_list[1].upper(), maker_fee_bnb * 100))
-
+            print("[i] BALANCE SCORE           EUR: %.4f%%;      BTC: %.4f%%" % (
+                balance_score["eur"], balance_score["btc"]))
             if (bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)) > 0:
                 low_balance = False
                 print(f"{Fore.CYAN}[#] %.2f < %.2f BUY %s | SELL TRT DIFF: %.2f (MENO FEE): %.3f" % (
@@ -399,6 +406,12 @@ def arbo():
                 save_trade_thread.start()
                 save_trade_thread.join()
                 _trade_list.clear()
+            if str(int(time.time()))[-4:] == this_sec:
+                count += 1
+            else:
+                actual = count
+                this_sec=str(int(time.time()))[-4:]
+                count = 0
             last_h = sum(time_list[-100:]) / min(100, len(time_list))
             print(
                 f"[-] ------------------------------------------------- {Fore.YELLOW}%d ms{Style.RESET_ALL} (%d ms(q) + %d ms(p)) - avg last %d ({Fore.YELLOW}%d ms{Style.RESET_ALL}) - global avg ({Fore.YELLOW}%d ms{Style.RESET_ALL})" % (
@@ -506,7 +519,7 @@ def db(_list, db_data):
         _list[0][7].replace(",", "."), _list[0][3].replace(",", "."),
         _list[0][8], _list[0][9], _list[0][10], _list[0][11], _list[0][12],
         _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12],
-        round(_list[1][11] + _list[1][10] - _list[0][11] - _list[0][10], 5), date,
+        round(float(_list[1][11]) + float(_list[1][10]) - float(_list[0][11]) - float(_list[0][10]), 5), date,
         "1337", "1337", "1")
     cursor.execute(add_trade, data_trade)
     conn.commit()
@@ -520,8 +533,9 @@ def telegram(_list, tg_data):
         _list[0][4]) + "</b> ON <code>" + str(
         _list[0][2]) + "</code> SOLD <b>" + str(_list[0][7]) + "</b> ON <code>" + str(
         _list[0][6]) + "</code>. CALCULATED GAIN: <b>" + str(
-        round(_list[1][11] + _list[1][10] - _list[0][11] - _list[0][10], 5)) + "€</b>" + "\nSPREAD: <b>" + str(
-        round(_list[0][7] - _list[0][4])) + "€</b>").replace(" ", "%20")
+        round(float(_list[1][11]) + float(_list[1][10]) - float(_list[0][11]) - float(_list[0][10]),
+              5)) + "€</b>" + "\nSPREAD: <b>" + str(
+        round(float(_list[0][7]) - float(_list[0][4]))) + "€</b>").replace(" ", "%20")
     bot_token = tg_data["token"]
     bot_chatID = tg_data["app_id"]
     send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=HTML&text=' + message
