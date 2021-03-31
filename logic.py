@@ -214,7 +214,7 @@ def arbo():
                 exchange_list[0].upper(), taker_fee_trt * 100, exchange_list[1].upper(), taker_fee_bnb * 100))
             print("[i] FETCHED MAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
                 exchange_list[0].upper(), maker_fee_trt * 100, exchange_list[1].upper(), maker_fee_bnb * 100))
-            print("[i] BALANCE SCORE           EUR: %.4f%%;      BTC: %.4f%%" % (
+            print("[i] BALANCE SCORE           EUR: %.4f ;      BTC: %.4f" % (
                 balance_score["eur"], balance_score["btc"]))
             if (bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)) > 0:
                 low_balance = False
@@ -519,7 +519,7 @@ def db(_list, db_data):
         _list[0][7].replace(",", "."), _list[0][3].replace(",", "."),
         _list[0][8], _list[0][9], _list[0][10], _list[0][11], _list[0][12],
         _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12],
-        round(float(_list[1][11]) + float(_list[1][10]) - float(_list[0][11]) - float(_list[0][10]), 5), date,
+        round(float(_list[1][11].replace(",", ".")) + float(_list[1][10].replace(",", ".")) - float(_list[0][11].replace(",", ".")) - float(_list[0][10].replace(",", ".")), 5), date,
         "1337", "1337", "1")
     cursor.execute(add_trade, data_trade)
     conn.commit()
@@ -533,9 +533,9 @@ def telegram(_list, tg_data):
         _list[0][4]) + "</b> ON <code>" + str(
         _list[0][2]) + "</code> SOLD <b>" + str(_list[0][7]) + "</b> ON <code>" + str(
         _list[0][6]) + "</code>. CALCULATED GAIN: <b>" + str(
-        round(float(_list[1][11]) + float(_list[1][10]) - float(_list[0][11]) - float(_list[0][10]),
+        round(float(_list[1][11].replace(",", ".")) + float(_list[1][10].replace(",", ".")) - float(_list[0][11].replace(",", ".")) - float(_list[0][10].replace(",", ".")),
               5)) + "€</b>" + "\nSPREAD: <b>" + str(
-        round(float(_list[0][7]) - float(_list[0][4]))) + "€</b>").replace(" ", "%20")
+        round(float(_list[0][7].replace(",", ".")) - float(_list[0][4].replace(",", ".")))) + "€</b>").replace(" ", "%20")
     bot_token = tg_data["token"]
     bot_chatID = tg_data["app_id"]
     send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=HTML&text=' + message
