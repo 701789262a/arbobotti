@@ -237,7 +237,7 @@ def arbo():
                 else:
                     print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
                     depth = round(float(depth * float(d["max_each_trade"])), 4)
-                    print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
+                    print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % depth)
 
                 if not low_balance and depth > float(d["min_balance"]):
                     print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
@@ -556,6 +556,7 @@ def db(_list, db_data):
 
 
 def telegram(_list, tg_data):
+    log(log_type="TRADELIST",message=str(_list))
     message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ":\nBOUGHT <b>" + str(
         round(float(_list[0][3].replace(",", ".")), 8)) + "</b> $BTC <b>" + str(
         _list[0][4]) + "</b> ON <code>" + str(
