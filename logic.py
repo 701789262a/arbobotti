@@ -220,7 +220,7 @@ def arbo():
                 exchange_list[0].upper(), maker_fee_trt * 100, exchange_list[1].upper(), maker_fee_bnb * 100))
             print("[i] BALANCE SCORE: %.4f" % (
                 balance_score["eur"]))
-            if (bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)) > d["threshold"]:
+            if (bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)) > int(d["threshold"]):
                 low_balance = False
                 print(f"{Fore.CYAN}[#] %.2f < %.2f BUY %s | SELL TRT DIFF: %.2f (MENO FEE): %.3f" % (
                     asks_krk, bids_trt, exchange_list[1].upper(), bids_trt - asks_krk,
@@ -290,7 +290,7 @@ def arbo():
                 else:
                     print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
                     checkbalance = True
-            elif (bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)) > d["threshold"]:
+            elif (bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)) > int(d["threshold"]):
                 low_balance = False
                 depth = float(min(asks_data_trt['amount'],
                                   float(bids_data_bnb[1])))
