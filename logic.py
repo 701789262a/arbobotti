@@ -80,8 +80,9 @@ def arbo():
             tg_data = json.loads(str(status_tg).strip().replace("\n", ""))
             db_data = json.loads(str(status_db).strip().replace("\n", ""))
             ok_pass = True
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError as err:
             print(f"{Fore.RED}[!] Wrong password!{Style.RESET_ALL}")
+            log("ERR", err)
             pass
     try:
         trt_apikey = str(printin_data["trt_apikey"])
@@ -129,7 +130,8 @@ def arbo():
     last_h = 0
     try:
         s.connect((str(d["dip"]).rstrip("\n"), 30630))
-    except ConnectionRefusedError:
+    except ConnectionRefusedError as err:
+        log("ERR", err)
         pass
     q_act = queue.Queue()
     t_action = threading.Thread(target=getaction, args=(q_act,))
@@ -138,11 +140,10 @@ def arbo():
     only_see = bool(int(d["only_see"]))
     this_sec = str(int(time.time()))[-4:]
     count = 0
-    actual=0
+    actual = 0
     while True:
         _start_time = time.time()
         _query_time = time.time()
-        _query_time = time.time() - _query_time
         eff = 0
         prod = 0
         try:
@@ -151,13 +152,15 @@ def arbo():
                 all_balance = op.balancethreading()
                 checkbalance = False
             price_dict = op.querythread()
+            _query_time = time.time() - _query_time
             try:
                 asks_data_bnb = price_dict["bnb"]['asks'][0]
                 bids_data_bnb = price_dict["bnb"]['bids'][0]
                 asks_data_trt = price_dict["trt"]['asks'][0]
                 bids_data_trt = price_dict["trt"]['bids'][0]
-            except TypeError:
+            except TypeError as err:
                 print(f"{Fore.RED}[#] ERROR WHILE FETCHING DATA [typeError - nonetype]{Style.RESET_ALL}")
+                log("ERR", err)
                 continue
             asks_krk = round(float(price_dict["bnb"]['asks'][0][0]), 2)
             bids_krk = round(float(price_dict["bnb"]['bids'][0][0]), 2)
@@ -188,7 +191,8 @@ def arbo():
             print(f"{Fore.MAGENTA}[!] ARBOBOTTI VERSION %s, MURINEDDU CAPITAL 2021{Style.RESET_ALL}\n" % (ver))
             print(
                 f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}\t\tTHREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}         ONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}           PERF: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL} cycles/s" % (
-                    a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), only_see,actual))
+                    a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), only_see,
+                    actual))
 
             print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
                 exchange_list[1].upper(), asks_krk, exchange_list[1].upper(), all_balance["bnbeur"]))
@@ -214,9 +218,9 @@ def arbo():
                 exchange_list[0].upper(), taker_fee_trt * 100, exchange_list[1].upper(), taker_fee_bnb * 100))
             print("[i] FETCHED MAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
                 exchange_list[0].upper(), maker_fee_trt * 100, exchange_list[1].upper(), maker_fee_bnb * 100))
-            print("[i] BALANCE SCORE           EUR: %.4f ;      BTC: %.4f" % (
-                balance_score["eur"], balance_score["btc"]))
-            if (bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)) > 0:
+            print("[i] BALANCE SCORE: %.4f" % (
+                balance_score["eur"]))
+            if (bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)) > d["threshold"]:
                 low_balance = False
                 print(f"{Fore.CYAN}[#] %.2f < %.2f BUY %s | SELL TRT DIFF: %.2f (MENO FEE): %.3f" % (
                     asks_krk, bids_trt, exchange_list[1].upper(), bids_trt - asks_krk,
@@ -256,10 +260,11 @@ def arbo():
                         print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
                         try:
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
-                        except KeyError:
+                        except KeyError as err:
                             print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["errors"][0]["message"])
-                            log("ERROR", resp_dict["bnb"]["status"] + resp_dict["trt"]["errors"][0]["message"])
+                            log("ERR", resp_dict["bnb"]["status"] + resp_dict["trt"]["errors"][0]["message"])
+                            log("ERR", err)
                         if status[0] == "ERROR" or status[1] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
@@ -285,7 +290,7 @@ def arbo():
                 else:
                     print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
                     checkbalance = True
-            elif (bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)) > 0:
+            elif (bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)) > d["threshold"]:
                 low_balance = False
                 depth = float(min(asks_data_trt['amount'],
                                   float(bids_data_bnb[1])))
@@ -324,16 +329,18 @@ def arbo():
                         print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
                         try:
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
-                        except KeyError:
+                        except KeyError as err:
                             print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["errors"][0]["message"])
-                            log("ERROR", resp_dict["bnb"]["status"] + resp_dict["trt"]["errors"][0]["message"])
+                            log("ERR", resp_dict["bnb"]["status"] + resp_dict["trt"]["errors"][0]["message"])
+                            log("ERR", err)
                         if status[0] == "ERROR" or status[1] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                             log("ERROR", resp_dict["trt"][0].upper() + resp_dict["bnb"])
                             time.sleep(20)
                             pass
+                            # TODO: IMPROVE ERROR CHECK
                         else:
                             print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"]["status"].upper(), resp_dict["bnb"]["status"]))
@@ -347,10 +354,13 @@ def arbo():
                                  float(all_balance["trtbtc"]),
                                  float(all_balance["bnbeur"]), float(all_balance["trteur"]),
                                  float(all_balance["trteur"] + all_balance["bnbeur"] + (
-                                         all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask)])
+                                         all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask), resp_dict["bnb"],
+                                 resp_dict["trt"]])
                 else:
                     print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
                     checkbalance = True
+
+            # TODO:GROUP THE TWO CHECK FUNCTION TOGETHER (SIMPLER CODE AND UPDATE)
             _end_time = time.time()
             totaltime = _end_time - _start_time
             time_list.append(int(totaltime * 1000))
@@ -375,18 +385,23 @@ def arbo():
                             os.system("cd " + dir_path + " && " + data.split(":")[1])
                     except Exception as errr:
                         print(errr)
+                        log("ERR", errr)
                         pass
                         try:
                             s.close()
                             s.connect((ip_mon, 30630))
                         except ConnectionRefusedError as err:
                             print(err)
+                            log("ERR", err)
                             pass
                         except socket.gaierror as err:
                             print(err)
+                            log("ERR", err)
                             pass
                         except Exception as err:
                             print(err)
+                            log("ERR", err)
+                            pass
             if int(str(int(_end_time))[-1]) > 1:
                 already_saved = False
             if int(_end_time % int(d["balance_interval"])) == 0:
@@ -410,7 +425,7 @@ def arbo():
                 count += 1
             else:
                 actual = count
-                this_sec=str(int(time.time()))[-4:]
+                this_sec = str(int(time.time()))[-4:]
                 count = 0
             last_h = sum(time_list[-100:]) / min(100, len(time_list))
             print(
@@ -418,7 +433,8 @@ def arbo():
                     int(totaltime * 1000), int(_query_time * 1000),
                     (int(totaltime * 1000) - int(_query_time * 1000)), min(100, len(time_list)),
                     sum(time_list[-100:]) / min(100, len(time_list)), sum(time_list) / len(time_list)))
-        except KeyboardInterrupt:
+        except KeyboardInterrupt as err:
+            log("ERR", err)
             sys.exit()
 
 
@@ -428,12 +444,15 @@ def save_data(_list, sep):
         df.to_csv('filev2.csv', index=False, sep=',', mode='a', header=False, decimal=',')
         # append(df, filename='filev2.xlsx', startrow=None, sheet_name='Sheet1', truncate_sheet=True,engine="openpyxl")
         _list.clear()
-    except FileNotFoundError:
+    except FileNotFoundError as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATAprint [file not found]{Style.RESET_ALL}")
-    except PermissionError:
+        log("ERR",err)
+    except PermissionError as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATAprint [resource busy]{Style.RESET_ALL}")
+        log("ERR",err)
     except:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATAprint [generic error]{Style.RESET_ALL}")
+        log("ERR","generic except")
 
 
 def save_trade(_list, sep, db_data, tg_data):
@@ -443,39 +462,45 @@ def save_trade(_list, sep, db_data, tg_data):
         # with open('file_trade.xlsx', 'a') as f:
         df.to_csv("file_trade.csv", sep=',', mode='a', index=False, header=False, decimal=',')
         # append(df, filename='file_trade.xlsx', startrow=None, sheet_name='Sheet1', truncate_sheet=True,engine="openpyxl")
-    except FileNotFoundError:
+    except FileNotFoundError as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [file not found]{Style.RESET_ALL}")
-    except PermissionError:
+        log("ERR",err)
+    except PermissionError as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [resource busy]{Style.RESET_ALL}")
+        log("ERR",err)
     except TypeError as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [type error]{Style.RESET_ALL}")
-        print(err)
+        log("ERR", err)
     except:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATAprint [generic error]{Style.RESET_ALL}")
+        log("ERR","generic except")
     try:
         telegram(_list, tg_data)
     except Exception as err:
         print(f"{Fore.RED}[ERR] ERRORE INVIO TELEGRAM [generic error]{Style.RESET_ALL}")
-        with open("errorlog", "a")as f:
-            f.write(str(err))
-            f.close()
+        log("ERR", err)
         print(err)
         exit(100)
     try:
         db(_list, db_data)
     except Exception as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
-        with open("errorlog", "a")as f:
-            f.write(str(err))
-            f.close()
+        log("ERR",err)
         print(err)
         exit(100)
     pass
 
 
-def log(log_type, message):
-    with open("errorlog", "a") as f:
-        f.write("[" + log_type + "] " + str(message))
+def log(log_type, message, thread=None):
+    if thread:
+        with open("errorlog", "a") as f:
+            f.write("[" + log_type + "] " + datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S") + " " + str(
+                message) + "\nEND\n")
+        exit(20)
+    else:
+        thread_l = threading.Thread(target=log, args=(log_type, message, 1))
+        thread_l.start()
+        return 0
 
 
 def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True, engine="xlrd"):
@@ -489,8 +514,9 @@ def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True
             writer.book.remove(writer.book.worksheets[idx])
             writer.book.create_sheet(sheet_name, idx)
         writer.sheets = {ws.title: ws for ws in writer.book.worksheets}
-    except FileNotFoundError:
+    except FileNotFoundError as err:
         print("e diocan pero")
+        log("ERR",err)
     if startrow is None:
         startrow = 0
     df.to_excel(writer, sheet_name, startrow=startrow)
@@ -506,6 +532,7 @@ def db(_list, db_data):
     conn = mysql.connector.connect(host=server, user=username, password=password, port=port, database=database)
     cursor = conn.cursor()
     date = datetime.datetime.strptime(_list[0][0], "%d/%m/%Y %H:%M:%S").strftime('%Y-%m-%d %H:%M:%S')
+    status = "err" in _list[len(_list)].lower() or "err" in _list[len(_list) - 1].lower()
     add_trade = (
         "INSERT INTO `tradelist` "
         "(`side1`,`exch1`,`ask`,`side2`,`exch2`,"
@@ -519,8 +546,9 @@ def db(_list, db_data):
         _list[0][7].replace(",", "."), _list[0][3].replace(",", "."),
         _list[0][8], _list[0][9], _list[0][10], _list[0][11], _list[0][12],
         _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12],
-        round(float(_list[1][11].replace(",", ".")) + float(_list[1][10].replace(",", ".")) - float(_list[0][11].replace(",", ".")) - float(_list[0][10].replace(",", ".")), 5), date,
-        "1337", "1337", "1")
+        round(float(_list[1][11].replace(",", ".")) + float(_list[1][10].replace(",", ".")) - float(
+            _list[0][11].replace(",", ".")) - float(_list[0][10].replace(",", ".")), 5), date,
+        _list[len(_list)], _list[len(_list) - 1], str(status))
     cursor.execute(add_trade, data_trade)
     conn.commit()
     cursor.close()
@@ -533,9 +561,11 @@ def telegram(_list, tg_data):
         _list[0][4]) + "</b> ON <code>" + str(
         _list[0][2]) + "</code> SOLD <b>" + str(_list[0][7]) + "</b> ON <code>" + str(
         _list[0][6]) + "</code>. CALCULATED GAIN: <b>" + str(
-        round(float(_list[1][11].replace(",", ".")) + float(_list[1][10].replace(",", ".")) - float(_list[0][11].replace(",", ".")) - float(_list[0][10].replace(",", ".")),
+        round(float(_list[1][11].replace(",", ".")) + float(_list[1][10].replace(",", ".")) - float(
+            _list[0][11].replace(",", ".")) - float(_list[0][10].replace(",", ".")),
               5)) + "€</b>" + "\nSPREAD: <b>" + str(
-        round(float(_list[0][7].replace(",", ".")) - float(_list[0][4].replace(",", ".")))) + "€</b>").replace(" ", "%20")
+        round(float(_list[0][7].replace(",", ".")) - float(_list[0][4].replace(",", ".")))) + "€</b>").replace(" ",
+                                                                                                               "%20")
     bot_token = tg_data["token"]
     bot_chatID = tg_data["app_id"]
     send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=HTML&text=' + message
@@ -613,7 +643,8 @@ def getaction(q):
             print(data.decode())
             q.put(data.decode())
             conn.close()
-        except socket.timeout:
+        except socket.timeout as err:
+            log("ERR", err)
             pass
 
 
@@ -622,3 +653,28 @@ def last(q):
         a = q.get()
         if q.empty():
             return a
+
+
+def auto_balancer(balance_score, balance_threshold, op, exchange_list):
+    price = 0
+    # MARKET ORDER
+    try:
+        if abs(balance_score) > balance_threshold:
+            if balance_score < 0:
+                all_balance = op.balancethreading()
+                depth = (all_balance["bnbbtc"] + all_balance["trtbtc"]) / 2
+                resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, price,
+                                              "buy", exchange_list[1], "BTCEUR", depth, price)
+                return resp_dict
+            if balance_score > 0:
+                all_balance = op.balancethreading()
+                depth = (all_balance["bnbbtc"] + all_balance["trtbtc"]) / 2
+                resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, price,
+                                              "sell", exchange_list[1], "BTCEUR", depth, price)
+                return resp_dict
+    except Exception as err:
+        log("ERR",err)
+        return str(err)
+    return 0
+# TODO: CHECK AUTOBALANCER FUNCTION
+# TODO: ADD FUNCTION TO CHECK FOR BNB BALANCE AND TOP IT UP WHEN NEEDED
