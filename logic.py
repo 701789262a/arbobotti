@@ -8,7 +8,6 @@ import sys
 import threading
 import time
 from multiprocessing import Process
-
 import gnupg
 import mysql.connector
 import pandas
@@ -103,7 +102,6 @@ def arbo():
         exchange_list.append("bnb")
     except:
         exit(3)
-    all_balance = dict()
     time_list = []
     print(f"{Fore.GREEN}\nThank you{Style.RESET_ALL}")
 
@@ -258,17 +256,18 @@ def arbo():
                                                       depth,
                                                       last_ask)
                         print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
+                        log("TRADE","BNB"+ str(resp_dict["bnb"])+ "\nTRT"+ str(resp_dict["trt"]))
                         try:
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
                         except KeyError as err:
                             print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["errors"][0]["message"])
-                            log("ERR", resp_dict["bnb"]["status"] + resp_dict["trt"]["errors"][0]["message"])
+                            log("ERR", str(resp_dict["bnb"]["status"]) + str(resp_dict["trt"]["errors"][0]["message"]))
                             log("ERR", err)
                         if status[0] == "ERROR" or status[1] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
-                            log("ERROR", resp_dict["trt"][0].upper() + resp_dict["bnb"])
+                            log("ERROR", str(resp_dict["trt"][0].upper()) + str(resp_dict["bnb"]))
                             time.sleep(20)
                         else:
                             print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER STATUS:[%s, %s]{Style.RESET_ALL}" % (
@@ -327,18 +326,18 @@ def arbo():
                         resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
                                                       "sell", exchange_list[1], "BTCEUR", depth, last_bid)
                         print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
-                        log("TRADE","BNB"+ resp_dict["bnb"]+ "\nTRT"+ resp_dict["trt"])
+                        log("TRADE","BNB"+ str(resp_dict["bnb"])+ "\nTRT"+ str(resp_dict["trt"]))
                         try:
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
                         except KeyError as err:
                             print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["errors"][0]["message"])
-                            log("ERR", resp_dict["bnb"]["status"] + resp_dict["trt"]["errors"][0]["message"])
+                            log("ERR", str(resp_dict["bnb"]["status"]) + str(resp_dict["trt"]["errors"][0]["message"]))
                             log("ERR", err)
                         if status[0] == "ERROR" or status[1] == "ERROR":
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
-                            log("ERROR", resp_dict["trt"][0].upper() + resp_dict["bnb"])
+                            log("ERROR", str(resp_dict["trt"][0].upper()) + (resp_dict["bnb"]))
                             time.sleep(20)
                             pass
                             # TODO: IMPROVE ERROR CHECK
