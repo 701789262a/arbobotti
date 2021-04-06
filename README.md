@@ -1,7 +1,7 @@
 # Arbobotti
 ### Usage
 
-    pip install pandas python-binance krakenex pykrakenapi openpyxl matplotlib mysql.connector telebot telethon python-gnupg
+    pip3 install pandas python-binance krakenex pykrakenapi openpyxl matplotlib mysql.connector telebot telethon python-gnupg
 
 
 ### File generated or needed
