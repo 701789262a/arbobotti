@@ -8,6 +8,7 @@ import sys
 import threading
 import time
 from multiprocessing import Process
+
 import gnupg
 import mysql.connector
 import pandas
@@ -256,7 +257,7 @@ def arbo():
                                                       depth,
                                                       last_ask)
                         print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
-                        log("TRADE","BNB"+ str(resp_dict["bnb"])+ "\nTRT"+ str(resp_dict["trt"]))
+                        log("TRADE", "BNB" + str(resp_dict["bnb"]) + "\nTRT" + str(resp_dict["trt"]))
                         try:
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
                         except KeyError as err:
@@ -326,7 +327,7 @@ def arbo():
                         resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
                                                       "sell", exchange_list[1], "BTCEUR", depth, last_bid)
                         print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
-                        log("TRADE","BNB"+ str(resp_dict["bnb"])+ "\nTRT"+ str(resp_dict["trt"]))
+                        log("TRADE", "BNB" + str(resp_dict["bnb"]) + "\nTRT" + str(resp_dict["trt"]))
                         try:
                             status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
                         except KeyError as err:
@@ -446,13 +447,13 @@ def save_data(_list, sep):
         _list.clear()
     except FileNotFoundError as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATAprint [file not found]{Style.RESET_ALL}")
-        log("ERR",err)
+        log("ERR", err)
     except PermissionError as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATAprint [resource busy]{Style.RESET_ALL}")
-        log("ERR",err)
+        log("ERR", err)
     except:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATAprint [generic error]{Style.RESET_ALL}")
-        log("ERR","generic except")
+        log("ERR", "generic except")
 
 
 def save_trade(_list, sep, db_data, tg_data):
@@ -464,16 +465,16 @@ def save_trade(_list, sep, db_data, tg_data):
         # append(df, filename='file_trade.xlsx', startrow=None, sheet_name='Sheet1', truncate_sheet=True,engine="openpyxl")
     except FileNotFoundError as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [file not found]{Style.RESET_ALL}")
-        log("ERR",err)
+        log("ERR", err)
     except PermissionError as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [resource busy]{Style.RESET_ALL}")
-        log("ERR",err)
+        log("ERR", err)
     except TypeError as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO TRADELIST [type error]{Style.RESET_ALL}")
         log("ERR", err)
     except:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATAprint [generic error]{Style.RESET_ALL}")
-        log("ERR","generic except")
+        log("ERR", "generic except")
     try:
         telegram(_list, tg_data)
     except Exception as err:
@@ -485,7 +486,7 @@ def save_trade(_list, sep, db_data, tg_data):
         db(_list, db_data)
     except Exception as err:
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATABASE [generic error]{Style.RESET_ALL}")
-        log("ERR",err)
+        log("ERR", err)
         print(err)
         exit(100)
     pass
@@ -516,7 +517,7 @@ def append(df, filename, startrow=None, sheet_name='Sheet1', truncate_sheet=True
         writer.sheets = {ws.title: ws for ws in writer.book.worksheets}
     except FileNotFoundError as err:
         print("e diocan pero")
-        log("ERR",err)
+        log("ERR", err)
     if startrow is None:
         startrow = 0
     df.to_excel(writer, sheet_name, startrow=startrow)
@@ -546,8 +547,8 @@ def db(_list, db_data):
         _list[0][7].replace(",", "."), _list[0][3].replace(",", "."),
         _list[0][8], _list[0][9], _list[0][10], _list[0][11], _list[0][12],
         _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12],
-        round(float(_list[1][11].replace(",", ".")) + float(_list[1][10].replace(",", ".")) - float(
-            _list[0][11].replace(",", ".")) - float(_list[0][10].replace(",", ".")), 5), date,
+        round(float(_list[1][11]) + float(_list[1][10]) - float(
+            _list[0][11]) - float(_list[0][10]), 5), date,
         _list[len(_list)], _list[len(_list) - 1], str(status))
     cursor.execute(add_trade, data_trade)
     conn.commit()
@@ -556,16 +557,16 @@ def db(_list, db_data):
 
 
 def telegram(_list, tg_data):
-    log(log_type="TRADELIST",message=str(_list))
+    log(log_type="TRADELIST", message=str(_list))
     message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ":\nBOUGHT <b>" + str(
         round(float(_list[0][3].replace(",", ".")), 8)) + "</b> $BTC <b>" + str(
         _list[0][4]) + "</b> ON <code>" + str(
         _list[0][2]) + "</code> SOLD <b>" + str(_list[0][7]) + "</b> ON <code>" + str(
         _list[0][6]) + "</code>. CALCULATED GAIN: <b>" + str(
-        round(float(_list[1][11].replace(",", ".")) + float(_list[1][10].replace(",", ".")) - float(
-            _list[0][11].replace(",", ".")) - float(_list[0][10].replace(",", ".")),
+        round(float(_list[1][11]) + float(_list[1][10]) - float(
+            _list[0][11]) - float(_list[0][10]),
               5)) + "€</b>" + "\nSPREAD: <b>" + str(
-        round(float(_list[0][7].replace(",", ".")) - float(_list[0][4].replace(",", ".")))) + "€</b>").replace(" ",
+        round(float(_list[0][7]) - float(_list[0][4]))) + "€</b>").replace(" ",
                                                                                                                "%20")
     bot_token = tg_data["token"]
     bot_chatID = tg_data["app_id"]
@@ -674,8 +675,9 @@ def auto_balancer(balance_score, balance_threshold, op, exchange_list):
                                               "sell", exchange_list[1], "BTCEUR", depth, price)
                 return resp_dict
     except Exception as err:
-        log("ERR",err)
+        log("ERR", err)
         return str(err)
     return 0
-# TODO: CHECK AUTOBALANCER FUNCTION
+# TODO: AUTOBALANCER FUNCTION
 # TODO: ADD FUNCTION TO CHECK FOR BNB BALANCE AND TOP IT UP WHEN NEEDED
+# TODO: AI PREDICTION ON NEXT PRICE FOR BOTH EXCHANGE, AND/OR PREDICTION OF ARBITRAGE VALUES
