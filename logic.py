@@ -499,8 +499,8 @@ def log(log_type, message, thread=None):
                 f.write("[" + log_type + "] " + datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S") + " " + str(
                     message) + "\nEND\n")
             exit(20)
-        if log_type=='TRADELIST':
-            with open("tradeerrorlog", "a") as f:
+        if log_type=='TRADELIST' or log_type=='TRADE':
+            with open("tradelog", "a") as f:
                 f.write("[" + log_type + "] " + datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S") + " " + str(
                     message) + "\nEND\n")
             exit(20)
