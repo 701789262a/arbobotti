@@ -566,7 +566,7 @@ def telegram(_list, tg_data):
         round(float(_list[1][11]) + float(_list[1][10]) - float(
             _list[0][11]) - float(_list[0][10]),
               5)) + "€</b>" + "\nSPREAD: <b>" + str(
-        round(float(_list[0][7].replace(",",".")) - float(_list[0][4]).replace(",","."))) + "€</b>").replace(" ",
+        round(float(_list[0][7].replace(",",".")) - float(_list[0][4].replace(",",".")))) + "€</b>").replace(" ",
                                                                                                                "%20")
     bot_token = tg_data["token"]
     bot_chatID = tg_data["app_id"]
