@@ -494,10 +494,16 @@ def save_trade(_list, sep, db_data, tg_data):
 
 def log(log_type, message, thread=None):
     if thread:
-        with open("errorlog", "a") as f:
-            f.write("[" + log_type + "] " + datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S") + " " + str(
-                message) + "\nEND\n")
-        exit(20)
+        if log_type=="ERR":
+            with open("errorlog", "a") as f:
+                f.write("[" + log_type + "] " + datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S") + " " + str(
+                    message) + "\nEND\n")
+            exit(20)
+        if log_type=='TRADELIST':
+            with open("tradeerrorlog", "a") as f:
+                f.write("[" + log_type + "] " + datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S") + " " + str(
+                    message) + "\nEND\n")
+            exit(20)
     else:
         thread_l = threading.Thread(target=log, args=(log_type, message, 1))
         thread_l.start()
