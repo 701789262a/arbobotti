@@ -494,12 +494,12 @@ def save_trade(_list, sep, db_data, tg_data):
 
 def log(log_type, message, thread=None):
     if thread:
-        if log_type=="ERR":
+        if log_type == "ERR":
             with open("errorlog", "a") as f:
                 f.write("[" + log_type + "] " + datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S") + " " + str(
                     message) + "\nEND\n")
             exit(20)
-        if log_type=='TRADELIST' or log_type=='TRADE':
+        if log_type == 'TRADELIST' or log_type == 'TRADE':
             with open("tradelog", "a") as f:
                 f.write("[" + log_type + "] " + datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S") + " " + str(
                     message) + "\nEND\n")
@@ -553,9 +553,10 @@ def db(_list, db_data):
         _list[0][7].replace(",", "."), _list[0][3].replace(",", "."),
         _list[0][8], _list[0][9], _list[0][10], _list[0][11], _list[0][12],
         _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12],
-        round(float(_list[1][11]) + float(_list[1][10]) - float(
-            _list[0][11]) - float(_list[0][10]), 5), date,
+        str(round(float(_list[1][11]) + float(_list[1][10]) - float(
+            _list[0][11]) - float(_list[0][10]), 5)), date,
         _list[len(_list)], _list[len(_list) - 1], str(status))
+
     cursor.execute(add_trade, data_trade)
     conn.commit()
     cursor.close()
@@ -572,7 +573,7 @@ def telegram(_list, tg_data):
         round(float(_list[1][11]) + float(_list[1][10]) - float(
             _list[0][11]) - float(_list[0][10]),
               5)) + "€</b>" + "\nSPREAD: <b>" + str(
-        round(float(_list[0][7].replace(",",".")) - float(_list[0][4].replace(",",".")))) + "€</b>").replace(" ",
+        round(float(_list[0][7].replace(",", ".")) - float(_list[0][4].replace(",", ".")))) + "€</b>").replace(" ",
                                                                                                                "%20")
     bot_token = tg_data["token"]
     bot_chatID = tg_data["app_id"]

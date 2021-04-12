@@ -207,30 +207,6 @@ class Operation:
             pass
         return d
 
-    def __cancel(self, exchange):
-        nonce = str(int(time.time() * 1e6))
-        d = dict()
-        if exchange == "trt":
-            url = "https://api.therocktrading.com/v1/funds/BTCEUR/orders/remove_all"
-            signature = hmac.new(self.secret_trt.encode(), msg=(str(nonce) + url).encode(),
-                                 digestmod=hashlib.sha512).hexdigest()
-            _headers = {"Content-Type": "application/json", "X-TRT-KEY": self.apikey_trt,
-                        "X-TRT-SIGN": signature, "X-TRT-NONCE": nonce}
-            resp = requests.delete(url, headers=_headers)
-        elif exchange == "krk":
-            print("FUNCTION NOT ENABLED ON KRAKEN EXCHANGE, USE OTHER EXCHANGES FOR THIS FEATURE TO WORK")
-            exit(2)
-            api = krakenex.API(self.apikey_krk, self.secret_krk)
-            k = KrakenAPI(api)
-            resp = pd.DataFrame(k.get_trade_volume("BTCEUR")[2])
-            d["feekrk"] = resp["XXBTZEUR"][0]
-            return d
-        elif exchange == "bnb":
-            resp = self.client.get_open_orders(symbol="BTCEUR")
-            if len(resp) > 0:
-                for i in range(len(resp)):
-                    self.client.cancel_order(symbol="BTCEUR", orderId=resp[i]["orderId"])
-
 
     def __order(self, exchange, order):
         nonce = str(int(time.time() * 1e6))
