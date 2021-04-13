@@ -195,6 +195,7 @@ def arbo():
                     a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), only_see,
                     actual))
             next_one = False
+            '''
             for exchange_a in exchange_list:
                 for exchange_b in exchange_list:
                     if exchange_a == exchange_b:
@@ -204,7 +205,8 @@ def arbo():
                         # info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee, maker_fee=None)
                         info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee)
                 next_one = False
-
+            '''
+            info('trt', 'bnb', all_balance, asks, bids, taker_fee)
 
             print("[i] FETCHED TAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
                 exchange_list[0].upper(), taker_fee['trt'] * 100, exchange_list[1].upper(), taker_fee['bnb'] * 100))
