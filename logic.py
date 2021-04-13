@@ -111,10 +111,11 @@ def arbo():
     op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret, bnb_apikey, bnb_secret, exchange_list)
     op.threadCreation()
     time.sleep(2)
-    taker_fee_trt = float(d["taker_fee_trt"])
-    taker_fee_bnb = float(d["taker_fee_bnb"])
-    maker_fee_trt = float(d["taker_fee_trt"])
-    maker_fee_bnb = float(d["taker_fee_bnb"])
+    taker_fee, maker_fee = dict(), dict()
+    taker_fee['trt'] = float(d["taker_fee_trt"])
+    taker_fee['bnb'] = float(d["taker_fee_bnb"])
+    maker_fee['trt'] = float(d["taker_fee_trt"])
+    maker_fee['bnb'] = float(d["taker_fee_bnb"])
     checkbalance = True
     _tglist = []
     if d["graph"].lower() == "true":
@@ -161,10 +162,11 @@ def arbo():
                 print(f"{Fore.RED}[#] ERROR WHILE FETCHING DATA [typeError - nonetype]{Style.RESET_ALL}")
                 log("ERR", err)
                 continue
-            asks_krk = round(float(price_dict["bnb"]['asks'][0][0]), 2)
-            bids_krk = round(float(price_dict["bnb"]['bids'][0][0]), 2)
-            asks_trt = round(float(price_dict["trt"]['asks'][0]['price']), 2)
-            bids_trt = round(float(price_dict["trt"]['bids'][0]['price']), 2)
+            asks = bids = {}
+            asks['bnb'] = round(float(price_dict["bnb"]['asks'][0][0]), 2)
+            bids['bnb'] = round(float(price_dict["bnb"]['bids'][0][0]), 2)
+            asks['trt'] = round(float(price_dict["trt"]['asks'][0]['price']), 2)
+            bids['trt'] = round(float(price_dict["trt"]['bids'][0]['price']), 2)
             last_bid = 0
             last_ask = 0
             depth = 0
@@ -192,41 +194,32 @@ def arbo():
                 f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}\t\tTHREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}         ONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}           PERF: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL} cycles/s" % (
                     a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), only_see,
                     actual))
+            next_one = False
+            for exchange_a in exchange_list:
+                for exchange_b in exchange_list:
+                    if exchange_a == exchange_b:
+                        next_one = True
+                        continue
+                    if next_one:
+                        # info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee, maker_fee=None)
+                        info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee)
+                next_one = False
 
-            print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
-                exchange_list[1].upper(), asks_krk, exchange_list[1].upper(), all_balance["bnbeur"]))
-            print(f"[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-                exchange_list[0].upper(), bids_trt, exchange_list[0].upper(), all_balance["trtbtc"]))
-            print("[i]                           DIFFERENCE: %s" % (num(round(bids_trt - asks_krk, 2))))
-            print(f"[i]                           DIFF + FEE: {Fore.RED}%s{Style.RESET_ALL}"
-                  % (num(round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2))))
-            print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f" % (
-                exchange_list[0].upper(), asks_trt, exchange_list[0].upper(), all_balance["trteur"]))
-            print(
-                f"{Style.RESET_ALL}[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
-                    exchange_list[1].upper(), bids_krk, exchange_list[1].upper(), all_balance["bnbbtc"]))
-            print(
-                f"[i]                           DIFFERENCE: %s                             TOT EUR: {Fore.GREEN}%.8f{Style.RESET_ALL}" % (
-                    num(round(bids_krk - asks_trt, 2)), all_balance["bnbeur"] + all_balance["trteur"]))
-            print(
-                f"[i]                           DIFF + FEE: {Fore.RED}%s{Style.RESET_ALL}                             TOT BTC: {Fore.GREEN}%.8f{Style.RESET_ALL}                       PF VALUE: {Fore.GREEN}%.4f{Style.RESET_ALL}"
-                % (num(round((bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), 2)),
-                   all_balance["bnbbtc"] + all_balance["trtbtc"], all_balance["bnbeur"] + all_balance["trteur"] + (
-                           (all_balance["bnbbtc"] + all_balance["trtbtc"]) * bids_trt)))
+
             print("[i] FETCHED TAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
-                exchange_list[0].upper(), taker_fee_trt * 100, exchange_list[1].upper(), taker_fee_bnb * 100))
+                exchange_list[0].upper(), taker_fee['trt'] * 100, exchange_list[1].upper(), taker_fee['bnb'] * 100))
             print("[i] FETCHED MAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
-                exchange_list[0].upper(), maker_fee_trt * 100, exchange_list[1].upper(), maker_fee_bnb * 100))
+                exchange_list[0].upper(), maker_fee['trt'] * 100, exchange_list[1].upper(), maker_fee['bnb'] * 100))
             print("[i] BALANCE SCORE: %.4f" % (
                 balance_score["eur"]))
-            if (bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)) > int(d["threshold"]):
+            if (bids['trt'] * (1 - taker_fee['trt'])) - (asks['bnb'] * (1 + taker_fee['bnb'])) > int(d["threshold"]):
                 low_balance = False
                 print(f"{Fore.CYAN}[#] %.2f < %.2f BUY %s | SELL TRT DIFF: %.2f (MENO FEE): %.3f" % (
-                    asks_krk, bids_trt, exchange_list[1].upper(), bids_trt - asks_krk,
-                    (bids_trt * (1 + taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb))))
+                    asks['bnb'], bids['trt'], exchange_list[1].upper(), bids['trt'] - asks['bnb'],
+                    (bids['trt'] * (1 + taker_fee['trt'])) - (asks['bnb'] * (1 + taker_fee['bnb']))))
                 depth = float(min(bids_data_trt['amount'],
                                   float(asks_data_bnb[1])))
-                balance = min(all_balance["trtbtc"], all_balance["bnbeur"] / asks_krk)
+                balance = min(all_balance["trtbtc"], all_balance["bnbeur"] / asks['bnb'])
                 if balance < depth:
                     depth = round(float(balance * float(d["max_each_trade"])), 4)
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
@@ -242,12 +235,13 @@ def arbo():
 
                 if not low_balance and depth > float(d["min_balance"]):
                     print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
-                    eff = (depth * bids_trt * (1 - taker_fee_trt)) - (depth * asks_krk * (1 + taker_fee_bnb))
-                    prod = eff / (depth * bids_trt)
+                    eff = (depth * bids['trt'] * (1 - taker_fee['trt'])) - (
+                                depth * asks['bnb'] * (1 + taker_fee['bnb']))
+                    prod = eff / (depth * bids['trt'])
                     print("[#] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
-                    print(f"[#] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_krk * depth, depth))
-                    last_ask = asks_krk
-                    last_bid = bids_trt
+                    print(f"[#] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks['bnb'] * depth, depth))
+                    last_ask = asks['bnb']
+                    last_bid = bids['trt']
                     if prod * 100 > float(d["prod_threshold"]) and not only_see:
                         checkbalance = True
                         print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
@@ -290,15 +284,16 @@ def arbo():
                 else:
                     print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
                     checkbalance = True
-            elif (bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)) > int(d["threshold"]):
+            elif (bids['bnb'] * (1 - taker_fee['bnb'])) - (asks['trt'] * (1 + taker_fee['trt'])) > int(d["threshold"]):
                 low_balance = False
                 depth = float(min(asks_data_trt['amount'],
                                   float(bids_data_bnb[1])))
-                balance = min(all_balance["bnbbtc"], all_balance["trteur"] / asks_trt)
+                balance = min(all_balance["bnbbtc"], all_balance["trteur"] / asks['trt'])
                 print(
                     f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f | DEPTH: %.8f | MINBAL: %.8f{Style.RESET_ALL}" % (
-                        asks_trt, bids_krk, exchange_list[1].upper(), bids_krk - asks_trt,
-                        (bids_krk * (1 + taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), depth, balance))
+                        asks['trt'], bids['bnb'], exchange_list[1].upper(), bids['bnb'] - asks['trt'],
+                        (bids['bnb'] * (1 + taker_fee['bnb'])) - (asks['trt'] * (1 + taker_fee['trt'])), depth,
+                        balance))
                 if balance < depth:
                     depth = round(float(balance * float(d["max_each_trade"])), 4)
                     print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
@@ -313,12 +308,13 @@ def arbo():
 
                 if not low_balance and (depth > float(d["min_balance"])):
                     print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
-                    eff = (depth * bids_krk * (1 - taker_fee_bnb)) - (depth * asks_trt * (1 + taker_fee_trt))
-                    prod = eff / (depth * bids_krk)
+                    eff = (depth * bids['bnb'] * (1 - taker_fee['bnb'])) - (
+                                depth * asks['trt'] * (1 + taker_fee['trt']))
+                    prod = eff / (depth * bids['bnb'])
                     print("[i] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
-                    print(f"[i] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks_trt * depth, depth))
-                    last_ask = asks_trt
-                    last_bid = bids_krk
+                    print(f"[i] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks['trt'] * depth, depth))
+                    last_ask = asks['trt']
+                    last_bid = bids['bnb']
                     if prod * 100 > float(d["prod_threshold"]) and not only_see:
                         checkbalance = True
                         print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
@@ -365,12 +361,12 @@ def arbo():
             _end_time = time.time()
             totaltime = _end_time - _start_time
             time_list.append(int(totaltime * 1000))
-            _list.append([datetime.datetime.now(), asks_krk, bids_krk, asks_trt, bids_trt,
+            _list.append([datetime.datetime.now(), asks['bnb'], bids['bnb'], asks['trt'], bids['trt'],
                           all_balance["bnbbtc"], all_balance["trtbtc"], all_balance["bnbeur"],
-                          all_balance["trteur"], eff, prod, int(totaltime * 1000), round(bids_trt - asks_krk, 2),
-                          round((bids_trt * (1 - taker_fee_trt)) - (asks_krk * (1 + taker_fee_bnb)), 2),
-                          round(bids_krk - asks_trt, 2),
-                          round((bids_krk * (1 - taker_fee_bnb)) - (asks_trt * (1 + taker_fee_trt)), 2)])
+                          all_balance["trteur"], eff, prod, int(totaltime * 1000), round(bids['trt'] - asks['bnb'], 2),
+                          round((bids['trt'] * (1 - taker_fee['trt'])) - (asks['bnb'] * (1 + taker_fee['bnb'])), 2),
+                          round(bids['bnb'] - asks['trt'], 2),
+                          round((bids['bnb'] * (1 - taker_fee['bnb'])) - (asks['trt'] * (1 + taker_fee['trt'])), 2)])
             if int(_end_time % int(d["save_interval"])) == 0 and not already_saved:
                 print(f"{Fore.YELLOW}[!] SAVING...{Style.RESET_ALL}")
                 if _list:
@@ -685,6 +681,34 @@ def auto_balancer(balance_score, balance_threshold, op, exchange_list):
         log("ERR", err)
         return str(err)
     return 0
+
+
+def info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee, maker_fee=None):
+    print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
+        exchange_b.upper(), asks[exchange_b], exchange_b.upper(), all_balance[exchange_b + "eur"]))
+    print(f"[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
+        exchange_a.upper(), bids[exchange_a], exchange_a.upper(), all_balance[exchange_a + "btc"]))
+    print("[i]                           DIFFERENCE: %s" % (num(round(bids[exchange_a] - asks[exchange_b], 2))))
+    print(f"[i]                           DIFF + FEE: {Fore.RED}%s{Style.RESET_ALL}"
+          % (num(
+        round((bids[exchange_a] * (1 - taker_fee[exchange_a])) - (asks[exchange_b] * (1 + taker_fee[exchange_b])), 2))))
+    print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f" % (
+        exchange_a.upper(), asks[exchange_a], exchange_a.upper(), all_balance[exchange_a + "eur"]))
+    print(
+        f"{Style.RESET_ALL}[i] BID %s : %.2f                              BTC %s BAL : {Fore.RED}%.8f{Style.RESET_ALL}" % (
+            exchange_b.upper(), bids[exchange_b], exchange_b.upper(), all_balance[exchange_b + "btc"]))
+    print(
+        f"[i]                           DIFFERENCE: %s                             TOT EUR: {Fore.GREEN}%.8f{Style.RESET_ALL}" % (
+            num(round(bids[exchange_b] - asks[exchange_a], 2)),
+            all_balance[exchange_b + "eur"] + all_balance[exchange_a + "eur"]))
+    print(
+        f"[i]                           DIFF + FEE: {Fore.RED}%s{Style.RESET_ALL}                             TOT BTC: {Fore.GREEN}%.8f{Style.RESET_ALL}                       PF VALUE: {Fore.GREEN}%.4f{Style.RESET_ALL}"
+        % (num(
+            round((bids[exchange_b] * (1 - taker_fee[exchange_b])) - (asks[exchange_a] * (1 + taker_fee[exchange_a])),
+                  2)),
+           all_balance[exchange_b + "btc"] + all_balance[exchange_a + "btc"],
+           all_balance[exchange_b + "eur"] + all_balance[exchange_a + "eur"] + (
+                   (all_balance[exchange_b + "btc"] + all_balance[exchange_a + "btc"]) * bids[exchange_a])))
 # TODO: AUTOBALANCER FUNCTION
 # TODO: ADD FUNCTION TO CHECK FOR BNB BALANCE AND TOP IT UP WHEN NEEDED
 # TODO: AI PREDICTION ON NEXT PRICE FOR BOTH EXCHANGE, AND/OR PREDICTION OF ARBITRAGE VALUES
