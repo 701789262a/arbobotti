@@ -552,7 +552,7 @@ def db(_list, db_data):
         _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12],
         str(round(float(_list[1][11]) + float(_list[1][10]) - float(
             _list[0][11]) - float(_list[0][10]), 5)), date,
-        _list[1][len(_list)], _list[1][len(_list) - 1], str(status))
+        _list[0][len(_list)-1], _list[0][len(_list) - 2], str(status))
 
     cursor.execute(add_trade, data_trade)
     conn.commit()
