@@ -5,15 +5,16 @@ import json
 import queue
 import time
 from threading import Thread
+
 import binance
 import krakenex
 import pandas as pd
 import requests
+from binance import exceptions
 from binance.client import Client
 from colorama import Fore
 from colorama import Style
 from pykrakenapi import KrakenAPI
-from binance import exceptions
 
 q1 = queue.Queue()
 q2 = queue.Queue()
@@ -66,10 +67,14 @@ class Operation:
 
     def __trade(self, exchange, fund_id, side, amount, price):
         nonce = str(int(time.time() * 1e6))
-        amount = round(amount,8)
+        amount = round(amount, 8)
+        if side == 'sell':
+            price = price - 100
+        elif side == 'buy':
+            price = price + 100
         if exchange == "trt":
             url = "https://api.therocktrading.com/v1/funds/" + fund_id + "/orders"
-            payload_trt = {"fund_id": "BTCEUR", "side": side, "amount": amount, "price": 0}
+            payload_trt = {"fund_id": "BTCEUR", "side": side, "amount": amount, "price": price}
             signature = hmac.new(self.secret_trt.encode(), msg=(str(nonce) + url).encode(),
                                  digestmod=hashlib.sha512).hexdigest()
 
@@ -206,7 +211,6 @@ class Operation:
         except Exception:
             pass
         return d
-
 
     def __order(self, exchange, order):
         nonce = str(int(time.time() * 1e6))
