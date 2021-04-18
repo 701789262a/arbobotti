@@ -69,9 +69,9 @@ class Operation:
         nonce = str(int(time.time() * 1e6))
         amount = round(amount, 8)
         if side == 'sell':
-            price = price - 500
+            price = price - 5000
         elif side == 'buy':
-            price = price + 500
+            price = price + 5000
         if exchange == "trt":
             url = "https://api.therocktrading.com/v1/funds/" + fund_id + "/orders"
             payload_trt = {"fund_id": "BTCEUR", "side": side, "amount": amount, "price": price}
