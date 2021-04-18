@@ -264,7 +264,7 @@ def arbo():
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                             log("ERROR", str(resp_dict["trt"][0].upper()) + str(resp_dict["bnb"]))
-                            time.sleep(20)
+                            time.sleep(2)
                         else:
                             print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER STATUS:[%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"]["status"].upper(), resp_dict["bnb"]["status"]))
@@ -336,7 +336,7 @@ def arbo():
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                             log("ERROR", str(resp_dict["trt"][0].upper()) + (resp_dict["bnb"]))
-                            time.sleep(20)
+                            time.sleep(2)
                             pass
                             # TODO: IMPROVE ERROR CHECK
                         else:
