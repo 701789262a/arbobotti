@@ -264,7 +264,7 @@ def arbo():
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                             log("ERROR", str(resp_dict["trt"][0].upper()) + str(resp_dict["bnb"]))
-                            time.sleep(2)
+                            time.sleep(0)
                         else:
                             print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER STATUS:[%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"]["status"].upper(), resp_dict["bnb"]["status"]))
@@ -336,7 +336,7 @@ def arbo():
                             print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
                                 resp_dict["trt"][0].upper(), resp_dict["bnb"]))
                             log("ERROR", str(resp_dict["trt"][0].upper()) + (resp_dict["bnb"]))
-                            time.sleep(2)
+                            time.sleep(0)
                             pass
                             # TODO: IMPROVE ERROR CHECK
                         else:
@@ -415,7 +415,7 @@ def arbo():
                      float(all_balance["bnbeur"]) +
                      float(all_balance["trteur"])])
                 print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
-                save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list, d["sep"], db_data, tg_data,))
+                save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list, d["sep"], db_data, tg_data,d['name']))
                 save_trade_thread.start()
                 save_trade_thread.join()
                 _trade_list.clear()
@@ -453,7 +453,7 @@ def save_data(_list, sep):
         log("ERR", "generic except")
 
 
-def save_trade(_list, sep, db_data, tg_data):
+def save_trade(_list, sep, db_data, tg_data,whoami):
     print(_list)
     df = pandas.DataFrame(_list)
     try:
@@ -473,7 +473,7 @@ def save_trade(_list, sep, db_data, tg_data):
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATAprint [generic error]{Style.RESET_ALL}")
         log("ERR", "generic except")
     try:
-        telegram(_list, tg_data)
+        telegram(_list, tg_data,whoami)
     except Exception as err:
         print(f"{Fore.RED}[ERR] ERRORE INVIO TELEGRAM [generic error]{Style.RESET_ALL}")
         log("ERR", err)
@@ -560,9 +560,9 @@ def db(_list, db_data):
     conn.close()
 
 
-def telegram(_list, tg_data):
+def telegram(_list, tg_data,whoami):
     log(log_type="TRADELIST", message=str(_list))
-    message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ":\nBOUGHT <b>" + str(
+    message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ":\n - BY "+whoami+"\nBOUGHT <b>" + str(
         round(float(_list[0][3].replace(",", ".")), 8)) + "</b> $BTC <b>" + str(
         _list[0][4]) + "</b> ON <code>" + str(
         _list[0][2]) + "</code> SOLD <b>" + str(_list[0][7]) + "</b> ON <code>" + str(
