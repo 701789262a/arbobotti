@@ -390,7 +390,7 @@ def arbo():
                         pass
                         try:
                             s.close()
-                            s.connect((ip_mon, 30630))
+                            s.connect((ip_mon, 30630),)
                         except ConnectionRefusedError as err:
                             print(err)
                             log("ERR", err)
@@ -402,6 +402,10 @@ def arbo():
                         except Exception as err:
                             print(err)
                             log("ERR", err)
+                            pass
+                        except TimeoutError as err:
+                            print(err)
+                            log("ERR",err)
                             pass
             if int(str(int(_end_time))[-1]) > 1:
                 already_saved = False
@@ -713,6 +717,10 @@ def info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee, maker_fee=N
            all_balance[exchange_b + "btc"] + all_balance[exchange_a + "btc"],
            all_balance[exchange_b + "eur"] + all_balance[exchange_a + "eur"] + (
                    (all_balance[exchange_b + "btc"] + all_balance[exchange_a + "btc"]) * bids[exchange_a])))
-# TODO: AUTOBALANCER FUNCTION
-# TODO: ADD FUNCTION TO CHECK FOR BNB BALANCE AND TOP IT UP WHEN NEEDED
+# TODO: FUNZIONE AUTO-BILANCIAMENTO
+# TODO: FUNZIONE PER CONTROLLARE IL SALDO BNB E AGGIUNGERLO QUANDO SERVE
+# TODO: SISTEMARE INTEGRAZIONE DATABASE
+# TODO: CONTROLLARE IL BOOK PIU IN PROFONDITA PER EVITARE BOOK VUOTI
+# TODO: FIX VARI
+
 # TODO: AI PREDICTION ON NEXT PRICE FOR BOTH EXCHANGE, AND/OR PREDICTION OF ARBITRAGE VALUES
