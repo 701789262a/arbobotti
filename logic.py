@@ -128,7 +128,7 @@ def arbo():
     maker_fee['bnb'] = float(d["taker_fee_bnb"])
     checkbalance = True
     _tglist = []
-    if d["graph"].lower() == "true":
+    if d["graph"]:
         g = Process(target=data_visual.ru)
         g.start()
     f = open("version", "r")
@@ -686,12 +686,12 @@ def auto_balancer(balance_score, op, exchange_list, config, hype):
     try:
         if abs(balance_score) > config['balancing']['threshold']:
             if balance_score < 0:
-                if config['balancing']['banking'] == 'no':
+                if not config['balancing']['banking']:
                     depth = (all_balance["bnbbtc"] + all_balance["trtbtc"]) / 2
                     resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, price,
                                                   "buy", exchange_list[1], "BTCEUR", depth, price)
                     return resp_dict
-                elif config['balancing']['banking'] == 'yes':
+                else:
                     op.withdraw(exchange_list[1], 'EUR', config['balancing']['IBAN'],
                                 abs(all_balance["bnbeur"] - all_balance["trteur"]))
                     hype.transfer(config['balancing']['IBAN_exch_1'], config['balancing']['recipient_exch_1'],
@@ -700,12 +700,12 @@ def auto_balancer(balance_score, op, exchange_list, config, hype):
                     op.withdraw(exchange_list[0], 'BTC', config['balancing']['btc_addr_1'],
                                 abs(all_balance["bnbbtc"] - all_balance["trtbtc"]))
             if balance_score > 0:
-                if config['balancing']['banking'] == 'no':
+                if not config['balancing']['banking']:
                     depth = (all_balance["bnbbtc"] + all_balance["trtbtc"]) / 2
                     resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, price,
                                                   "sell", exchange_list[1], "BTCEUR", depth, price)
                     return resp_dict
-                elif config['balancing']['banking'] == 'yes':
+                else:
                     op.withdraw(exchange_list[0], 'EUR', config['balancing']['IBAN'],
                                 abs(all_balance["bnbeur"] - all_balance["trteur"]))
                     hype.transfer(config['balancing']['IBAN_exch_1'], config['balancing']['recipient_exch_0'],
