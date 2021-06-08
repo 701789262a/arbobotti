@@ -147,6 +147,9 @@ def arbo():
     except TimeoutError as err:
         log("ERR", err)
         pass
+    except socket.timeout as err:
+        log("ERR", err)
+        pass
     q_act = queue.Queue()
     t_action = threading.Thread(target=getaction, args=(q_act,))
     t_action.start()
