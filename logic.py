@@ -84,7 +84,7 @@ def arbo():
             print(f"{Fore.RED}[!] Wrong password!{Style.RESET_ALL}")
             log("ERR", err)
             pass
-    if d['balancing']['banking'] == 'yes':
+    if d['balancing']['banking']:
         hype = Hype()
         hype.login(d['balancing']['username'], getpass.getpass('[?] Please provide banking password'),
                    getpass.getpass('[?] Please provide DOB'))
@@ -139,6 +139,7 @@ def arbo():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     last_h = 0
     try:
+        s.settimeout(10)
         s.connect((str(d["dip"]).rstrip("\n"), 30630))
     except ConnectionRefusedError as err:
         log("ERR", err)
