@@ -389,8 +389,7 @@ class Operation:
             self.bnb.pop(1)
             try:
                 resp_bnb = self.client.get_order_book(symbol="BTCEUR", limit=5)
-                res = self.client.get_exchange_info()
-                self.requests_used = res.headers['x-mbx-used-weight-1m']
+                self.requests_used = self.client.response.headers['x-mbx-used-weight-1m']
                 return resp_bnb
             except requests.exceptions.ConnectionError:
                 print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
