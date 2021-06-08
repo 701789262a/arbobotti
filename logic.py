@@ -168,7 +168,7 @@ def arbo():
                 print(f"{Fore.YELLOW}[#] RETRIEVING BALANCE{Style.RESET_ALL}")
                 all_balance = op.balancethreading()
                 checkbalance = False
-                time.sleep(d['sleep_balance'])
+                time.sleep(int(d['sleep_balance']))
             price_dict = op.querythread()
             #requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
             _query_time = time.time() - _query_time
