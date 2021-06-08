@@ -427,7 +427,7 @@ def arbo():
                 checkbalance = True
             if _trade_list:
                 all_balance = op.balancethreading()
-                time.sleep(1.5)
+                time.sleep(d['sleep_balance'])
                 _trade_list.append(
                     ["", "", "", "", "", "", "", "", float(all_balance["bnbbtc"]), float(all_balance["trtbtc"]),
                      float(all_balance["bnbeur"]),
