@@ -13,11 +13,14 @@ import gnupg
 import mysql.connector
 import pandas
 import requests
+import yaml
 from colorama import Fore
 from colorama import Style
 from openpyxl import load_workbook
 
+import banking
 import data_visual
+from hype import Hype
 from trade import Operation
 
 _print_list = []
@@ -25,11 +28,8 @@ _print_list = []
 
 def arbo():
     d = {}
-    with open("config.txt") as f:
-        for line in f:
-            (key, val) = line.replace(" ", "").split("=")
-            val = val.split("#")[0]
-            d[key] = val
+    with open("config.yaml") as f:
+        d = yaml.safe_load(f)
     ip_mon = d["dip"]
     gpg = gnupg.GPG(d["gpg"][:-1])
     _list = []
@@ -84,6 +84,16 @@ def arbo():
             print(f"{Fore.RED}[!] Wrong password!{Style.RESET_ALL}")
             log("ERR", err)
             pass
+    if d['balancing']['banking'] == 'yes':
+        hype = Hype()
+        hype.login(d['balancing']['username'], getpass.getpass('[?] Please provide banking password'),
+                   getpass.getpass('[?] Please provide DOB'))
+        OTP = getpass.getpass('[?] Please provide hype OTP to continue:')
+        hype.otp2fa(OTP)
+        try:
+            hype.get_balance()
+        except banking.Banking.AuthenticationFailure:
+            exit(75)
     try:
         trt_apikey = str(printin_data["trt_apikey"])
         trt_secret = str(printin_data["trt_secret"])
@@ -155,6 +165,7 @@ def arbo():
                 all_balance = op.balancethreading()
                 checkbalance = False
             price_dict = op.querythread()
+            requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
             _query_time = time.time() - _query_time
             try:
                 asks_data_bnb = price_dict["bnb"]['asks'][0]
@@ -194,9 +205,9 @@ def arbo():
                     all_balance["trtbtc"] + all_balance["bnbbtc"])
             print(f"{Fore.MAGENTA}[!] ARBOBOTTI VERSION %s, MURINEDDU CAPITAL 2021{Style.RESET_ALL}\n" % (ver))
             print(
-                f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}          INDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}\t\tTHREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}         ONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}           PERF: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL} cycles/s" % (
+                f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}\tINDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}\tTHREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}\tONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}\tPERF: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL} cycles/s\tREQUESTS: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}/1200" % (
                     a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), only_see,
-                    actual))
+                    actual,requests_used))
             next_one = False
             for exchange_a in exchange_list:
                 for exchange_b in exchange_list:
@@ -207,8 +218,7 @@ def arbo():
                         # info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee, maker_fee=None)
                         info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee)
                 next_one = False
-            #info('trt', 'bnb', all_balance, asks, bids, taker_fee)
-
+            # info('trt', 'bnb', all_balance, asks, bids, taker_fee)
 
             print("[i] FETCHED TAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
                 exchange_list[0].upper(), taker_fee['trt'] * 100, exchange_list[1].upper(), taker_fee['bnb'] * 100))
@@ -240,7 +250,7 @@ def arbo():
                 if not low_balance and depth > float(d["min_balance"]):
                     print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
                     eff = (depth * bids['trt'] * (1 - taker_fee['trt'])) - (
-                                depth * asks['bnb'] * (1 + taker_fee['bnb']))
+                            depth * asks['bnb'] * (1 + taker_fee['bnb']))
                     prod = eff / (depth * bids['trt'])
                     print("[#] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
                     print(f"[#] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks['bnb'] * depth, depth))
@@ -313,7 +323,7 @@ def arbo():
                 if not low_balance and (depth > float(d["min_balance"])):
                     print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
                     eff = (depth * bids['bnb'] * (1 - taker_fee['bnb'])) - (
-                                depth * asks['trt'] * (1 + taker_fee['trt']))
+                            depth * asks['trt'] * (1 + taker_fee['trt']))
                     prod = eff / (depth * bids['bnb'])
                     print("[i] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
                     print(f"[i] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks['trt'] * depth, depth))
@@ -390,7 +400,7 @@ def arbo():
                         pass
                         try:
                             s.close()
-                            s.connect((ip_mon, 30630),)
+                            s.connect((ip_mon, 30630))
                         except ConnectionRefusedError as err:
                             print(err)
                             log("ERR", err)
@@ -405,7 +415,7 @@ def arbo():
                             pass
                         except TimeoutError as err:
                             print(err)
-                            log("ERR",err)
+                            log("ERR", err)
                             pass
             if int(str(int(_end_time))[-1]) > 1:
                 already_saved = False
@@ -422,7 +432,8 @@ def arbo():
                      float(all_balance["bnbeur"]) +
                      float(all_balance["trteur"])])
                 print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
-                save_trade_thread = threading.Thread(target=save_trade, args=(_trade_list, d["sep"], db_data, tg_data,d['name']))
+                save_trade_thread = threading.Thread(target=save_trade,
+                                                     args=(_trade_list, d["sep"], db_data, tg_data, d['name']))
                 save_trade_thread.start()
                 save_trade_thread.join()
                 _trade_list.clear()
@@ -460,7 +471,7 @@ def save_data(_list, sep):
         log("ERR", "generic except")
 
 
-def save_trade(_list, sep, db_data, tg_data,whoami):
+def save_trade(_list, sep, db_data, tg_data, whoami):
     print(_list)
     df = pandas.DataFrame(_list)
     try:
@@ -480,7 +491,7 @@ def save_trade(_list, sep, db_data, tg_data,whoami):
         print(f"{Fore.RED}[ERR] ERRORE SALVATAGGIO DATAprint [generic error]{Style.RESET_ALL}")
         log("ERR", "generic except")
     try:
-        telegram(_list, tg_data,whoami)
+        telegram(_list, tg_data, whoami)
     except Exception as err:
         print(f"{Fore.RED}[ERR] ERRORE INVIO TELEGRAM [generic error]{Style.RESET_ALL}")
         log("ERR", err)
@@ -559,7 +570,7 @@ def db(_list, db_data):
         _list[1][8], _list[1][9], _list[1][10], _list[1][11], _list[1][12],
         str(round(float(_list[1][11]) + float(_list[1][10]) - float(
             _list[0][11]) - float(_list[0][10]), 5)), date,
-        _list[0][len(_list)-1], _list[0][len(_list) - 2], str(status))
+        _list[0][len(_list) - 1], _list[0][len(_list) - 2], str(status))
 
     cursor.execute(add_trade, data_trade)
     conn.commit()
@@ -567,9 +578,9 @@ def db(_list, db_data):
     conn.close()
 
 
-def telegram(_list, tg_data,whoami):
+def telegram(_list, tg_data, whoami):
     log(log_type="TRADELIST", message=str(_list))
-    message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ":\n - BY "+whoami+"\nBOUGHT <b>" + str(
+    message = ("EXECUTED TRADE AT " + str(_list[0][0]) + ":\n - BY " + whoami + "\nBOUGHT <b>" + str(
         round(float(_list[0][3].replace(",", ".")), 8)) + "</b> $BTC <b>" + str(
         _list[0][4]) + "</b> ON <code>" + str(
         _list[0][2]) + "</code> SOLD <b>" + str(_list[0][7]) + "</b> ON <code>" + str(
@@ -668,23 +679,40 @@ def last(q):
             return a
 
 
-def auto_balancer(balance_score, balance_threshold, op, exchange_list):
+def auto_balancer(balance_score, op, exchange_list, config, hype):
     price = 0
     # MARKET ORDER
+    all_balance = op.balancethreading()
     try:
-        if abs(balance_score) > balance_threshold:
+        if abs(balance_score) > config['balancing']['threshold']:
             if balance_score < 0:
-                all_balance = op.balancethreading()
-                depth = (all_balance["bnbbtc"] + all_balance["trtbtc"]) / 2
-                resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, price,
-                                              "buy", exchange_list[1], "BTCEUR", depth, price)
-                return resp_dict
+                if config['balancing']['banking'] == 'no':
+                    depth = (all_balance["bnbbtc"] + all_balance["trtbtc"]) / 2
+                    resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, price,
+                                                  "buy", exchange_list[1], "BTCEUR", depth, price)
+                    return resp_dict
+                elif config['balancing']['banking'] == 'yes':
+                    op.withdraw(exchange_list[1], 'EUR', config['balancing']['IBAN'],
+                                abs(all_balance["bnbeur"] - all_balance["trteur"]))
+                    hype.transfer(config['balancing']['IBAN_exch_1'], config['balancing']['recipient_exch_1'],
+                                  abs(all_balance["bnbeur"] - all_balance["trteur"]),
+                                  config['balancing']['reference_exch_0'])
+                    op.withdraw(exchange_list[0], 'BTC', config['balancing']['btc_addr_1'],
+                                abs(all_balance["bnbbtc"] - all_balance["trtbtc"]))
             if balance_score > 0:
-                all_balance = op.balancethreading()
-                depth = (all_balance["bnbbtc"] + all_balance["trtbtc"]) / 2
-                resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, price,
-                                              "sell", exchange_list[1], "BTCEUR", depth, price)
-                return resp_dict
+                if config['balancing']['banking'] == 'no':
+                    depth = (all_balance["bnbbtc"] + all_balance["trtbtc"]) / 2
+                    resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, price,
+                                                  "sell", exchange_list[1], "BTCEUR", depth, price)
+                    return resp_dict
+                elif config['balancing']['banking'] == 'yes':
+                    op.withdraw(exchange_list[0], 'EUR', config['balancing']['IBAN'],
+                                abs(all_balance["bnbeur"] - all_balance["trteur"]))
+                    hype.transfer(config['balancing']['IBAN_exch_1'], config['balancing']['recipient_exch_0'],
+                                  abs(all_balance["bnbeur"] - all_balance["trteur"]),
+                                  config['balancing']['reference_exch_0'])
+                    op.withdraw(exchange_list[1], 'BTC', config['balancing']['btc_addr_1'],
+                                abs(all_balance["bnbbtc"] - all_balance["trtbtc"]))
     except Exception as err:
         log("ERR", err)
         return str(err)

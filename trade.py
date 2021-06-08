@@ -239,6 +239,22 @@ class Operation:
             d["status_bnb"] = resp["status"]
             return d
 
+    def withdraw(self, exchange, coin, address, amount):
+        if exchange == "trt":
+            nonce = str(int(time.time() * 1e6))
+            url='https://api.therocktrading.com/v1/atms/withdraw'
+            payload_trt = {"currency": coin, "address": address, "amount": amount}
+            signature = hmac.new(self.secret_trt.encode(), msg=(str(nonce) + url).encode(),
+                                 digestmod=hashlib.sha512).hexdigest()
+
+            _headers = {'User-Agent': 'PyRock v1', "Content-Type": "application/json", "X-TRT-KEY": self.apikey_trt,
+                        "X-TRT-SIGN": signature, "X-TRT-NONCE": nonce}
+            resp = requests.post(url, data=json.dumps(payload_trt), headers=_headers)
+            return json.loads(resp.text)['transaction_id']
+        elif exchange == "bnb":
+            resp=self.client.withdraw(asset=coin.upper(),address=address,amount=amount)
+            return resp['id']
+
     def __fee(self, exchange):
         nonce = str(int(time.time() * 1e6))
         d = dict()
