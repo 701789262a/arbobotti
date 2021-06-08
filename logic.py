@@ -165,7 +165,7 @@ def arbo():
                 all_balance = op.balancethreading()
                 checkbalance = False
             price_dict = op.querythread()
-            requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
+            #requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
             _query_time = time.time() - _query_time
             try:
                 asks_data_bnb = price_dict["bnb"]['asks'][0]
@@ -207,7 +207,7 @@ def arbo():
             print(
                 f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}\tINDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}\tTHREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}\tONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}\tPERF: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL} cycles/s\tREQUESTS: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}/1200" % (
                     a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), only_see,
-                    actual,requests_used))
+                    actual,op.get_requests_used()))
             next_one = False
             for exchange_a in exchange_list:
                 for exchange_b in exchange_list:

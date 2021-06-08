@@ -42,6 +42,7 @@ class Operation:
         self.bnb = []
         self.prbnb = []
         self.len = 0
+        self.requests_used = 0
 
     def thread_func(self):
         while (1):
@@ -242,7 +243,7 @@ class Operation:
     def withdraw(self, exchange, coin, address, amount):
         if exchange == "trt":
             nonce = str(int(time.time() * 1e6))
-            url='https://api.therocktrading.com/v1/atms/withdraw'
+            url = 'https://api.therocktrading.com/v1/atms/withdraw'
             payload_trt = {"currency": coin, "address": address, "amount": amount}
             signature = hmac.new(self.secret_trt.encode(), msg=(str(nonce) + url).encode(),
                                  digestmod=hashlib.sha512).hexdigest()
@@ -252,7 +253,7 @@ class Operation:
             resp = requests.post(url, data=json.dumps(payload_trt), headers=_headers)
             return json.loads(resp.text)['transaction_id']
         elif exchange == "bnb":
-            resp=self.client.withdraw(asset=coin.upper(),address=address,amount=amount)
+            resp = self.client.withdraw(asset=coin.upper(), address=address, amount=amount)
             return resp['id']
 
     def __fee(self, exchange):
@@ -388,6 +389,7 @@ class Operation:
             self.bnb.pop(1)
             try:
                 resp_bnb = self.client.get_order_book(symbol="BTCEUR", limit=5)
+                self.requests_used = resp_bnb.headers['x-mbx-used-weight-1m']
                 return resp_bnb
             except requests.exceptions.ConnectionError:
                 print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
@@ -419,3 +421,6 @@ class Operation:
             pass
 
         return d
+
+    def get_requests_used(self):
+        return self.requests_used
