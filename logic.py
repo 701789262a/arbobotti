@@ -172,8 +172,7 @@ def arbo():
                 checkbalance = False
                 time.sleep(int(d['sleep_balance']))
             price_dict = op.querythread()
-            async with ds as tscm:
-                res = await tscm.recv()
+            res = wss_logger(ds)
             #requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
             _query_time = time.time() - _query_time
             try:
@@ -733,7 +732,10 @@ async def wss_puller(pair):
     ds = bm.depth_socket(pair, depth=BinanceSocketManager.WEBSOCKET_DEPTH_5, interval=100)
     return ds
 
-
+async def wss_logger(ds):
+    async with ds as tscm:
+        res = await tscm.recv()
+        return res
 def info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee, maker_fee=None):
     print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
         exchange_b.upper(), asks[exchange_b], exchange_b.upper(), all_balance[exchange_b + "eur"]))
