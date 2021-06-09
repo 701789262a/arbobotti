@@ -2,7 +2,7 @@ import os
 import sys
 import time
 from threading import Thread
-
+import asyncio
 import requests
 from colorama import Fore, Style
 
@@ -31,10 +31,9 @@ def main():
             str(requests.get("https://api.github.com/repos/701789262a/arbobotti/tags").json()[0]["name"]), ver))
 
     try:
-        thread_arbo = Thread(target=logic.arbo)
-        thread_arbo.start()
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(logic.arbo())
     except KeyboardInterrupt:
-        thread_arbo.join()
         sys.exit(0)
 
 

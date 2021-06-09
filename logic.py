@@ -26,7 +26,7 @@ from trade import Operation
 
 _print_list = []
 
-def arbo():
+async def arbo():
     d = {}
     with open("config.yaml") as f:
         d = yaml.safe_load(f)
