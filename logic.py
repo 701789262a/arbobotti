@@ -177,12 +177,10 @@ async def arbo():
                 #requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
 
                 res = await tscm.recv()
-                print(res['asks'][0])
-                time.sleep(5)
                 _query_time = time.time() - _query_time
                 try:
-                    asks_data_bnb = price_dict["bnb"]['asks'][0]
-                    bids_data_bnb = price_dict["bnb"]['bids'][0]
+                    asks_data_bnb = res['asks'][0]
+                    bids_data_bnb = res['bids'][0]
                     asks_data_trt = price_dict["trt"]['asks'][0]
                     bids_data_trt = price_dict["trt"]['bids'][0]
                 except TypeError as err:
@@ -190,8 +188,8 @@ async def arbo():
                     log("ERR", err)
                     continue
                 asks = bids = {}
-                asks['bnb'] = round(float(price_dict["bnb"]['asks'][0][0]), 2)
-                bids['bnb'] = round(float(price_dict["bnb"]['bids'][0][0]), 2)
+                asks['bnb'] = round(float(res['asks'][0][0]), 2)
+                bids['bnb'] = round(float(res['bids'][0][0]), 2)
                 asks['trt'] = round(float(price_dict["trt"]['asks'][0]['price']), 2)
                 bids['trt'] = round(float(price_dict["trt"]['bids'][0]['price']), 2)
                 last_bid = 0
