@@ -8,6 +8,7 @@ import sys
 import threading
 import time
 from multiprocessing import Process
+from binance import AsyncClient, BinanceSocketManager
 
 import gnupg
 import mysql.connector
@@ -25,8 +26,7 @@ from trade import Operation
 
 _print_list = []
 
-
-def arbo():
+async def arbo():
     d = {}
     with open("config.yaml") as f:
         d = yaml.safe_load(f)
@@ -153,6 +153,9 @@ def arbo():
     q_act = queue.Queue()
     t_action = threading.Thread(target=getaction, args=(q_act,))
     t_action.start()
+    client = await AsyncClient.create()
+    bm = BinanceSocketManager(client)
+    ds = bm.depth_socket('BTCEUR', depth=BinanceSocketManager.WEBSOCKET_DEPTH_5, interval=100)
     already_saved = False
     only_see = bool(int(d["only_see"]))
     this_sec = str(int(time.time()))[-4:]
@@ -172,6 +175,9 @@ def arbo():
             price_dict = op.querythread()
             #requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
             _query_time = time.time() - _query_time
+            async with ds as tscm:
+                res = await tscm.recv()
+                print(res['asks'][0])
             try:
                 asks_data_bnb = price_dict["bnb"]['asks'][0]
                 bids_data_bnb = price_dict["bnb"]['bids'][0]
