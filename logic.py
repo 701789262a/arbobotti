@@ -8,8 +8,7 @@ import sys
 import threading
 import time
 from multiprocessing import Process
-from binance import AsyncClient, BinanceSocketManager
-import asyncio
+
 import gnupg
 import mysql.connector
 import pandas
@@ -151,7 +150,6 @@ def arbo():
     except socket.timeout as err:
         log("ERR", err)
         pass
-    ds=wss_puller('BTCEUR')
     q_act = queue.Queue()
     t_action = threading.Thread(target=getaction, args=(q_act,))
     t_action.start()
@@ -172,12 +170,11 @@ def arbo():
                 checkbalance = False
                 time.sleep(int(d['sleep_balance']))
             price_dict = op.querythread()
-            res = wss_logger(ds)
             #requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
             _query_time = time.time() - _query_time
             try:
-                asks_data_bnb = res['asks'][0]
-                bids_data_bnb = res['bids'][0]
+                asks_data_bnb = price_dict["bnb"]['asks'][0]
+                bids_data_bnb = price_dict["bnb"]['bids'][0]
                 asks_data_trt = price_dict["trt"]['asks'][0]
                 bids_data_trt = price_dict["trt"]['bids'][0]
             except TypeError as err:
@@ -185,8 +182,8 @@ def arbo():
                 log("ERR", err)
                 continue
             asks = bids = {}
-            asks['bnb'] = round(float(res['asks'][0][0]), 2)
-            bids['bnb'] = round(float(res['bids'][0][0]), 2)
+            asks['bnb'] = round(float(price_dict["bnb"]['asks'][0][0]), 2)
+            bids['bnb'] = round(float(price_dict["bnb"]['bids'][0][0]), 2)
             asks['trt'] = round(float(price_dict["trt"]['asks'][0]['price']), 2)
             bids['trt'] = round(float(price_dict["trt"]['bids'][0]['price']), 2)
             last_bid = 0
@@ -726,16 +723,7 @@ def auto_balancer(balance_score, op, exchange_list, config, hype):
         return str(err)
     return 0
 
-async def wss_puller(pair):
-    client = await AsyncClient.create()
-    bm = BinanceSocketManager(client)
-    ds = bm.depth_socket(pair, depth=BinanceSocketManager.WEBSOCKET_DEPTH_5, interval=100)
-    return ds
 
-async def wss_logger(ds):
-    async with ds as tscm:
-        res = await tscm.recv()
-        return res
 def info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee, maker_fee=None):
     print(f"[i] ASK %s : %.2f                              EUR %s BAL : {Fore.RED}%.5f{Style.RESET_ALL}" % (
         exchange_b.upper(), asks[exchange_b], exchange_b.upper(), all_balance[exchange_b + "eur"]))

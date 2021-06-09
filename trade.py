@@ -5,7 +5,7 @@ import json
 import queue
 import time
 from threading import Thread
-
+from binance import AsyncClient, BinanceSocketManager
 import binance
 import krakenex
 import pandas as pd
@@ -43,6 +43,9 @@ class Operation:
         self.prbnb = []
         self.len = 0
         self.requests_used = 0
+        self.wss_client = await AsyncClient.create()
+        self.bm = BinanceSocketManager(self.wss_client)
+        self.ds = self.bm.depth_socket('BTCEUR', depth=BinanceSocketManager.WEBSOCKET_DEPTH_5, interval=100)
 
     def thread_func(self):
         while (1):
@@ -372,7 +375,7 @@ class Operation:
         except json.decoder.JSONDecodeError:
             print(f"{Fore.RED}[ERR] ERROR WHILE CONVERTING TO JSON [expecting value]{Style.RESET_ALL}")
 
-    def __query(self, exchange, apikey, secret):
+    async def __query(self, exchange, apikey, secret):
         if exchange == "trt":
             self.trt.pop(1)
             try:
@@ -388,9 +391,10 @@ class Operation:
         elif exchange == "bnb":
             self.bnb.pop(1)
             try:
-                resp_bnb = self.client.get_order_book(symbol="BTCEUR", limit=5)
+                async with self.ds as tscm:
+                    res = await tscm.recv()
                 self.requests_used = self.client.response.headers['x-mbx-used-weight-1m']
-                return resp_bnb
+                return res
             except requests.exceptions.ConnectionError:
                 print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
             except requests.exceptions.ReadTimeout:
