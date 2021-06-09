@@ -178,6 +178,7 @@ async def arbo():
 
                 res = await tscm.recv()
                 print(res['asks'][0])
+                time.sleep(5)
                 _query_time = time.time() - _query_time
                 try:
                     asks_data_bnb = price_dict["bnb"]['asks'][0]
