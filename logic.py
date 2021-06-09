@@ -175,9 +175,9 @@ async def arbo():
             price_dict = op.querythread()
             #requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
             _query_time = time.time() - _query_time
-            async with ds as tscm:
-                res = await tscm.recv()
-                print(res['asks'][0])
+            #async with ds as tscm:
+            #    res = await tscm.recv()
+            #    print(res['asks'][0])
             try:
                 asks_data_bnb = price_dict["bnb"]['asks'][0]
                 bids_data_bnb = price_dict["bnb"]['bids'][0]
