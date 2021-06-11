@@ -237,23 +237,24 @@ async def arbo():
                         a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), only_see,
                         actual, int(op.get_requests_used())))
                 next_one = False
-                for exchange_a in exchange_list:
-                    for exchange_b in exchange_list:
-                        if exchange_a == exchange_b:
-                            next_one = True
-                            continue
-                        if next_one:
-                            # info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee, maker_fee=None)
-                            info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee)
-                    next_one = False
-                # info('trt', 'bnb', all_balance, asks, bids, taker_fee)
+                if d['general_output']:
+                    for exchange_a in exchange_list:
+                        for exchange_b in exchange_list:
+                            if exchange_a == exchange_b:
+                                next_one = True
+                                continue
+                            if next_one:
+                                # info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee, maker_fee=None)
+                                info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee)
+                        next_one = False
+                    # info('trt', 'bnb', all_balance, asks, bids, taker_fee)
 
-                print("[i] FETCHED TAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
-                    exchange_list[0].upper(), taker_fee['trt'] * 100, exchange_list[1].upper(), taker_fee['bnb'] * 100))
-                print("[i] FETCHED MAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
-                    exchange_list[0].upper(), maker_fee['trt'] * 100, exchange_list[1].upper(), maker_fee['bnb'] * 100))
-                print("[i] BALANCE SCORE: %.4f" % (
-                    balance_score["eur"]))
+                    print("[i] FETCHED TAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
+                        exchange_list[0].upper(), taker_fee['trt'] * 100, exchange_list[1].upper(), taker_fee['bnb'] * 100))
+                    print("[i] FETCHED MAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
+                        exchange_list[0].upper(), maker_fee['trt'] * 100, exchange_list[1].upper(), maker_fee['bnb'] * 100))
+                    print("[i] BALANCE SCORE: %.4f" % (
+                        balance_score["eur"]))
                 if (bids['trt'] * (1 - taker_fee['trt'])) - (asks['bnb'] * (1 + taker_fee['bnb'])) > int(
                         d["threshold"]):
                     low_balance = False
