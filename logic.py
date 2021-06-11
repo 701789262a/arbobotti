@@ -456,8 +456,6 @@ async def arbo():
                                 pass
                 if int(str(int(_end_time))[-1]) > 1:
                     already_saved = False
-                if int(_end_time % int(d["balance_interval"])) == 0:
-                    checkbalance = True
                 if _trade_list:
                     all_balance = op.balancethreading()
                     time.sleep(int(d['sleep_balance']))
