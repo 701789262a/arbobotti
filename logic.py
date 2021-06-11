@@ -4,13 +4,12 @@ import json
 import os
 import queue
 import socket
+import subprocess
 import sys
 import threading
 import time
 from multiprocessing import Process
-import subprocess
-from pusher import pusher_client
-from py4j.java_gateway import JavaGateway,GatewayParameters
+
 import gnupg
 import mysql.connector
 import pandas
@@ -20,6 +19,7 @@ from binance import AsyncClient, BinanceSocketManager
 from colorama import Fore
 from colorama import Style
 from openpyxl import load_workbook
+from py4j.java_gateway import JavaGateway, GatewayParameters
 
 import banking
 import data_visual
@@ -154,7 +154,7 @@ async def arbo():
         log("ERR", err)
         pass
     q_act = queue.Queue()
-    p = subprocess.Popen("java -jar wss_trt_jar.jar "+d['trt_xauth'], shell=True)
+    p = subprocess.Popen("java -jar wss_trt_jar.jar " + d['trt_xauth'], shell=True)
     time.sleep(2)
     t_action = threading.Thread(target=getaction, args=(q_act,))
     t_action.start()
@@ -181,13 +181,13 @@ async def arbo():
                     checkbalance = False
                     time.sleep(int(d['sleep_balance']))
                 # requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
-                res_trt=json.loads(stack.pop()
-                           .replace('orderbook', '"orderbook"')
-                           .replace('BTCEUR', '1')
-                           .replace('event', '"event"')
-                           .replace('data', '"data"')
-                           .replace('channel', '"channel"')
-                           .replace('=', ':'))['data']
+                res_trt = json.loads(stack.pop()
+                                     .replace('orderbook', '"orderbook"')
+                                     .replace('BTCEUR', '1')
+                                     .replace('event', '"event"')
+                                     .replace('data', '"data"')
+                                     .replace('channel', '"channel"')
+                                     .replace('=', ':'))['data']
                 res_bnb = await tscm.recv()
 
                 _query_time = time.time() - _query_time
@@ -200,7 +200,8 @@ async def arbo():
                     print(f"{Fore.RED}[#] ERROR WHILE FETCHING DATA [typeError - nonetype]{Style.RESET_ALL}")
                     log("ERR", err)
                     continue
-                asks = bids = {}
+                asks = {}
+                bids = {}
                 asks['bnb'] = round(float(res_bnb['asks'][0][0]), 2)
                 bids['bnb'] = round(float(res_bnb['bids'][0][0]), 2)
                 asks['trt'] = round(float(res_trt['asks'][0]['price']), 2)
