@@ -15,7 +15,8 @@ import mysql.connector
 import pandas
 import requests
 import yaml
-from binance import AsyncClient, BinanceSocketManager
+from binance import AsyncClient
+from binance import BinanceSocketManager
 from colorama import Fore
 from colorama import Style
 from openpyxl import load_workbook
