@@ -154,7 +154,7 @@ async def arbo():
         log("ERR", err)
         pass
     q_act = queue.Queue()
-    p = subprocess.Popen("screen -S javatrt java -jar wss_trt_jar.jar "+d['trt_xauth'], shell=False)
+    p = subprocess.Popen("java -jar wss_trt_jar.jar "+d['trt_xauth'], shell=False)
     time.sleep(2)
     t_action = threading.Thread(target=getaction, args=(q_act,))
     t_action.start()
