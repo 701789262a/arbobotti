@@ -203,8 +203,8 @@ async def arbo():
                 asks = bids = {}
                 asks['bnb'] = round(float(res_bnb['asks'][0][0]), 2)
                 bids['bnb'] = round(float(res_bnb['bids'][0][0]), 2)
-                asks['trt'] = round(float(res_trt["trt"]['asks'][0]['price']), 2)
-                bids['trt'] = round(float(res_trt["trt"]['bids'][0]['price']), 2)
+                asks['trt'] = round(float(res_trt['asks'][0]['price']), 2)
+                bids['trt'] = round(float(res_trt['bids'][0]['price']), 2)
                 last_bid = 0
                 last_ask = 0
                 depth = 0
