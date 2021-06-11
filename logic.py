@@ -180,16 +180,18 @@ async def arbo():
                     print(f"{Fore.YELLOW}[#] RETRIEVING BALANCE{Style.RESET_ALL}")
                     all_balance = op.balancethreading()
                     checkbalance = False
-                    time.sleep(int(d['sleep_balance']))
                 # requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
-                res_trt = json.loads(stack.pop()
-                                     .replace('orderbook', '"orderbook"')
-                                     .replace('BTCEUR', '1')
-                                     .replace('event', '"event"')
-                                     .replace('data', '"data"')
-                                     .replace('channel', '"channel"')
-                                     .replace('=', ':'))['data']
-                res_bnb = await tscm.recv()
+                try:
+                    res_trt = json.loads(stack.pop()
+                                         .replace('orderbook', '"orderbook"')
+                                         .replace('BTCEUR', '1')
+                                         .replace('event', '"event"')
+                                         .replace('data', '"data"')
+                                         .replace('channel', '"channel"')
+                                         .replace('=', ':'))['data']
+                    res_bnb = await tscm.recv()
+                except Exception as err:
+                    print(err)
 
                 _query_time = time.time() - _query_time
                 try:
