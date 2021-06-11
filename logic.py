@@ -8,13 +8,15 @@ import sys
 import threading
 import time
 from multiprocessing import Process
-from binance import AsyncClient, BinanceSocketManager
-
+import subprocess
+from pusher import pusher_client
+from py4j.java_gateway import JavaGateway,GatewayParameters
 import gnupg
 import mysql.connector
 import pandas
 import requests
 import yaml
+from binance import AsyncClient, BinanceSocketManager
 from colorama import Fore
 from colorama import Style
 from openpyxl import load_workbook
@@ -25,6 +27,7 @@ from hype import Hype
 from trade import Operation
 
 _print_list = []
+
 
 async def arbo():
     d = {}
@@ -151,11 +154,15 @@ async def arbo():
         log("ERR", err)
         pass
     q_act = queue.Queue()
+    p = subprocess.Popen("screen -S javatrt java -jar wss_trt_jar.jar "+d['trt_xauth'], shell=True)
+    time.sleep(2)
     t_action = threading.Thread(target=getaction, args=(q_act,))
     t_action.start()
     client = await AsyncClient.create()
     bm = BinanceSocketManager(client)
     ds = bm.depth_socket('BTCEUR', depth=BinanceSocketManager.WEBSOCKET_DEPTH_5, interval=100)
+    gateway = JavaGateway(gateway_parameters=GatewayParameters(port=45618))
+    stack = gateway.entry_point.getStack()
     already_saved = False
     only_see = bool(int(d["only_see"]))
     this_sec = str(int(time.time()))[-4:]
@@ -173,25 +180,31 @@ async def arbo():
                     all_balance = op.balancethreading()
                     checkbalance = False
                     time.sleep(int(d['sleep_balance']))
-                price_dict = op.querythread()
-                #requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
+                # requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
+                res_trt=json.loads(stack.pop()
+                           .replace('orderbook', '"orderbook"')
+                           .replace('BTCEUR', '1')
+                           .replace('event', '"event"')
+                           .replace('data', '"data"')
+                           .replace('channel', '"channel"')
+                           .replace('=', ':'))['data']
+                res_bnb = await tscm.recv()
 
-                res = await tscm.recv()
                 _query_time = time.time() - _query_time
                 try:
-                    asks_data_bnb = res['asks'][0]
-                    bids_data_bnb = res['bids'][0]
-                    asks_data_trt = price_dict["trt"]['asks'][0]
-                    bids_data_trt = price_dict["trt"]['bids'][0]
+                    asks_data_bnb = res_bnb['asks'][0]
+                    bids_data_bnb = res_bnb['bids'][0]
+                    asks_data_trt = res_trt['asks'][0]
+                    bids_data_trt = res_trt['bids'][0]
                 except TypeError as err:
                     print(f"{Fore.RED}[#] ERROR WHILE FETCHING DATA [typeError - nonetype]{Style.RESET_ALL}")
                     log("ERR", err)
                     continue
                 asks = bids = {}
-                asks['bnb'] = round(float(res['asks'][0][0]), 2)
-                bids['bnb'] = round(float(res['bids'][0][0]), 2)
-                asks['trt'] = round(float(price_dict["trt"]['asks'][0]['price']), 2)
-                bids['trt'] = round(float(price_dict["trt"]['bids'][0]['price']), 2)
+                asks['bnb'] = round(float(res_bnb['asks'][0][0]), 2)
+                bids['bnb'] = round(float(res_bnb['bids'][0][0]), 2)
+                asks['trt'] = round(float(res_trt["trt"]['asks'][0]['price']), 2)
+                bids['trt'] = round(float(res_trt["trt"]['bids'][0]['price']), 2)
                 last_bid = 0
                 last_ask = 0
                 depth = 0
@@ -218,7 +231,7 @@ async def arbo():
                 print(
                     f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}\tINDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}\tTHREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}\tONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}\tPERF: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL} cycles/s\tREQUESTS: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}/1200" % (
                         a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), only_see,
-                        actual,int(op.get_requests_used())))
+                        actual, int(op.get_requests_used())))
                 next_one = False
                 for exchange_a in exchange_list:
                     for exchange_b in exchange_list:
@@ -237,7 +250,8 @@ async def arbo():
                     exchange_list[0].upper(), maker_fee['trt'] * 100, exchange_list[1].upper(), maker_fee['bnb'] * 100))
                 print("[i] BALANCE SCORE: %.4f" % (
                     balance_score["eur"]))
-                if (bids['trt'] * (1 - taker_fee['trt'])) - (asks['bnb'] * (1 + taker_fee['bnb'])) > int(d["threshold"]):
+                if (bids['trt'] * (1 - taker_fee['trt'])) - (asks['bnb'] * (1 + taker_fee['bnb'])) > int(
+                        d["threshold"]):
                     low_balance = False
                     print(f"{Fore.CYAN}[#] %.2f < %.2f BUY %s | SELL TRT DIFF: %.2f (MENO FEE): %.3f" % (
                         asks['bnb'], bids['trt'], exchange_list[1].upper(), bids['trt'] - asks['bnb'],
@@ -272,7 +286,8 @@ async def arbo():
                             print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
                             print(f"{Fore.YELLOW}[H] SELL %f BTC ON TRT, BUYING %f (%f) BTC ON BNB{Style.RESET_ALL}" % (
                                 depth, depth, depth * last_ask))
-                            resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, last_bid, "buy", "bnb", "BTCEUR",
+                            resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, last_bid, "buy", "bnb",
+                                                          "BTCEUR",
                                                           depth,
                                                           last_ask)
                             print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
@@ -282,7 +297,8 @@ async def arbo():
                             except KeyError as err:
                                 print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
                                 status = (resp_dict["bnb"]["status"], resp_dict["trt"]["errors"][0]["message"])
-                                log("ERR", str(resp_dict["bnb"]["status"]) + str(resp_dict["trt"]["errors"][0]["message"]))
+                                log("ERR",
+                                    str(resp_dict["bnb"]["status"]) + str(resp_dict["trt"]["errors"][0]["message"]))
                                 log("ERR", err)
                             if status[0] == "ERROR" or status[1] == "ERROR":
                                 print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
@@ -295,7 +311,8 @@ async def arbo():
                                 bal_list = True
                                 time.sleep(int(d["sleep_check_order"]))
                                 _trade_list.append(
-                                    [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", exchange_list[1].upper(),
+                                    [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY",
+                                     exchange_list[1].upper(),
                                      str(depth).replace(",", "."),
                                      str(last_ask).replace(".", ","),
                                      "SELL", "TRT", str(last_bid).replace(".", ","), float(all_balance["bnbbtc"]),
@@ -309,7 +326,8 @@ async def arbo():
                     else:
                         print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
                         checkbalance = True
-                elif (bids['bnb'] * (1 - taker_fee['bnb'])) - (asks['trt'] * (1 + taker_fee['trt'])) > int(d["threshold"]):
+                elif (bids['bnb'] * (1 - taker_fee['bnb'])) - (asks['trt'] * (1 + taker_fee['trt'])) > int(
+                        d["threshold"]):
                     low_balance = False
                     depth = float(min(asks_data_trt['amount'],
                                       float(bids_data_bnb[1])))
@@ -354,7 +372,8 @@ async def arbo():
                             except KeyError as err:
                                 print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
                                 status = (resp_dict["bnb"]["status"], resp_dict["trt"]["errors"][0]["message"])
-                                log("ERR", str(resp_dict["bnb"]["status"]) + str(resp_dict["trt"]["errors"][0]["message"]))
+                                log("ERR",
+                                    str(resp_dict["bnb"]["status"]) + str(resp_dict["trt"]["errors"][0]["message"]))
                                 log("ERR", err)
                             if status[0] == "ERROR" or status[1] == "ERROR":
                                 print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
@@ -376,7 +395,8 @@ async def arbo():
                                      float(all_balance["trtbtc"]),
                                      float(all_balance["bnbeur"]), float(all_balance["trteur"]),
                                      float(all_balance["trteur"] + all_balance["bnbeur"] + (
-                                             all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask), resp_dict["bnb"],
+                                             all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask),
+                                     resp_dict["bnb"],
                                      resp_dict["trt"]])
                     else:
                         print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
@@ -388,10 +408,12 @@ async def arbo():
                 time_list.append(int(totaltime * 1000))
                 _list.append([datetime.datetime.now(), asks['bnb'], bids['bnb'], asks['trt'], bids['trt'],
                               all_balance["bnbbtc"], all_balance["trtbtc"], all_balance["bnbeur"],
-                              all_balance["trteur"], eff, prod, int(totaltime * 1000), round(bids['trt'] - asks['bnb'], 2),
+                              all_balance["trteur"], eff, prod, int(totaltime * 1000),
+                              round(bids['trt'] - asks['bnb'], 2),
                               round((bids['trt'] * (1 - taker_fee['trt'])) - (asks['bnb'] * (1 + taker_fee['bnb'])), 2),
                               round(bids['bnb'] - asks['trt'], 2),
-                              round((bids['bnb'] * (1 - taker_fee['bnb'])) - (asks['trt'] * (1 + taker_fee['trt'])), 2)])
+                              round((bids['bnb'] * (1 - taker_fee['bnb'])) - (asks['trt'] * (1 + taker_fee['trt'])),
+                                    2)])
                 if int(_end_time % int(d["save_interval"])) == 0 and not already_saved:
                     print(f"{Fore.YELLOW}[!] SAVING...{Style.RESET_ALL}")
                     if _list:
