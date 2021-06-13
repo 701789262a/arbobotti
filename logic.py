@@ -161,7 +161,7 @@ async def arbo():
     t_action.start()
     client = await AsyncClient.create()
     bm = BinanceSocketManager(client)
-    ds = bm.depth_socket('BTCEUR', depth=BinanceSocketManager.WEBSOCKET_DEPTH_5, interval=100)
+    ds = bm.symbol_book_ticker_socket('BTCEUR')
     gateway = JavaGateway(gateway_parameters=GatewayParameters(port=45618))
     stack = gateway.entry_point.getStack()
     already_saved = False
@@ -195,8 +195,8 @@ async def arbo():
 
                 _query_time = time.time() - _query_time
                 try:
-                    asks_data_bnb = res_bnb['asks'][0]
-                    bids_data_bnb = res_bnb['bids'][0]
+                    asks_data_bnb = res_bnb['A']
+                    bids_data_bnb = res_bnb['B']
                     asks_data_trt = res_trt['asks'][0]
                     bids_data_trt = res_trt['bids'][0]
                 except TypeError as err:
@@ -205,8 +205,8 @@ async def arbo():
                     continue
                 asks = {}
                 bids = {}
-                asks['bnb'] = round(float(res_bnb['asks'][0][0]), 2)
-                bids['bnb'] = round(float(res_bnb['bids'][0][0]), 2)
+                asks['bnb'] = round(float(res_bnb['a']), 2)
+                bids['bnb'] = round(float(res_bnb['b']), 2)
                 asks['trt'] = round(float(res_trt['asks'][0]['price']), 2)
                 bids['trt'] = round(float(res_trt['bids'][0]['price']), 2)
                 last_bid = 0
@@ -262,7 +262,7 @@ async def arbo():
                         asks['bnb'], bids['trt'], exchange_list[1].upper(), bids['trt'] - asks['bnb'],
                         (bids['trt'] * (1 + taker_fee['trt'])) - (asks['bnb'] * (1 + taker_fee['bnb']))))
                     depth = float(min(bids_data_trt['amount'],
-                                      float(asks_data_bnb[1])))
+                                      float(asks_data_bnb)))
                     balance = min(all_balance["trtbtc"], all_balance["bnbeur"] / asks['bnb'])
                     if balance < depth:
                         depth = round(float(balance * float(d["max_each_trade"])), 4)
@@ -335,7 +335,7 @@ async def arbo():
                         d["threshold"]):
                     low_balance = False
                     depth = float(min(asks_data_trt['amount'],
-                                      float(bids_data_bnb[1])))
+                                      float(bids_data_bnb)))
                     balance = min(all_balance["bnbbtc"], all_balance["trteur"] / asks['trt'])
                     print(
                         f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f | DEPTH: %.8f | MINBAL: %.8f{Style.RESET_ALL}" % (
