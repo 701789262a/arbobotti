@@ -38,33 +38,10 @@ class Operation:
         self.exchange_list = exchange_list
         self.client = Client(self.apikey_bnb, self.secret_bnb)
         self.trt = []
-        self.prtrt = []
         self.bnb = []
-        self.prbnb = []
         self.len = 0
         self.requests_used = 0
 
-    def thread_func(self):
-        while (1):
-            if len(self.prtrt) < 200:
-                tr = Thread(target=lambda q, arg1, arg2, arg3: q.put(self.__query(arg1, arg2, arg3)),
-                            args=(q1, "trt", self.apikey_trt, self.secret_trt))
-                self.prtrt.append(tr)
-                bn = Thread(target=lambda q, arg1, arg2, arg3: q.put(self.__query(arg1, arg2, arg3)),
-                            args=(q2, "bnb", self.apikey_bnb, self.secret_bnb))
-                self.prbnb.append(bn)
-            else:
-                time.sleep(1)
-                if len(self.trt) < 25:
-                    self.bnb = self.bnb + self.prbnb
-                    self.trt = self.trt + self.prtrt
-                    self.prtrt.clear()
-                    self.prbnb.clear()
-                    time.sleep(30)
-
-    def threadCreation(self):
-        x = Thread(target=self.thread_func)
-        x.start()
 
     def __trade(self, exchange, fund_id, side, amount, price):
         nonce = str(int(time.time() * 1e6))
@@ -372,54 +349,3 @@ class Operation:
         except json.decoder.JSONDecodeError:
             print(f"{Fore.RED}[ERR] ERROR WHILE CONVERTING TO JSON [expecting value]{Style.RESET_ALL}")
 
-    def __query(self, exchange, apikey, secret):
-        if exchange == "trt":
-            self.trt.pop(1)
-            try:
-                resp_trt = requests.get('https://api.therocktrading.com/v1/funds/BTCEUR/orderbook?limit=1')
-                return json.loads(resp_trt.text)
-            except requests.exceptions.ConnectionError:
-                print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
-            except json.decoder.JSONDecodeError:
-                print(f"{Fore.RED}[ERR] ERROR WHILE CONVERTING TO JSON [expecting value]{Style.RESET_ALL}")
-        elif exchange == "krk":
-            resp_krk = requests.get('https://api.kraken.com/0/public/Depth')  # , params=params)
-            return resp_krk.text
-        elif exchange == "bnb":
-            self.bnb.pop(1)
-            try:
-                resp_bnb = self.client.get_order_book(symbol="BTCEUR", limit=5)
-                return resp_bnb
-            except requests.exceptions.ConnectionError:
-                print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
-            except requests.exceptions.ReadTimeout:
-                print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
-            except binance.exceptions.BinanceAPIException:
-                print(f"{Fore.RED}[ERR] CHECK INTERNET CONNECTION{Style.RESET_ALL}")
-
-    def querythread(self):
-        d = dict()
-        if "trt" in self.exchange_list:
-            self.len = len(self.trt)
-            trt_thread = self.trt[1]
-            trt_thread.start()
-
-        if "bnb" in self.exchange_list:
-            bnb_thread = self.bnb[1]
-            bnb_thread.start()
-
-        try:
-            trt_thread.join()
-            d["trt"] = q1.get()
-        except:
-            pass
-        try:
-            bnb_thread.join()
-            d["bnb"] = q2.get()
-        except:
-            pass
-
-        return d
-
-    def get_requests_used(self):
-        return self.requests_used

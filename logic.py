@@ -123,7 +123,6 @@ async def arbo():
     while not check_api_connection():
         time.sleep(1)
     op = Operation(trt_apikey, trt_secret, krk_apikey, krk_secret, bnb_apikey, bnb_secret, exchange_list)
-    op.threadCreation()
     time.sleep(2)
     taker_fee, maker_fee = dict(), dict()
     taker_fee['trt'] = float(d["taker_fee_trt"])
@@ -155,7 +154,7 @@ async def arbo():
         log("ERR", err)
         pass
     q_act = queue.Queue()
-    p = subprocess.Popen("java -jar wss_trt_jar.jar " + d['trt_xauth'], shell=True)
+    p = subprocess.Popen("screen -S wsstrt java -jar wss_trt_jar.jar " + d['trt_xauth'], shell=True)
     time.sleep(2)
     t_action = threading.Thread(target=getaction, args=(q_act,))
     t_action.start()
@@ -234,9 +233,9 @@ async def arbo():
                         all_balance["trtbtc"] + all_balance["bnbbtc"])
                 print(f"{Fore.MAGENTA}[!] ARBOBOTTI VERSION %s, MURINEDDU CAPITAL 2021{Style.RESET_ALL}\n" % (ver))
                 print(
-                    f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}\tINDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}\tTHREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}\tONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}\tPERF: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL} cycles/s\tREQUESTS: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}/1200" % (
+                    f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}\tINDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}\tTHREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}\tONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}\tPERF: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL} cycles/s" % (
                         a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), only_see,
-                        actual, int(op.get_requests_used())))
+                        actual))
                 next_one = False
                 if d['general_output']:
                     for exchange_a in exchange_list:
