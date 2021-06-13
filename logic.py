@@ -172,6 +172,7 @@ async def arbo():
     async with ds as tscm:
         while True:
             _start_time = time.time()
+            time.sleep(d['sleep_query'])
             _query_time = time.time()
             eff = 0
             prod = 0
