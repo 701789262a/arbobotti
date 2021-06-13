@@ -154,10 +154,11 @@ async def arbo():
         log("ERR", err)
         pass
     q_act = queue.Queue()
-    p = subprocess.Popen("screen -S wsstrt java -jar wss_trt_jar.jar " + d['trt_xauth'], shell=True)
+    p = subprocess.Popen("java -jar wss_trt_jar.jar " + d['trt_xauth'], shell=True)
     time.sleep(2)
-    t_action = threading.Thread(target=getaction, args=(q_act,))
-    t_action.start()
+
+    #t_action = threading.Thread(target=getaction, args=(q_act,))
+    #t_action.start()
     client = await AsyncClient.create()
     bm = BinanceSocketManager(client)
     ds = bm.symbol_book_ticker_socket('BTCEUR')
@@ -438,7 +439,7 @@ async def arbo():
                             pass
                             try:
                                 s.close()
-                                s.connect((ip_mon, 30630))
+                                #s.connect((ip_mon, 30630))
                             except ConnectionRefusedError as err:
                                 print(err)
                                 log("ERR", err)
