@@ -11,7 +11,7 @@ import threading
 import time
 from contextlib import contextmanager
 from multiprocessing import Process
-
+from func_timeout import func_timeout, FunctionTimedOut
 import gnupg
 import mysql.connector
 import pandas
@@ -194,7 +194,8 @@ async def arbo():
                                              .replace('data', '"data"')
                                              .replace('channel', '"channel"')
                                              .replace('=', ':'))['data']
-                        res_bnb = await tscm.recv()
+                        res_bnb = await func_timeout(1, tscm.recv())
+
                 except TimeoutError:
                     print('boh')
                     exit(90)
