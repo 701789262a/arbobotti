@@ -8,23 +8,20 @@ import socket
 import subprocess
 import sys
 import threading
-from multiprocessing import Process, Queue
-
 import time
 from contextlib import contextmanager
 from multiprocessing import Process
-from func_timeout import func_timeout, FunctionTimedOut
+
 import gnupg
 import mysql.connector
 import pandas
 import requests
 import yaml
-from binance import AsyncClient
-from binance import BinanceSocketManager
 from colorama import Fore
 from colorama import Style
 from openpyxl import load_workbook
 from py4j.java_gateway import JavaGateway, GatewayParameters
+from unicorn_binance_websocket_api.unicorn_binance_websocket_api_manager import BinanceWebSocketApiManager
 
 import banking
 import data_visual
@@ -160,12 +157,8 @@ async def arbo():
     q_act = queue.Queue()
     p = subprocess.Popen("java -jar wss_trt_jar.jar " + d['trt_xauth'], shell=True)
     time.sleep(2)
-
-    # t_action = threading.Thread(target=getaction, args=(q_act,))
-    # t_action.start()
-    client = await AsyncClient.create()
-    bm = BinanceSocketManager(client)
-    ds = bm.symbol_book_ticker_socket('BTCEUR')
+    binance_websocket_api_manager = BinanceWebSocketApiManager(exchange="binance.com")
+    binance_websocket_api_manager.create_stream(['bookTicker'], ['btceur'])
     gateway = JavaGateway(gateway_parameters=GatewayParameters(port=45618))
     stack = gateway.entry_point.getStack()
     already_saved = False
@@ -173,334 +166,327 @@ async def arbo():
     this_sec = str(int(time.time()))[-4:]
     count = 0
     actual = 0
-    async with ds as tscm:
-        while True:
-            _start_time = time.time()
-            time.sleep(d['sleep_query'])
-            _query_time = time.time()
-            eff = 0
-            prod = 0
+    while True:
+        _start_time = time.time()
+        time.sleep(d['sleep_query'])
+        _query_time = time.time()
+        eff = 0
+        prod = 0
+        try:
+            if checkbalance:
+                print(f"{Fore.YELLOW}[#] RETRIEVING BALANCE{Style.RESET_ALL}")
+                all_balance = op.balancethreading()
+                checkbalance = False
+            # requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
+            res_trt = json.loads(stack.pop()
+                                 .replace('orderbook', '"orderbook"')
+                                 .replace('BTCEUR', '1')
+                                 .replace('event', '"event"')
+                                 .replace('data', '"data"')
+                                 .replace('channel', '"channel"')
+                                 .replace('=', ':'))['data']
+            res_bnb = binance_websocket_api_manager.pop_stream_data_from_stream_buffer()
+            _query_time = time.time() - _query_time
             try:
-                if checkbalance:
-                    print(f"{Fore.YELLOW}[#] RETRIEVING BALANCE{Style.RESET_ALL}")
-                    all_balance = op.balancethreading()
-                    checkbalance = False
-                # requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
-
-                try:
-                    res_trt = json.loads(stack.pop()
-                                             .replace('orderbook', '"orderbook"')
-                                             .replace('BTCEUR', '1')
-                                             .replace('event', '"event"')
-                                             .replace('data', '"data"')
-                                             .replace('channel', '"channel"')
-                                             .replace('=', ':'))['data']
-                    res_bnb = await wss_bnb(tscm)
-
-                except TimeoutError:
-                    print('boh')
-                    exit(90)
-                _query_time = time.time() - _query_time
-                try:
-                    asks_data_bnb = res_bnb['A']
-                    bids_data_bnb = res_bnb['B']
-                    asks_data_trt = res_trt['asks'][0]
-                    bids_data_trt = res_trt['bids'][0]
-                except TypeError as err:
-                    print(f"{Fore.RED}[#] ERROR WHILE FETCHING DATA [typeError - nonetype]{Style.RESET_ALL}")
-                    log("ERR", err)
-                    continue
-                asks = {}
-                bids = {}
-                asks['bnb'] = round(float(res_bnb['a']), 2)
-                bids['bnb'] = round(float(res_bnb['b']), 2)
-                asks['trt'] = round(float(res_trt['asks'][0]['price']), 2)
-                bids['trt'] = round(float(res_trt['bids'][0]['price']), 2)
-                last_bid = 0
-                last_ask = 0
-                depth = 0
-                bal_list = False
-                if not q_act.empty():
-                    action = last(q_act)
-                    if action == "STOP" and not only_see:
-                        only_see = True
-                    elif action == "GO" and only_see:
-                        only_see = False
-                os.system('cls' if os.name == 'nt' else 'clear')
-                a = datetime.datetime.now()
-                if not str(a.microsecond)[:-5]:
-                    small_index = 0
-                else:
-                    small_index = str(a.microsecond)[:-5]
-                _trade_list.clear()
-                balance_score = dict()
-                balance_score["eur"] = (all_balance["trteur"] - all_balance["bnbeur"]) / (
-                        all_balance["trteur"] + all_balance["bnbeur"])
-                balance_score["btc"] = (all_balance["trtbtc"] - all_balance["bnbbtc"]) / (
-                        all_balance["trtbtc"] + all_balance["bnbbtc"])
-                print(f"{Fore.MAGENTA}[!] ARBOBOTTI VERSION %s, MURINEDDU CAPITAL 2021{Style.RESET_ALL}\n" % (ver))
-                print(
-                    f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}\tINDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}\tTHREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}\tONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}\tPERF: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL} cycles/s" % (
-                        a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), only_see,
-                        actual))
-                next_one = False
-                try:
-                    if d['general_output']:
-                        for exchange_a in exchange_list:
-                            for exchange_b in exchange_list:
-                                if exchange_a == exchange_b:
-                                    next_one = True
-                                    continue
-                                if next_one:
-                                    # info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee, maker_fee=None)
-                                    info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee)
-                            next_one = False
-                        # info('trt', 'bnb', all_balance, asks, bids, taker_fee)
-
-                        print("[i] FETCHED TAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
-                            exchange_list[0].upper(), taker_fee['trt'] * 100, exchange_list[1].upper(),
-                            taker_fee['bnb'] * 100))
-                        print("[i] FETCHED MAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
-                            exchange_list[0].upper(), maker_fee['trt'] * 100, exchange_list[1].upper(),
-                            maker_fee['bnb'] * 100))
-                        print("[i] BALANCE SCORE: %.4f" % (
-                            balance_score["eur"]))
-                except Exception as err:
-                    log('ERR', err)
-                    print(err)
-                if (bids['trt'] * (1 - taker_fee['trt'])) - (asks['bnb'] * (1 + taker_fee['bnb'])) > int(
-                        d["threshold"]):
-                    low_balance = False
-                    print(f"{Fore.CYAN}[#] %.2f < %.2f BUY %s | SELL TRT DIFF: %.2f (MENO FEE): %.3f" % (
-                        asks['bnb'], bids['trt'], exchange_list[1].upper(), bids['trt'] - asks['bnb'],
-                        (bids['trt'] * (1 + taker_fee['trt'])) - (asks['bnb'] * (1 + taker_fee['bnb']))))
-                    depth = float(min(bids_data_trt['amount'],
-                                      float(asks_data_bnb)))
-                    balance = min(all_balance["trtbtc"], all_balance["bnbeur"] / asks['bnb'])
-                    if balance < depth:
-                        depth = round(float(balance * float(d["max_each_trade"])), 4)
-                        print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
-                        print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
-
-                        if depth == 0:
-                            print(f"{Fore.RED}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
-                            low_balance = True
-                    else:
-                        print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
-                        depth = round(float(depth * float(d["max_each_trade"])), 4)
-                        print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % depth)
-
-                    if not low_balance and depth > float(d["min_balance"]):
-                        print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
-                        eff = (depth * bids['trt'] * (1 - taker_fee['trt'])) - (
-                                depth * asks['bnb'] * (1 + taker_fee['bnb']))
-                        prod = eff / (depth * bids['trt'])
-                        print("[#] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
-                        print(f"[#] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks['bnb'] * depth, depth))
-                        last_ask = asks['bnb']
-                        last_bid = bids['trt']
-                        if prod * 100 > float(d["prod_threshold"]) and not only_see:
-                            checkbalance = True
-                            print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
-                            print(f"{Fore.YELLOW}[H] SELL %f BTC ON TRT, BUYING %f (%f) BTC ON BNB{Style.RESET_ALL}" % (
-                                depth, depth, depth * last_ask))
-                            resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, last_bid, "buy", "bnb",
-                                                          "BTCEUR",
-                                                          depth,
-                                                          last_ask)
-                            print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
-                            log("TRADE", "BNB" + str(resp_dict["bnb"]) + "\nTRT" + str(resp_dict["trt"]))
-                            try:
-                                status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
-                            except KeyError as err:
-                                print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
-                                status = (resp_dict["bnb"]["status"], resp_dict["trt"]["errors"][0]["message"])
-                                log("ERR",
-                                    str(resp_dict["bnb"]["status"]) + str(resp_dict["trt"]["errors"][0]["message"]))
-                                log("ERR", err)
-                            if status[0] == "ERROR" or status[1] == "ERROR":
-                                print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
-                                    resp_dict["trt"][0].upper(), resp_dict["bnb"]))
-                                log("ERROR", str(resp_dict["trt"][0].upper()) + str(resp_dict["bnb"]))
-                                time.sleep(0)
-                            else:
-                                print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER STATUS:[%s, %s]{Style.RESET_ALL}" % (
-                                    resp_dict["trt"]["status"].upper(), resp_dict["bnb"]["status"]))
-                                bal_list = True
-                                time.sleep(int(d["sleep_check_order"]))
-                                _trade_list.append(
-                                    [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY",
-                                     exchange_list[1].upper(),
-                                     str(depth).replace(",", "."),
-                                     str(last_ask).replace(".", ","),
-                                     "SELL", "TRT", str(last_bid).replace(".", ","), float(all_balance["bnbbtc"]),
-                                     float(all_balance["trtbtc"]),
-                                     float(all_balance["bnbeur"]), float(all_balance["trteur"]),
-                                     float(all_balance["trteur"] + all_balance["bnbeur"] + (
-                                             all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask)])
-                                pass
-                                # EXECUTED OR SUCCESS
-                                # IF BOTH ORDER ARE NOT COMPLETED, DELETE ORDER
-                    else:
-                        print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
-                        checkbalance = True
-                elif (bids['bnb'] * (1 - taker_fee['bnb'])) - (asks['trt'] * (1 + taker_fee['trt'])) > int(
-                        d["threshold"]):
-                    low_balance = False
-                    depth = float(min(asks_data_trt['amount'],
-                                      float(bids_data_bnb)))
-                    balance = min(all_balance["bnbbtc"], all_balance["trteur"] / asks['trt'])
-                    print(
-                        f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f | DEPTH: %.8f | MINBAL: %.8f{Style.RESET_ALL}" % (
-                            asks['trt'], bids['bnb'], exchange_list[1].upper(), bids['bnb'] - asks['trt'],
-                            (bids['bnb'] * (1 + taker_fee['bnb'])) - (asks['trt'] * (1 + taker_fee['trt'])), depth,
-                            balance))
-                    if balance < depth:
-                        depth = round(float(balance * float(d["max_each_trade"])), 4)
-                        print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
-                        print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
-                        if depth == 0:
-                            print(f"{Fore.MAGENTA}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
-                            low_balance = True
-                    else:
-                        print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
-                        depth = round(float(depth * float(d["max_each_trade"])), 4)
-                        print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
-
-                    if not low_balance and (depth > float(d["min_balance"])):
-                        print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
-                        eff = (depth * bids['bnb'] * (1 - taker_fee['bnb'])) - (
-                                depth * asks['trt'] * (1 + taker_fee['trt']))
-                        prod = eff / (depth * bids['bnb'])
-                        print("[i] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
-                        print(f"[i] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks['trt'] * depth, depth))
-                        last_ask = asks['trt']
-                        last_bid = bids['bnb']
-                        if prod * 100 > float(d["prod_threshold"]) and not only_see:
-                            checkbalance = True
-                            print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
-                            print(f"{Fore.YELLOW}[H] SELL %f BTC ON BNB, BUYING %f (%f) BTC ON TRT{Style.RESET_ALL}" % (
-                                depth, depth, depth * last_ask))
-                            resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
-                                                          "sell", exchange_list[1], "BTCEUR", depth, last_bid)
-                            print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
-                            log("TRADE", "BNB" + str(resp_dict["bnb"]) + "\nTRT" + str(resp_dict["trt"]))
-                            try:
-                                status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
-                            except KeyError as err:
-                                print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
-                                status = (resp_dict["bnb"]["status"], resp_dict["trt"]["errors"][0]["message"])
-                                log("ERR",
-                                    str(resp_dict["bnb"]["status"]) + str(resp_dict["trt"]["errors"][0]["message"]))
-                                log("ERR", err)
-                            if status[0] == "ERROR" or status[1] == "ERROR":
-                                print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
-                                    resp_dict["trt"][0].upper(), resp_dict["bnb"]))
-                                log("ERROR", str(resp_dict["trt"][0].upper()) + (resp_dict["bnb"]))
-                                time.sleep(0)
-                                pass
-                                # TODO: IMPROVE ERROR CHECK
-                            else:
-                                print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
-                                    resp_dict["trt"]["status"].upper(), resp_dict["bnb"]["status"]))
-                                bal_list = True
-                                time.sleep(int(d["sleep_check_order"]))
-                                _trade_list.append(
-                                    [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", "TRT",
-                                     str(depth).replace(".", ","), str(last_ask).replace(".", ","),
-                                     "SELL", exchange_list[1].upper(), str(last_bid).replace(".", ","),
-                                     float(all_balance["bnbbtc"]),
-                                     float(all_balance["trtbtc"]),
-                                     float(all_balance["bnbeur"]), float(all_balance["trteur"]),
-                                     float(all_balance["trteur"] + all_balance["bnbeur"] + (
-                                             all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask),
-                                     resp_dict["bnb"],
-                                     resp_dict["trt"]])
-                    else:
-                        print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
-                        checkbalance = True
-
-                # TODO:GROUP THE TWO CHECK FUNCTION TOGETHER (SIMPLER CODE AND UPDATE)
-                _end_time = time.time()
-                totaltime = _end_time - _start_time
-                time_list.append(int(totaltime * 1000))
-                _list.append([datetime.datetime.now(), asks['bnb'], bids['bnb'], asks['trt'], bids['trt'],
-                              all_balance["bnbbtc"], all_balance["trtbtc"], all_balance["bnbeur"],
-                              all_balance["trteur"], eff, prod, int(totaltime * 1000),
-                              round(bids['trt'] - asks['bnb'], 2),
-                              round((bids['trt'] * (1 - taker_fee['trt'])) - (asks['bnb'] * (1 + taker_fee['bnb'])), 2),
-                              round(bids['bnb'] - asks['trt'], 2),
-                              round((bids['bnb'] * (1 - taker_fee['bnb'])) - (asks['trt'] * (1 + taker_fee['trt'])),
-                                    2)])
-                if int(_end_time % int(d["save_interval"])) == 0 and not already_saved:
-                    print(f"{Fore.YELLOW}[!] SAVING...{Style.RESET_ALL}")
-                    if _list:
-                        save_data_thread = threading.Thread(target=save_data, args=(_list, d["sep"],))
-                        save_data_thread.start()
-                        already_saved = True
-                        try:
-                            data = arbomonitor(s, only_see, last_h, d["name"])
-                            if data == "go":
-                                only_see = True
-                            if "command" in data:
-                                os.system("cd " + dir_path)
-                                os.system("cd " + dir_path + " && " + data.split(":")[1])
-                        except Exception as errr:
-                            print(errr)
-                            log("ERR", errr)
-                            pass
-                            try:
-                                s.close()
-                                # s.connect((ip_mon, 30630))
-                            except ConnectionRefusedError as err:
-                                print(err)
-                                log("ERR", err)
-                                pass
-                            except socket.gaierror as err:
-                                print(err)
-                                log("ERR", err)
-                                pass
-                            except Exception as err:
-                                print(err)
-                                log("ERR", err)
-                                pass
-                            except TimeoutError as err:
-                                print(err)
-                                log("ERR", err)
-                                pass
-                if int(str(int(_end_time))[-1]) > 1:
-                    already_saved = False
-                if _trade_list:
-                    all_balance = op.balancethreading()
-                    time.sleep(int(d['sleep_balance']))
-                    _trade_list.append(
-                        ["", "", "", "", "", "", "", "", float(all_balance["bnbbtc"]), float(all_balance["trtbtc"]),
-                         float(all_balance["bnbeur"]),
-                         float(all_balance["trteur"]),
-                         ((all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask) +
-                         float(all_balance["bnbeur"]) +
-                         float(all_balance["trteur"])])
-                    print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
-                    save_trade_thread = threading.Thread(target=save_trade,
-                                                         args=(_trade_list, d["sep"], db_data, tg_data, d['name']))
-                    save_trade_thread.start()
-                    save_trade_thread.join()
-                    _trade_list.clear()
-                if str(int(time.time()))[-4:] == this_sec:
-                    count += 1
-                else:
-                    actual = count
-                    this_sec = str(int(time.time()))[-4:]
-                    count = 0
-                last_h = sum(time_list[-100:]) / min(100, len(time_list))
-                print(
-                    f"[-] ------------------------------------------------- {Fore.YELLOW}%d ms{Style.RESET_ALL} (%d ms(q) + %d ms(p)) - avg last %d ({Fore.YELLOW}%d ms{Style.RESET_ALL}) - global avg ({Fore.YELLOW}%d ms{Style.RESET_ALL})" % (
-                        int(totaltime * 1000), int(_query_time * 1000),
-                        (int(totaltime * 1000) - int(_query_time * 1000)), min(100, len(time_list)),
-                        sum(time_list[-100:]) / min(100, len(time_list)), sum(time_list) / len(time_list)))
-            except KeyboardInterrupt as err:
+                asks_data_bnb = res_bnb['A']
+                bids_data_bnb = res_bnb['B']
+                asks_data_trt = res_trt['asks'][0]
+                bids_data_trt = res_trt['bids'][0]
+            except TypeError as err:
+                print(f"{Fore.RED}[#] ERROR WHILE FETCHING DATA [typeError - nonetype]{Style.RESET_ALL}")
                 log("ERR", err)
-                sys.exit()
+                continue
+            asks = {}
+            bids = {}
+            asks['bnb'] = round(float(res_bnb['a']), 2)
+            bids['bnb'] = round(float(res_bnb['b']), 2)
+            asks['trt'] = round(float(res_trt['asks'][0]['price']), 2)
+            bids['trt'] = round(float(res_trt['bids'][0]['price']), 2)
+            last_bid = 0
+            last_ask = 0
+            depth = 0
+            bal_list = False
+            if not q_act.empty():
+                action = last(q_act)
+                if action == "STOP" and not only_see:
+                    only_see = True
+                elif action == "GO" and only_see:
+                    only_see = False
+            os.system('cls' if os.name == 'nt' else 'clear')
+            a = datetime.datetime.now()
+            if not str(a.microsecond)[:-5]:
+                small_index = 0
+            else:
+                small_index = str(a.microsecond)[:-5]
+            _trade_list.clear()
+            balance_score = dict()
+            balance_score["eur"] = (all_balance["trteur"] - all_balance["bnbeur"]) / (
+                    all_balance["trteur"] + all_balance["bnbeur"])
+            balance_score["btc"] = (all_balance["trtbtc"] - all_balance["bnbbtc"]) / (
+                    all_balance["trtbtc"] + all_balance["bnbbtc"])
+            print(f"{Fore.MAGENTA}[!] ARBOBOTTI VERSION %s, MURINEDDU CAPITAL 2021{Style.RESET_ALL}\n" % (ver))
+            print(
+                f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}\tINDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}\tTHREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}\tONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}\tPERF: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL} cycles/s" % (
+                    a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), only_see,
+                    actual))
+            next_one = False
+            try:
+                if d['general_output']:
+                    for exchange_a in exchange_list:
+                        for exchange_b in exchange_list:
+                            if exchange_a == exchange_b:
+                                next_one = True
+                                continue
+                            if next_one:
+                                # info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee, maker_fee=None)
+                                info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee)
+                        next_one = False
+                    # info('trt', 'bnb', all_balance, asks, bids, taker_fee)
+
+                    print("[i] FETCHED TAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
+                        exchange_list[0].upper(), taker_fee['trt'] * 100, exchange_list[1].upper(),
+                        taker_fee['bnb'] * 100))
+                    print("[i] FETCHED MAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
+                        exchange_list[0].upper(), maker_fee['trt'] * 100, exchange_list[1].upper(),
+                        maker_fee['bnb'] * 100))
+                    print("[i] BALANCE SCORE: %.4f" % (
+                        balance_score["eur"]))
+            except Exception as err:
+                log('ERR', err)
+                print(err)
+            if (bids['trt'] * (1 - taker_fee['trt'])) - (asks['bnb'] * (1 + taker_fee['bnb'])) > int(
+                    d["threshold"]):
+                low_balance = False
+                print(f"{Fore.CYAN}[#] %.2f < %.2f BUY %s | SELL TRT DIFF: %.2f (MENO FEE): %.3f" % (
+                    asks['bnb'], bids['trt'], exchange_list[1].upper(), bids['trt'] - asks['bnb'],
+                    (bids['trt'] * (1 + taker_fee['trt'])) - (asks['bnb'] * (1 + taker_fee['bnb']))))
+                depth = float(min(bids_data_trt['amount'],
+                                  float(asks_data_bnb)))
+                balance = min(all_balance["trtbtc"], all_balance["bnbeur"] / asks['bnb'])
+                if balance < depth:
+                    depth = round(float(balance * float(d["max_each_trade"])), 4)
+                    print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
+                    print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
+
+                    if depth == 0:
+                        print(f"{Fore.RED}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
+                        low_balance = True
+                else:
+                    print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
+                    depth = round(float(depth * float(d["max_each_trade"])), 4)
+                    print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % depth)
+
+                if not low_balance and depth > float(d["min_balance"]):
+                    print(f"{Fore.CYAN}[#] DEPTH %f BTC" % depth)
+                    eff = (depth * bids['trt'] * (1 - taker_fee['trt'])) - (
+                            depth * asks['bnb'] * (1 + taker_fee['bnb']))
+                    prod = eff / (depth * bids['trt'])
+                    print("[#] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
+                    print(f"[#] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks['bnb'] * depth, depth))
+                    last_ask = asks['bnb']
+                    last_bid = bids['trt']
+                    if prod * 100 > float(d["prod_threshold"]) and not only_see:
+                        checkbalance = True
+                        print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
+                        print(f"{Fore.YELLOW}[H] SELL %f BTC ON TRT, BUYING %f (%f) BTC ON BNB{Style.RESET_ALL}" % (
+                            depth, depth, depth * last_ask))
+                        resp_dict = op.tradethreading("sell", "trt", "BTCEUR", depth, last_bid, "buy", "bnb",
+                                                      "BTCEUR",
+                                                      depth,
+                                                      last_ask)
+                        print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
+                        log("TRADE", "BNB" + str(resp_dict["bnb"]) + "\nTRT" + str(resp_dict["trt"]))
+                        try:
+                            status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
+                        except KeyError as err:
+                            print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
+                            status = (resp_dict["bnb"]["status"], resp_dict["trt"]["errors"][0]["message"])
+                            log("ERR",
+                                str(resp_dict["bnb"]["status"]) + str(resp_dict["trt"]["errors"][0]["message"]))
+                            log("ERR", err)
+                        if status[0] == "ERROR" or status[1] == "ERROR":
+                            print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
+                                resp_dict["trt"][0].upper(), resp_dict["bnb"]))
+                            log("ERROR", str(resp_dict["trt"][0].upper()) + str(resp_dict["bnb"]))
+                            time.sleep(0)
+                        else:
+                            print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER STATUS:[%s, %s]{Style.RESET_ALL}" % (
+                                resp_dict["trt"]["status"].upper(), resp_dict["bnb"]["status"]))
+                            bal_list = True
+                            time.sleep(int(d["sleep_check_order"]))
+                            _trade_list.append(
+                                [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY",
+                                 exchange_list[1].upper(),
+                                 str(depth).replace(",", "."),
+                                 str(last_ask).replace(".", ","),
+                                 "SELL", "TRT", str(last_bid).replace(".", ","), float(all_balance["bnbbtc"]),
+                                 float(all_balance["trtbtc"]),
+                                 float(all_balance["bnbeur"]), float(all_balance["trteur"]),
+                                 float(all_balance["trteur"] + all_balance["bnbeur"] + (
+                                         all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask)])
+                            pass
+                            # EXECUTED OR SUCCESS
+                            # IF BOTH ORDER ARE NOT COMPLETED, DELETE ORDER
+                else:
+                    print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
+                    checkbalance = True
+            elif (bids['bnb'] * (1 - taker_fee['bnb'])) - (asks['trt'] * (1 + taker_fee['trt'])) > int(
+                    d["threshold"]):
+                low_balance = False
+                depth = float(min(asks_data_trt['amount'],
+                                  float(bids_data_bnb)))
+                balance = min(all_balance["bnbbtc"], all_balance["trteur"] / asks['trt'])
+                print(
+                    f"{Fore.CYAN}[!] %.2f < %.2f BUY TRT | SELL %s DIFF: %.2f (MENO FEE): %.3f | DEPTH: %.8f | MINBAL: %.8f{Style.RESET_ALL}" % (
+                        asks['trt'], bids['bnb'], exchange_list[1].upper(), bids['bnb'] - asks['trt'],
+                        (bids['bnb'] * (1 + taker_fee['bnb'])) - (asks['trt'] * (1 + taker_fee['trt'])), depth,
+                        balance))
+                if balance < depth:
+                    depth = round(float(balance * float(d["max_each_trade"])), 4)
+                    print(f"{Fore.MAGENTA}[#] PARTIAL FILLING, BALANCE LOWER THAN DEPTH{Style.RESET_ALL}")
+                    print(f"{Fore.MAGENTA}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
+                    if depth == 0:
+                        print(f"{Fore.MAGENTA}[#] BALANCE IS LOW, PLEASE DEPOSIT TO CONTINUE{Style.RESET_ALL}")
+                        low_balance = True
+                else:
+                    print(f"{Fore.GREEN}[#] COMPLETE FILLING{Style.RESET_ALL}")
+                    depth = round(float(depth * float(d["max_each_trade"])), 4)
+                    print(f"{Fore.GREEN}[#] DEPTH %f{Style.RESET_ALL}" % (depth))
+
+                if not low_balance and (depth > float(d["min_balance"])):
+                    print(f"{Fore.CYAN}[!] DEPTH %f BTC" % depth)
+                    eff = (depth * bids['bnb'] * (1 - taker_fee['bnb'])) - (
+                            depth * asks['trt'] * (1 + taker_fee['trt']))
+                    prod = eff / (depth * bids['bnb'])
+                    print("[i] GAIN DOPO FEE EFF %f € | PROD %f ¢/€" % (eff, prod * 100))
+                    print(f"[i] NEED %.3f EUR | %f BTC{Style.RESET_ALL}" % (asks['trt'] * depth, depth))
+                    last_ask = asks['trt']
+                    last_bid = bids['bnb']
+                    if prod * 100 > float(d["prod_threshold"]) and not only_see:
+                        checkbalance = True
+                        print(f"{Fore.GREEN}[#] TRADE{Style.RESET_ALL}")
+                        print(f"{Fore.YELLOW}[H] SELL %f BTC ON BNB, BUYING %f (%f) BTC ON TRT{Style.RESET_ALL}" % (
+                            depth, depth, depth * last_ask))
+                        resp_dict = op.tradethreading("buy", "trt", "BTCEUR", depth, last_ask,
+                                                      "sell", exchange_list[1], "BTCEUR", depth, last_bid)
+                        print("BNB", resp_dict["bnb"], "\nTRT", resp_dict["trt"])
+                        log("TRADE", "BNB" + str(resp_dict["bnb"]) + "\nTRT" + str(resp_dict["trt"]))
+                        try:
+                            status = (resp_dict["bnb"]["status"], resp_dict["trt"]["status"])
+                        except KeyError as err:
+                            print(f"{Fore.RED}[!] ERROR RETRIEVING STATUS{Style.RESET_ALL}")
+                            status = (resp_dict["bnb"]["status"], resp_dict["trt"]["errors"][0]["message"])
+                            log("ERR",
+                                str(resp_dict["bnb"]["status"]) + str(resp_dict["trt"]["errors"][0]["message"]))
+                            log("ERR", err)
+                        if status[0] == "ERROR" or status[1] == "ERROR":
+                            print(f"{Fore.RED}[$] TRADE ERROR MSG: [%s, %s]{Style.RESET_ALL}" % (
+                                resp_dict["trt"][0].upper(), resp_dict["bnb"]))
+                            log("ERROR", str(resp_dict["trt"][0].upper()) + (resp_dict["bnb"]))
+                            time.sleep(0)
+                            pass
+                            # TODO: IMPROVE ERROR CHECK
+                        else:
+                            print(f"{Fore.GREEN}[#] SOUNDS GOOD! ORDER NO:[%s, %s]{Style.RESET_ALL}" % (
+                                resp_dict["trt"]["status"].upper(), resp_dict["bnb"]["status"]))
+                            bal_list = True
+                            time.sleep(int(d["sleep_check_order"]))
+                            _trade_list.append(
+                                [datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "BUY", "TRT",
+                                 str(depth).replace(".", ","), str(last_ask).replace(".", ","),
+                                 "SELL", exchange_list[1].upper(), str(last_bid).replace(".", ","),
+                                 float(all_balance["bnbbtc"]),
+                                 float(all_balance["trtbtc"]),
+                                 float(all_balance["bnbeur"]), float(all_balance["trteur"]),
+                                 float(all_balance["trteur"] + all_balance["bnbeur"] + (
+                                         all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask),
+                                 resp_dict["bnb"],
+                                 resp_dict["trt"]])
+                else:
+                    print(f"{Fore.RED}[$] TOO LOW BALANCE, PLEASE DEPOSIT{Style.RESET_ALL}")
+                    checkbalance = True
+
+            # TODO:GROUP THE TWO CHECK FUNCTION TOGETHER (SIMPLER CODE AND UPDATE)
+            _end_time = time.time()
+            totaltime = _end_time - _start_time
+            time_list.append(int(totaltime * 1000))
+            _list.append([datetime.datetime.now(), asks['bnb'], bids['bnb'], asks['trt'], bids['trt'],
+                          all_balance["bnbbtc"], all_balance["trtbtc"], all_balance["bnbeur"],
+                          all_balance["trteur"], eff, prod, int(totaltime * 1000),
+                          round(bids['trt'] - asks['bnb'], 2),
+                          round((bids['trt'] * (1 - taker_fee['trt'])) - (asks['bnb'] * (1 + taker_fee['bnb'])), 2),
+                          round(bids['bnb'] - asks['trt'], 2),
+                          round((bids['bnb'] * (1 - taker_fee['bnb'])) - (asks['trt'] * (1 + taker_fee['trt'])),
+                                2)])
+            if int(_end_time % int(d["save_interval"])) == 0 and not already_saved:
+                print(f"{Fore.YELLOW}[!] SAVING...{Style.RESET_ALL}")
+                if _list:
+                    save_data_thread = threading.Thread(target=save_data, args=(_list, d["sep"],))
+                    save_data_thread.start()
+                    already_saved = True
+                    try:
+                        data = arbomonitor(s, only_see, last_h, d["name"])
+                        if data == "go":
+                            only_see = True
+                        if "command" in data:
+                            os.system("cd " + dir_path)
+                            os.system("cd " + dir_path + " && " + data.split(":")[1])
+                    except Exception as errr:
+                        print(errr)
+                        log("ERR", errr)
+                        pass
+                        try:
+                            s.close()
+                            # s.connect((ip_mon, 30630))
+                        except ConnectionRefusedError as err:
+                            print(err)
+                            log("ERR", err)
+                            pass
+                        except socket.gaierror as err:
+                            print(err)
+                            log("ERR", err)
+                            pass
+                        except Exception as err:
+                            print(err)
+                            log("ERR", err)
+                            pass
+                        except TimeoutError as err:
+                            print(err)
+                            log("ERR", err)
+                            pass
+            if int(str(int(_end_time))[-1]) > 1:
+                already_saved = False
+            if _trade_list:
+                all_balance = op.balancethreading()
+                time.sleep(int(d['sleep_balance']))
+                _trade_list.append(
+                    ["", "", "", "", "", "", "", "", float(all_balance["bnbbtc"]), float(all_balance["trtbtc"]),
+                     float(all_balance["bnbeur"]),
+                     float(all_balance["trteur"]),
+                     ((all_balance["bnbbtc"] + all_balance["trtbtc"]) * last_ask) +
+                     float(all_balance["bnbeur"]) +
+                     float(all_balance["trteur"])])
+                print(f"{Fore.YELLOW}[!] SAVING TRADE LIST...{Style.RESET_ALL}")
+                save_trade_thread = threading.Thread(target=save_trade,
+                                                     args=(_trade_list, d["sep"], db_data, tg_data, d['name']))
+                save_trade_thread.start()
+                save_trade_thread.join()
+                _trade_list.clear()
+            if str(int(time.time()))[-4:] == this_sec:
+                count += 1
+            else:
+                actual = count
+                this_sec = str(int(time.time()))[-4:]
+                count = 0
+            last_h = sum(time_list[-100:]) / min(100, len(time_list))
+            print(
+                f"[-] ------------------------------------------------- {Fore.YELLOW}%d ms{Style.RESET_ALL} (%d ms(q) + %d ms(p)) - avg last %d ({Fore.YELLOW}%d ms{Style.RESET_ALL}) - global avg ({Fore.YELLOW}%d ms{Style.RESET_ALL})" % (
+                    int(totaltime * 1000), int(_query_time * 1000),
+                    (int(totaltime * 1000) - int(_query_time * 1000)), min(100, len(time_list)),
+                    sum(time_list[-100:]) / min(100, len(time_list)), sum(time_list) / len(time_list)))
+        except KeyboardInterrupt as err:
+            log("ERR", err)
+            sys.exit()
 
 
 def save_data(_list, sep):
@@ -811,11 +797,6 @@ def timeout(time):
 def raise_timeout(signum, frame):
     raise TimeoutError
 
-@timeout(1)
-async def wss_bnb(tscm):
-    resp =await tscm.recv()
-    return resp
-
 # TODO: FUNZIONE AUTO-BILANCIAMENTO
 # TODO: FUNZIONE PER CONTROLLARE IL SALDO BNB E AGGIUNGERLO QUANDO SERVE
 # TODO: SISTEMARE INTEGRAZIONE DATABASE
@@ -823,31 +804,3 @@ async def wss_bnb(tscm):
 # TODO: FIX VARI
 
 # TODO: AI PREDICTION ON NEXT PRICE FOR BOTH EXCHANGE, AND/OR PREDICTION OF ARBITRAGE VALUES
-def timeout(seconds, action=None):
-    """Calls any function with timeout after 'seconds'.
-       If a timeout occurs, 'action' will be returned or called if
-       it is a function-like object.
-    """
-    def handler(queue, func, args, kwargs):
-        queue.put(func(*args, **kwargs))
-
-    def decorator(func):
-
-        def wraps(*args, **kwargs):
-            q = Queue()
-            p = Process(target=handler, args=(q, func, args, kwargs))
-            p.start()
-            p.join(timeout=seconds)
-            if p.is_alive():
-                p.terminate()
-                p.join()
-                if hasattr(action, '__call__'):
-                    return action()
-                else:
-                    return action
-            else:
-                return q.get()
-
-        return wraps
-
-    return decorator
