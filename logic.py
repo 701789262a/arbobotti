@@ -185,7 +185,7 @@ async def arbo():
                                  .replace('data', '"data"')
                                  .replace('channel', '"channel"')
                                  .replace('=', ':'))['data']
-            res_bnb = binance_websocket_api_manager.pop_stream_data_from_stream_buffer()
+            res_bnb = json.loads(binance_websocket_api_manager.pop_stream_data_from_stream_buffer())
             _query_time = time.time() - _query_time
             try:
                 asks_data_bnb = res_bnb['A']
