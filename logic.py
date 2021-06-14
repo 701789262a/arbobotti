@@ -187,6 +187,8 @@ async def arbo():
                                  .replace('=', ':'))['data']
             oldest_stream_data_from_stream_buffer = binance_websocket_api_manager.pop_stream_data_from_stream_buffer()
             if oldest_stream_data_from_stream_buffer:
+                if 'result' in oldest_stream_data_from_stream_buffer:
+                    continue
                 res_bnb = json.loads(oldest_stream_data_from_stream_buffer)['data']
             else:
                 continue
