@@ -3,14 +3,15 @@ import getpass
 import json
 import os
 import queue
+import signal
 import socket
 import subprocess
 import sys
 import threading
 import time
-from multiprocessing import Process
-import signal
 from contextlib import contextmanager
+from multiprocessing import Process
+
 import gnupg
 import mysql.connector
 import pandas
@@ -158,8 +159,8 @@ async def arbo():
     p = subprocess.Popen("java -jar wss_trt_jar.jar " + d['trt_xauth'], shell=True)
     time.sleep(2)
 
-    #t_action = threading.Thread(target=getaction, args=(q_act,))
-    #t_action.start()
+    # t_action = threading.Thread(target=getaction, args=(q_act,))
+    # t_action.start()
     client = await AsyncClient.create()
     bm = BinanceSocketManager(client)
     ds = bm.symbol_book_ticker_socket('BTCEUR')
@@ -183,19 +184,20 @@ async def arbo():
                     all_balance = op.balancethreading()
                     checkbalance = False
                 # requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
-                with timeout(1):
-                    try:
+
+                try:
+                    with timeout(1):
                         res_trt = json.loads(stack.pop()
-                                                 .replace('orderbook', '"orderbook"')
-                                                 .replace('BTCEUR', '1')
-                                                 .replace('event', '"event"')
-                                                 .replace('data', '"data"')
-                                                 .replace('channel', '"channel"')
-                                                 .replace('=', ':'))['data']
+                                             .replace('orderbook', '"orderbook"')
+                                             .replace('BTCEUR', '1')
+                                             .replace('event', '"event"')
+                                             .replace('data', '"data"')
+                                             .replace('channel', '"channel"')
+                                             .replace('=', ':'))['data']
                         res_bnb = await tscm.recv()
-                    except TimeoutError:
-                        print('boh')
-                        exit(90)
+                except TimeoutError:
+                    print('boh')
+                    exit(90)
                 _query_time = time.time() - _query_time
                 try:
                     asks_data_bnb = res_bnb['A']
@@ -254,9 +256,11 @@ async def arbo():
                         # info('trt', 'bnb', all_balance, asks, bids, taker_fee)
 
                         print("[i] FETCHED TAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
-                            exchange_list[0].upper(), taker_fee['trt'] * 100, exchange_list[1].upper(), taker_fee['bnb'] * 100))
+                            exchange_list[0].upper(), taker_fee['trt'] * 100, exchange_list[1].upper(),
+                            taker_fee['bnb'] * 100))
                         print("[i] FETCHED MAKER FEE       %s: %.4f%%;      %s: %.4f%%" % (
-                            exchange_list[0].upper(), maker_fee['trt'] * 100, exchange_list[1].upper(), maker_fee['bnb'] * 100))
+                            exchange_list[0].upper(), maker_fee['trt'] * 100, exchange_list[1].upper(),
+                            maker_fee['bnb'] * 100))
                         print("[i] BALANCE SCORE: %.4f" % (
                             balance_score["eur"]))
                 except Exception as err:
@@ -445,7 +449,7 @@ async def arbo():
                             pass
                             try:
                                 s.close()
-                                #s.connect((ip_mon, 30630))
+                                # s.connect((ip_mon, 30630))
                             except ConnectionRefusedError as err:
                                 print(err)
                                 log("ERR", err)
@@ -789,6 +793,7 @@ def info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee, maker_fee=N
            all_balance[exchange_b + "eur"] + all_balance[exchange_a + "eur"] + (
                    (all_balance[exchange_b + "btc"] + all_balance[exchange_a + "btc"]) * bids[exchange_a])))
 
+
 @contextmanager
 def timeout(time):
     signal.signal(signal.SIGALRM, raise_timeout)
@@ -802,7 +807,7 @@ def timeout(time):
 
 
 def raise_timeout(signum, frame):
-    raise TimeoutError
+    pass
 
 # TODO: FUNZIONE AUTO-BILANCIAMENTO
 # TODO: FUNZIONE PER CONTROLLARE IL SALDO BNB E AGGIUNGERLO QUANDO SERVE
