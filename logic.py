@@ -807,7 +807,7 @@ def timeout(time):
 
 
 def raise_timeout(signum, frame):
-    pass
+    raise TimeoutError
 
 # TODO: FUNZIONE AUTO-BILANCIAMENTO
 # TODO: FUNZIONE PER CONTROLLARE IL SALDO BNB E AGGIUNGERLO QUANDO SERVE
