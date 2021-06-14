@@ -188,15 +188,14 @@ async def arbo():
                 # requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
 
                 try:
-                    with timeout(1):
-                        res_trt = json.loads(stack.pop()
+                    res_trt = json.loads(stack.pop()
                                              .replace('orderbook', '"orderbook"')
                                              .replace('BTCEUR', '1')
                                              .replace('event', '"event"')
                                              .replace('data', '"data"')
                                              .replace('channel', '"channel"')
                                              .replace('=', ':'))['data']
-                        res_bnb = wss_bnb(tscm)
+                    res_bnb = wss_bnb(tscm)
 
                 except TimeoutError:
                     print('boh')
