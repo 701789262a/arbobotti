@@ -194,7 +194,7 @@ async def arbo():
                                              .replace('data', '"data"')
                                              .replace('channel', '"channel"')
                                              .replace('=', ':'))['data']
-                        res_bnb = await func_timeout(1, tscm.recv())
+                        res_bnb = func_timeout(1, await tscm.recv())
 
                 except TimeoutError:
                     print('boh')
