@@ -8,6 +8,8 @@ import socket
 import subprocess
 import sys
 import threading
+from multiprocessing import Process, Queue
+
 import time
 from contextlib import contextmanager
 from multiprocessing import Process
@@ -194,7 +196,7 @@ async def arbo():
                                              .replace('data', '"data"')
                                              .replace('channel', '"channel"')
                                              .replace('=', ':'))['data']
-                        res_bnb = func_timeout(1, await tscm.recv())
+                        res_bnb = wss_bnb(tscm)
 
                 except TimeoutError:
                     print('boh')
@@ -810,6 +812,11 @@ def timeout(time):
 def raise_timeout(signum, frame):
     raise TimeoutError
 
+@timeout(1)
+def wss_bnb(tscm):
+    resp =await tscm.recv()
+    return resp
+
 # TODO: FUNZIONE AUTO-BILANCIAMENTO
 # TODO: FUNZIONE PER CONTROLLARE IL SALDO BNB E AGGIUNGERLO QUANDO SERVE
 # TODO: SISTEMARE INTEGRAZIONE DATABASE
@@ -817,3 +824,31 @@ def raise_timeout(signum, frame):
 # TODO: FIX VARI
 
 # TODO: AI PREDICTION ON NEXT PRICE FOR BOTH EXCHANGE, AND/OR PREDICTION OF ARBITRAGE VALUES
+def timeout(seconds, action=None):
+    """Calls any function with timeout after 'seconds'.
+       If a timeout occurs, 'action' will be returned or called if
+       it is a function-like object.
+    """
+    def handler(queue, func, args, kwargs):
+        queue.put(func(*args, **kwargs))
+
+    def decorator(func):
+
+        def wraps(*args, **kwargs):
+            q = Queue()
+            p = Process(target=handler, args=(q, func, args, kwargs))
+            p.start()
+            p.join(timeout=seconds)
+            if p.is_alive():
+                p.terminate()
+                p.join()
+                if hasattr(action, '__call__'):
+                    return action()
+                else:
+                    return action
+            else:
+                return q.get()
+
+        return wraps
+
+    return decorator
