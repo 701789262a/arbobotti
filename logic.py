@@ -9,7 +9,8 @@ import sys
 import threading
 import time
 from multiprocessing import Process
-
+import signal
+from contextlib import contextmanager
 import gnupg
 import mysql.connector
 import pandas
@@ -183,15 +184,17 @@ async def arbo():
                     checkbalance = False
                 # requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
                 try:
-                    res_trt = json.loads(stack.pop()
-                                         .replace('orderbook', '"orderbook"')
-                                         .replace('BTCEUR', '1')
-                                         .replace('event', '"event"')
-                                         .replace('data', '"data"')
-                                         .replace('channel', '"channel"')
-                                         .replace('=', ':'))['data']
-                    res_bnb = await tscm.recv()
-                    print(res_trt,res_bnb)
+                    with timeout(1):
+                        res_trt = json.loads(stack.pop()
+                                             .replace('orderbook', '"orderbook"')
+                                             .replace('BTCEUR', '1')
+                                             .replace('event', '"event"')
+                                             .replace('data', '"data"')
+                                             .replace('channel', '"channel"')
+                                             .replace('=', ':'))['data']
+                        res_bnb = await tscm.recv()
+                except TimeoutError as err:
+                    log('ERR',err)
                 except Exception as err:
                     print(err)
 
@@ -787,6 +790,22 @@ def info(exchange_a, exchange_b, all_balance, asks, bids, taker_fee, maker_fee=N
            all_balance[exchange_b + "btc"] + all_balance[exchange_a + "btc"],
            all_balance[exchange_b + "eur"] + all_balance[exchange_a + "eur"] + (
                    (all_balance[exchange_b + "btc"] + all_balance[exchange_a + "btc"]) * bids[exchange_a])))
+
+@contextmanager
+def timeout(time):
+    signal.signal(signal.SIGALRM, raise_timeout)
+    signal.alarm(time)
+    try:
+        yield
+    except TimeoutError:
+        pass
+    finally:
+        signal.signal(signal.SIGALRM, signal.SIG_IGN)
+
+
+def raise_timeout(signum, frame):
+    raise TimeoutError
+
 # TODO: FUNZIONE AUTO-BILANCIAMENTO
 # TODO: FUNZIONE PER CONTROLLARE IL SALDO BNB E AGGIUNGERLO QUANDO SERVE
 # TODO: SISTEMARE INTEGRAZIONE DATABASE
