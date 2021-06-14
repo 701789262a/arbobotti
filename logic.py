@@ -183,21 +183,15 @@ async def arbo():
                     all_balance = op.balancethreading()
                     checkbalance = False
                 # requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
-                try:
-                    with timeout(1):
-                        res_trt = json.loads(stack.pop()
+                with timeout(1):
+                    res_trt = json.loads(stack.pop()
                                              .replace('orderbook', '"orderbook"')
                                              .replace('BTCEUR', '1')
                                              .replace('event', '"event"')
                                              .replace('data', '"data"')
                                              .replace('channel', '"channel"')
                                              .replace('=', ':'))['data']
-                        res_bnb = await tscm.recv()
-                except TimeoutError as err:
-                    log('ERR',err)
-                except Exception as err:
-                    print(err)
-
+                    res_bnb = await tscm.recv()
                 _query_time = time.time() - _query_time
                 try:
                     asks_data_bnb = res_bnb['A']
