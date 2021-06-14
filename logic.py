@@ -811,7 +811,7 @@ def timeout(time):
 def raise_timeout(signum, frame):
     raise TimeoutError
 
-@timeout(0.04)
+@timeout(1)
 async def wss_bnb(tscm):
     resp =await tscm.recv()
     return resp
