@@ -114,6 +114,7 @@ class Operation:
             try:
                 d["bnbbtc"] = float(self.client.get_asset_balance(asset="BTC")["free"])
                 d["bnbeur"] = float(self.client.get_asset_balance(asset="EUR")["free"])
+                self.requests_used = self.client.response.headers['x-mbx-used-weight-1m']
             except Exception:
                 d["bnbbtc"] = float(self.client.get_asset_balance(asset="BTC")["free"])
                 d["bnbeur"] = float(self.client.get_asset_balance(asset="EUR")["free"])
@@ -349,3 +350,5 @@ class Operation:
         except json.decoder.JSONDecodeError:
             print(f"{Fore.RED}[ERR] ERROR WHILE CONVERTING TO JSON [expecting value]{Style.RESET_ALL}")
 
+    def get_requests_used(self):
+        return self.requests_used

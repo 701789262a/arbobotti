@@ -167,6 +167,10 @@ async def arbo():
     count = 0
     actual = 0
     while True:
+        requests_used = int(op.get_requests_used())
+        if requests_used>1000:
+            time.sleep(3)
+
         _start_time = time.time()
         time.sleep(d['sleep_query'])
         _query_time = time.time()
@@ -177,6 +181,7 @@ async def arbo():
                 print(f"{Fore.YELLOW}[#] RETRIEVING BALANCE{Style.RESET_ALL}")
                 all_balance = op.balancethreading()
                 checkbalance = False
+
             # requests_used=price_dict['bnb'].headers['x-mbx-used-weight-1m']
             res_trt = json.loads(stack.pop()
                                  .replace('orderbook', '"orderbook"')
@@ -235,6 +240,7 @@ async def arbo():
                 f"{Fore.LIGHTCYAN_EX}[i] %s{Style.RESET_ALL}\tINDEX: {Fore.LIGHTCYAN_EX}%s - %s{Style.RESET_ALL}\tTHREAD_POOL:{Fore.LIGHTCYAN_EX} %s{Style.RESET_ALL}\tONLY_SEE: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL}\tPERF: {Fore.LIGHTCYAN_EX} %d{Style.RESET_ALL} cycles/s" % (
                     a.strftime("%d/%m/%Y %H:%M:%S"), str(int(time.time()))[-4:], small_index, str(op.len), only_see,
                     actual))
+
             next_one = False
             try:
                 if d['general_output']:
